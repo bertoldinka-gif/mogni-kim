@@ -1,0 +1,8 @@
+{
+  "name": "могни КИМ",
+  "description": "Платформа для подготовки к ЕГЭ, ОГЭ и изучения русского языка с умной работой над ошибками.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
