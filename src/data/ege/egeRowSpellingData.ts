@@ -1595,7 +1595,7 @@ hint: 'В 4-м ряду слово «стАрожилы» (давние жите
           { template: 'усм..рять (хищника)', expectedLetter: 'и' },
         ],
       },
-    ],
+   ];
 
 /**
  * EGE Task 10 — Правописание приставок (Base + Hard 5-row blocks, 3 words per row)
