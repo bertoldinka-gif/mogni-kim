@@ -1593,7 +1593,6 @@ hint: 'В 4-м ряду слово «стАрожилы» (давние жите
           { template: 'сж..гать', expectedLetter: 'и' },
           { template: 'разв..вается (на ветру)', expectedLetter: 'е' },
           { template: 'усм..рять (хищника)', expectedLetter: 'и' },
-        ],
       },
    ];
 
