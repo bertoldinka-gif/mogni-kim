@@ -1593,8 +1593,621 @@ hint: 'В 4-м ряду слово «стАрожилы» (давние жите
           { template: 'сж..гать', expectedLetter: 'и' },
           { template: 'разв..вается (на ветру)', expectedLetter: 'е' },
           { template: 'усм..рять (хищника)', expectedLetter: 'и' },
+        ],
       },
-   ];
+    ],
+    correctRows: Array.of(1, 3, 4),
+    ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 134. 1) обжОра (исключение), бесшОвные (шов — исключение), жОнглёр (заимств. словарное) — везде О. 2) скОсить (ко́сит), гОризонт (словарное), обмАкнуть в воду (-мак-/-мок-, погружать в жидкость). 3) лОгичность (ло́гика), спОкойный (словарное), озОрной (зо́рька) — везде О. 4) аквАмарин (аква́риум), мАжор (словарное), кАтастрофа (словарное) — везде А. 5) сжИгать (-жиг-/-жег-, есть -а-), развЕвается на ветру (ве́ять), усмИрять (сми́рный).',
+    hint: 'В 1-м ряду все три слова после шипящих пишутся с буквой О («обжОра», «бесшОвные», «жОнглёр»).',
+  },
+  {
+    id: 'ege-9-row-base-33',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 9,
+    topicTag: 'ЕГЭ · Задание 9',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'соб..рать', expectedLetter: 'и' },
+          { template: 'г..роический', expectedLetter: 'е' },
+          { template: 'тр..вога', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'происх..дить', expectedLetter: 'о' },
+          { template: 'к..смонавт', expectedLetter: 'о' },
+          { template: 'прик..сновение', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'укр..пление', expectedLetter: 'е' },
+          { template: 'соч..тание', expectedLetter: 'е' },
+          { template: 'в..теранский', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'изв..ниться', expectedLetter: 'и' },
+          { template: 'вп..чатление', expectedLetter: 'е' },
+          { template: 'в..ртуальный', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пл..вчиха', expectedLetter: 'о' },
+          { template: 'утр..мбовать', expectedLetter: 'а' },
+          { template: 'р..стение', expectedLetter: 'а' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3),
+    ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 23. 1) собИрать (-бир-/-бер-, есть -а-), гЕроический (геро́й), трЕвога (словарное). 2) происхОдить (происхо́дит), кОсмонавт (ко́смос), прикОсновение (-кас-/-кос-, нет -а-) — везде О. 3) укрЕпление (кре́пкий), сочЕтание (исключение в -чит-/-чет-), вЕтеранский (словарное) — везде Е. 4) извИниться (пови́нный), впЕчатление (словарное), вИртуальный (словарное). 5) плОвчиха (исключение), утрАмбовать (тра́мбовка), рАстение (корень -раст-).',
+    hint: 'В 3-м ряду вспомните слово-исключение «сочЕтание», которое пишется с буквой Е, несмотря на суффикс -а-.',
+  },
+  {
+    id: 'ege-9-row-base-34',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 9,
+    topicTag: 'ЕГЭ · Задание 9',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'разм..шать', expectedLetter: 'е' },
+          { template: 'зап..реть', expectedLetter: 'е' },
+          { template: 'инт..ллигент', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'зап..тевать', expectedLetter: 'о' },
+          { template: 'к..ллекция', expectedLetter: 'о' },
+          { template: 'р..стовщик', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'кл..ссический', expectedLetter: 'а' },
+          { template: 'пл..вец', expectedLetter: 'о' },
+          { template: 'во..бражать', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'в..негрет', expectedLetter: 'и' },
+          { template: 'разв..вать (способности)', expectedLetter: 'и' },
+          { template: 'св..ла (ребёнка по лестнице)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'к..мпания (друзей)', expectedLetter: 'о' },
+          { template: 'непром..каемый (плащ)', expectedLetter: 'о' },
+          { template: 'в..кзал', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 2, 5),
+    ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 125. 1) размЕшать (разме́шивать), запЕреть (-пир-/-пер-, нет -а-), интЕллигент (словарное) — везде Е. 2) запОтевать (пот), кОллекция (словарное), рОстовщик (исключение в -раст-/-рос-) — везде О. 3) клАссический (кла́ссика), плОвец (исключение), воОбражать (о́браз). 4) вИнегрет (словарное), развИвать способности (разви́тие), свЕла по лестнице (свёл). 5) кОмпания друзей (словарное), непромОкаемый плащ (-мак-/-мок-, не пропускающий влагу), вОкзал (словарное) — везде О.',
+    hint: 'В 5-м ряду различайте «кОмпанию» (группу друзей — через О) и «кАмпанию» (мероприятие — через А).',
+  },
+  {
+    id: 'ege-9-row-base-35',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 9,
+    topicTag: 'ЕГЭ · Задание 9',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'выгл..деть', expectedLetter: 'я' },
+          { template: 'разр..дить (атмосферу в коллективе)', expectedLetter: 'я' },
+          { template: 'м..теж', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'р..весник', expectedLetter: 'о' },
+          { template: 'нав..ждение', expectedLetter: 'а' },
+          { template: 'анн..тация', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'заб..рать', expectedLetter: 'и' },
+          { template: 'ч..столюбие', expectedLetter: 'е' },
+          { template: 'в..рмишель', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'д..мократ', expectedLetter: 'е' },
+          { template: 'ун..кальный', expectedLetter: 'и' },
+          { template: 'зап..реть (дверь)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'оп..здать', expectedLetter: 'о' },
+          { template: 'прик..снуться', expectedLetter: 'о' },
+          { template: 'к..лдун', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 5),
+    ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 15. 1) выглЯдеть (взгляд), разрЯдить атмосферу (разря́дка), мЯтеж (словарное) — везде Я. 2) рОвесник (исключение в -равн-/-ровн-), навАждение (словарное), аннОтация (словарное). 3) забИрать (-бир-/-бер-, есть -а-), чЕстолюбие (честь), вЕрмишель (словарное). 4) дЕмократ (словарное), унИкальный (у́никум), запЕреть дверь (-пир-/-пер-, нет -а-). 5) опОздать (по́здно), прикОснуться (-кас-/-кос-, нет -а-), кОлдун (словарное) — везде О.',
+    hint: 'В 1-м ряду «разрЯдить атмосферу» означает «снять напряжение» (проверочное слово — «разря́дка», пишется Я).',
+  },
+  {
+    id: 'ege-9-row-base-36',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 9,
+    topicTag: 'ЕГЭ · Задание 9',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пл..нительный', expectedLetter: 'е' },
+          { template: 'отб..рает', expectedLetter: 'и' },
+          { template: 'м..нералы', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'г..рделиво', expectedLetter: 'о' },
+          { template: 'неук..снительно', expectedLetter: 'о' },
+          { template: 'к..лыхать', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'укр..щать (тигра)', expectedLetter: 'о' },
+          { template: 'пл..вучий', expectedLetter: 'а' },
+          { template: 'г..зон', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'осл..пительно', expectedLetter: 'е' },
+          { template: 'прив..дение (в исполнение)', expectedLetter: 'е' },
+          { template: 'б..рёзовый', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'выр..сла', expectedLetter: 'о' },
+          { template: 'претв..рить', expectedLetter: 'о' },
+{ template: 'игн..рировать', expectedLetter: 'о' },
+],
+},
+],
+correctRows: Array.of(2, 4, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 245. 1) плЕнительный (плен), отбИрает (-бир-/-бер-, есть -а-), мИнералы (словарное). 2) гОрделиво (го́рдый), неукОснительно (-кас-/-кос-, нет -а-), кОлыхать (колы́шет) — везде О. 3) укрОщать тигра (кро́ткий), плАвучий (безудар. -плав-), гАзон (словарное). 4) ослЕпительно (слеп), привЕдение в исполнение (привёл), бЕрёзовый (словарное) — везде Е. 5) вырОсла (корень -рос-), претвОрить (безудар. -твар-/-твор-), игнОрировать (словарное) — везде О.',
+hint: 'В 4-м ряду обратите внимание на контекст: «привЕдение в исполнение» проверяется глаголом «привёл».',
+},
+{
+id: 'ege-9-row-base-37',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'р..птать', expectedLetter: 'о' },
+{ template: 'заг..релый', expectedLetter: 'о' },
+{ template: 'выр..зительный', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'прин..мать', expectedLetter: 'и' },
+{ template: 'разв..вать (воображение)', expectedLetter: 'и' },
+{ template: 'кор..фей', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'посв..щать (учителю)', expectedLetter: 'я' },
+{ template: 'разр..дить (посевы)', expectedLetter: 'е' },
+{ template: 'прот..рать (полы)', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: '(всю ночь) ст..рожил', expectedLetter: 'о' },
+{ template: 'р..внина', expectedLetter: 'а' },
+{ template: 'гр..мадный', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'зам..реть (от восторга)', expectedLetter: 'е' },
+{ template: 'соч..таться', expectedLetter: 'е' },
+{ template: 'в..нтилятор', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(2, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 25. 1) рОптать (ро́пот), загОрелый (безудар. -гор-), вырАзительный (словарное). 2) принИмать (-ним-/-ня-, есть -а-), развИвать воображение (разви́тие), корИфей (словарное) — везде И. 3) посвЯщать учителю (свя́то), разрЕдить посевы (ре́дкий), протИрать (-тир-/-тер-, есть -а-). 4) стОрожил всю ночь (сто́рож), рАвнина (исключение в -равн-/-ровн-), грОмадный (огро́мный). 5) замЕреть (-мир-/-мер-, нет -а-), сочЕтаться (исключение), вЕнтилятор (словарное) — везде Е.',
+hint: 'В 4-м ряду слово «стОрожил» в значении «охранял всю ночь» проверяется словом «сто́рож» (пишется О).',
+},
+{
+id: 'ege-9-row-base-38',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'зап..рать (на замок)', expectedLetter: 'и' },
+{ template: 'д..кларация', expectedLetter: 'е' },
+{ template: 'велос..педный', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'р..внинный', expectedLetter: 'а' },
+{ template: 'прод..лжение', expectedLetter: 'о' },
+{ template: 'г..рячий', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'р..птать', expectedLetter: 'о' },
+{ template: 'пок..сившийся (забор)', expectedLetter: 'о' },
+{ template: 'н..велла', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'объед..нять', expectedLetter: 'и' },
+{ template: 'в..стибюль', expectedLetter: 'е' },
+{ template: 'л..леять', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'отв..рить (картофель)', expectedLetter: 'а' },
+{ template: '(пролетела) к..сатка', expectedLetter: 'а' },
+{ template: 'пол..скать (ребёнка)', expectedLetter: 'а' },
+],
+},
+],
+correctRows: Array.of(3, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 35. 1) запИрать (-пир-/-пер-, есть -а-), дЕкларация (словарное), велосИпедный (словарное). 2) рАвнинный (от исключения равни́на), продОлжение (продо́лжить), гОрячий (словарное). 3) рОптать (ро́пот), покОсившийся забор (ко́со), нОвелла (словарное) — везде О. 4) объедИнять (еди́ный), вЕстибюль (словарное), лЕлеять (словарное). 5) отвАрить картофель (ва́рит), кАсатка (ласточка — от «каса́ться», ср. коса́тка — кит), полАскать ребёнка (ла́ска) — везде А.',
+hint: 'В 5-м ряду обратите внимание на омофоны: «кАсатка» (птица ласточка, пишется с А) и «полАскать ребёнка» (от слова «ла́ска»).',
+},
+{
+id: 'ege-9-row-base-39',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'дел..катес', expectedLetter: 'и' },
+{ template: 'соч..тать', expectedLetter: 'е' },
+{ template: 'гал..рея', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'нам..чить', expectedLetter: 'о' },
+{ template: 'пор..вну', expectedLetter: 'о' },
+{ template: 'н..секомые', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'огр..ждать', expectedLetter: 'а' },
+{ template: 'г..рмония', expectedLetter: 'а' },
+{ template: 'р..сток', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'ув..дать (от жары)', expectedLetter: 'я' },
+{ template: 'неисс..каемый', expectedLetter: 'я' },
+{ template: 'напр..жение', expectedLetter: 'я' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'п..лезный', expectedLetter: 'о' },
+{ template: '(костюм) на выр..ст', expectedLetter: 'о' },
+{ template: 'г..рмон', expectedLetter: 'о' },
+],
+},
+],
+correctRows: Array.of(4, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 45. 1) делИкатес (словарное), сочЕтать (исключение), галЕрея (словарное). 2) намОчить (-мак-/-мок-, пропустить влагу), порОвну (исключение в -равн-/-ровн-), нАсекомые (словарное). 3) огрАждать (огра́да), гАрмония (словарное), рОсток (исключение). 4) увЯдать от жары (вя́нет), неиссЯкаемый (исся́кнуть), напрЯжение (напря́чь) — везде Я. 5) пОлезный (по́льза), на вырОст (исключение в -раст-/-рос-), гОрмон (словарное) — везде О.',
+hint: 'В 5-м ряду запомните слово-исключение из чередующихся корней -раст-/-рос-: «на вырОст» (пишется О).',
+},
+{
+id: 'ege-9-row-base-40',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'зап..рать (на замок)', expectedLetter: 'и' },
+{ template: 'тр..петать', expectedLetter: 'е' },
+{ template: 'ум..рла (вера)', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'сотв..рить', expectedLetter: 'о' },
+{ template: 'вопл..тить', expectedLetter: 'о' },
+{ template: 'оз..рной (ребёнок)', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'оз..рять', expectedLetter: 'а' },
+{ template: '(костюм) на выр..ст', expectedLetter: 'о' },
+{ template: 'выр..щенный', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'заб..рать', expectedLetter: 'и' },
+{ template: 'подм..тать (пол)', expectedLetter: 'е' },
+{ template: 'вол..йбол', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: '(разделить) пор..вну', expectedLetter: 'о' },
+{ template: 'ар..матный', expectedLetter: 'о' },
+{ template: 'Р..стов', expectedLetter: 'о' },
+],
+},
+],
+correctRows: Array.of(2, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 25. 1) запИрать (-пир-/-пер-, есть -а-), трЕпетать (тре́пет), умЕрла (-мир-/-мер-, нет -а-). 2) сотвОрить (безудар. -твар-/-твор-), воплОтить (плоть), озОрной (зо́рька) — везде О. 3) озАрять (безудар. -зар-), на вырОст (исключение), вырАщенный (корень -ращ-). 4) забИрать (-бир-/-бер-, есть -а-), подмЕтать (подмёл), волЕйбол (словарное). 5) порОвну (исключение), арОматный (словарное), РОстов (исключение в -раст-/-рос-) — везде О.',
+hint: 'В 5-м ряду сразу два исключения из правил чередующихся корней: «порОвну» и «РОстов».',
+},
+{
+id: 'ege-9-row-base-41',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'неув..дающая (красота)', expectedLetter: 'я' },
+{ template: '(век) Просв..щения', expectedLetter: 'е' },
+{ template: 'кол..бание', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'др..бить', expectedLetter: 'о' },
+{ template: 'г..рделивый', expectedLetter: 'о' },
+{ template: 'к..ричневый', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пр..стиж', expectedLetter: 'е' },
+{ template: 'ч..столюбивый', expectedLetter: 'е' },
+{ template: 'выч..тание', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'л..гичный', expectedLetter: 'о' },
+{ template: 'укр..щать (тигра)', expectedLetter: 'о' },
+{ template: 'мгн..вение', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'нач..нать', expectedLetter: 'и' },
+{ template: 'бл..стательный', expectedLetter: 'и' },
+{ template: 'ист..нный', expectedLetter: 'и' },
+],
+},
+],
+correctRows: Array.of(2, 4, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 245. 1) неувЯдающая (вя́нет), ПросвЕщения (свет), колЕбание (коле́блется). 2) дрОбить (дробь), гОрделивый (го́рдый), кОричневый (словарное) — везде О. 3) прЕстиж (словарное), чЕстолюбивый (честь), вычИтание (-чит-/-чет-, есть -а-). 4) лОгичный (ло́гика), укрОщать (кро́ткий), мгнОвение (словарное) — везде О. 5) начИнать (-чин-/-ча-, есть -а-), блИстательный (-блист-/-блест-, есть -а-), истИнный (словарное «и́стина») — везде И.',
+hint: 'Проверьте словарные слова «кОричневый», «мгнОвение» и «истИнный».',
+},
+{
+id: 'ege-9-row-base-42',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'объ..вление', expectedLetter: 'я' },
+{ template: 'выт..сненный (из толпы)', expectedLetter: 'е' },
+{ template: 'п..ссимизм', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'оп..реться', expectedLetter: 'е' },
+{ template: '(жизнь их) св..ла', expectedLetter: 'е' },
+{ template: 'приж..мать', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'з..рница', expectedLetter: 'а' },
+{ template: 'сл..гаемые (успеха)', expectedLetter: 'а' },
+{ template: 'обн..жённый (лес)', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'в..шнёвый', expectedLetter: 'и' },
+{ template: 'посв..щение (в рыцари)', expectedLetter: 'я' },
+{ template: '(белый) ин..й', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'задр..жать', expectedLetter: 'о' },
+{ template: 'Р..стислав', expectedLetter: 'о' },
+{ template: 'к..лоссальный', expectedLetter: 'о' },
+],
+},
+],
+correctRows: Array.of(3, 5),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 35. 1) объЯвление (я́вка), вытЕсненный (те́сно), пЕссимизм (словарное). 2) опЕреться (-пир-/-пер-, нет -а-), свЕла (свёл), прижИмать (-жим-/-жа-, есть -а-). 3) зАрница (безудар. -зар-), слАгаемые (-лаг-/-лож-, есть -а-), обнАжённый (наг) — везде А. 4) вИшнёвый (ви́шня), посвЯщение (свя́то), и́нЕй (словарное). 5) задрОжать (дрожь), РОстислав (исключение в -раст-/-рос-), кОлоссальный (словарное) — везде О.',
+hint: 'В 5-м ряду вспомните имя-исключение «РОстислав» (пишется с О перед СТ).',
+},
+{
+id: 'ege-9-row-base-43',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 9,
+topicTag: 'ЕГЭ · Задание 9',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'п..рашют', expectedLetter: 'а' },
+{ template: '(посевная) к..мпания', expectedLetter: 'а' },
+{ template: 'в..кцина', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'с..мптом', expectedLetter: 'и' },
+{ template: 'прид..раться', expectedLetter: 'и' },
+{ template: 'соц..альный', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'п..лемичный', expectedLetter: 'о' },
+{ template: 'покл..ниться', expectedLetter: 'о' },
+{ template: 'пр..вительство', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'р..внобедренный (треугольник)', expectedLetter: 'а' },
+{ template: 'об..яние', expectedLetter: 'а' },
+{ template: 'прил..гать (усилия)', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'г..потеза', expectedLetter: 'и' },
+{ template: 'пал..садник', expectedLetter: 'и' },
+{ template: 'инт..нсивный', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(1, 2, 4),
+ruleTitle: 'Правописание гласных в корне (Задание 9 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 124. 1) пАрашют (словарное), посевная кАмпания (мероприятие — через А), вАкцина (словарное) — везде А. 2) сИмптом (словарное), придИраться (-дир-/-дер-, есть -а-), соцИальный (И после Ц) — везде И. 3) пОлемичный (словарное), поклОниться (безудар. -клан-/-клон-), прАвительство (пра́вить). 4) рАвнобедренный (-равн-/-ровн-, равные бёдра), обАяние (словарное), прилАгать (-лаг-/-лож-, есть -а-) — везде А. 5) гИпотеза (словарное), палИсадник (словарное), интЕнсивный (инте́нс).',
+hint: 'В 1-м ряду «посевная кАмпания» (мероприятие) пишется с А, а в 4-м — «рАвнобедренный» (равные стороны) тоже с А.',
+},
+];
 
 /**
  * EGE Task 10 — Правописание приставок (Base + Hard 5-row blocks, 3 words per row)
