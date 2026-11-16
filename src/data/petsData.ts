@@ -254,7 +254,7 @@ export const MENTORS: MentorCharacter[] = [
       'Самый умный учёный во всех измерениях. Объяснит правила русского языка так, будто это квантовая физика, попутно высмеивая бюрократов из ФИПИ.',
     price: 1000,
     monogram: 'РС',
-    avatarUrl: 'avatarUrl: './rick.jpg',
+    avatarUrl: './rick.jpg',
     accentBg: 'bg-cyan-500/15',
     accentBorder: 'border-cyan-500/40',
     accentText: 'text-cyan-300',
