@@ -2824,8 +2824,8 @@ export const ege11RowQuestions: EgeRowSpellingQuestion[] = [
       {
         rowNumber: 3,
         words: [
-          { template: 'матрос..кий', expectedLetter: 'к' },
-          { template: 'француз..кий', expectedLetter: 'к' },
+          { template: 'матрос..кий', expectedLetter: 'с' },
+          { template: 'француз..кий', expectedLetter: 'с' },
         ],
       },
       {
@@ -3460,8 +3460,8 @@ rows: [
 {
 rowNumber: 1,
 words: [
-{ template: 'рез..кий', expectedLetter: 'к' },
-{ template: 'кавказ..кий', expectedLetter: 'к' },
+{ template: 'рез..кий', expectedLetter: '-' },
+{ template: 'кавказ..кий', expectedLetter: 'с' },
 ],
 },
 {
@@ -3493,10 +3493,10 @@ words: [
 ],
 },
 ],
-correctRows: Array.of(1, 4, 5),
+correctRows: Array.of(, 4, 5),
 ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
 ruleExplanation:
-'Верные ряды — 145. 1) резКий (есть краткая форма резок — пишем суффикс -к-), кавказСкий (основа на -з + суффикс -ск-) — везде К. 2) услышАл (от инфинитива услышАть), уменьшИл (от инфинитива уменьшИть). 3) слюдЯная (-ян-), ветрЕный (исключение). 4) буфетЧик (после Т пишем -чик-), подписЧик (после С пишем -чик-) — везде Ч. 5) плутониЕвый (безудар. -ев-), форелЕвый (безудар. -ев-) — везде Е.',
+'Верные ряды — 45. 1) резКий (есть краткая форма резок — пишем суффикс -к-), кавказСкий (основа на -з + суффикс -ск-) — везде К. 2) услышАл (от инфинитива услышАть), уменьшИл (от инфинитива уменьшИть). 3) слюдЯная (-ян-), ветрЕный (исключение). 4) буфетЧик (после Т пишем -чик-), подписЧик (после С пишем -чик-) — везде Ч. 5) плутониЕвый (безудар. -ев-), форелЕвый (безудар. -ев-) — везде Е.',
 hint: 'В 4-м ряду вспомните правило: суффикс -чик- пишется после согласных Д, Т, З, С, Ж (буфетЧик, подписЧик).',
 },
 {
@@ -3768,7 +3768,7 @@ hint: 'В 3-м ряду оба наречия с приставками из- и
         rowNumber: 2,
         words: [
           { template: 'париж..кий', expectedLetter: 'с' },
-          { template: 'низ..кий', expectedLetter: 'к' },
+          { template: 'низ..кий', expectedLetter: '-' },
         ],
       },
       {
@@ -3924,7 +3924,7 @@ words: [
 {
 rowNumber: 3,
 words: [
-{ template: 'старуш..чий', expectedLetter: 'е' },
+{ template: 'стару́ш..чий', expectedLetter: 'е' },
 { template: 'узорч..тый', expectedLetter: 'а' },
 ],
 },
@@ -3946,7 +3946,7 @@ words: [
 correctRows: Array.of(2, 4, 5),
 ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
 ruleExplanation:
-'Верные ряды — 245. 1) опаздЫвать (опаздываю), заведОвать (заведую). 2) владелЕц (сущ. муж. рода с беглой гласной: владельца), эмалЕвая (безудар. -ев-) — везде Е. 3) старушЕчий (безудар. суффикс -еч- после шипящего), узорчАтый (неизменяемый суффикс -чат-). 4) измельчЁнный (причастие, пишем Ё), стажЁрская (от «стажЁр» с суффиксом -ёр-) — везде Ё. 5) достоИн (от «досто́йный» — запомнить написание И), размашИстый (-ист-) — везде И.',
+'Верные ряды — 245. 1) опаздЫвать (опаздываю), заведОвать (заведую). 2) владелЕц (сущ. муж. рода с беглой гласной: владельца), эмалЕвая (безудар. -ев-) — везде Е. 3) стару́шЕчий (безудар. суффикс -еч- после шипящего), узорчАтый (неизменяемый суффикс -чат-). 4) измельчЁнный (причастие, пишем Ё), стажЁрская (от «стажЁр» с суффиксом -ёр-) — везде Ё. 5) достоИн (от «досто́йный» — запомнить написание И), размашИстый (-ист-) — везде И.',
 hint: 'В 5-м ряду запомните правописание краткого прилагательного «достоИн» (пишется с буквой И).',
 },
 {
@@ -3998,6 +3998,506 @@ ruleTitle: 'Суффиксы разных частей речи (Задание 
 ruleExplanation:
 'Верные ряды — 145. 1) обезвредИть врага (переходный глагол: сделать безвредным кого-то — И), рассматрИвал (рассматриваю) — везде И. 2) новичОк (отымённое сущ., под ударением после шипящего О), сгущЁнка (отглагольное сущ., пишем Ё). 3) платьИце (сущ. ср. рода с ударением на основе — пишем -иц-), мудрЕцы (сущ. муж. рода с беглой гласной: мудреца). 4) милостИвый (слово-исключение с суффиксом -ив-), прожорлИвый (-лив-) — везде И. 5) дымчАтый (-чат-), слевА (приставка с- + окно → с окнА) — везде А.',
 hint: 'В 4-м ряду запомните слова-исключения с безударным суффиксом -ив-: «милостИвый» и «юродИвый».',
+},
+    {
+    id: 'ege-11-row-base-27',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'удва..вать', expectedLetter: 'и' },
+          { template: 'овлад..вать', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'придирч..вый', expectedLetter: 'и' },
+          { template: 'хитр..нький', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'совестл..вый', expectedLetter: 'и' },
+          { template: 'шир..на', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'корч..вка', expectedLetter: 'ё' },
+          { template: 'реш..нный', expectedLetter: 'ё' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'клетч..тый', expectedLetter: 'а' },
+          { template: 'запрост..', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 4),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 34. 1) удваИвать (удваиваю), овладЕвать (ударный -ва- выпадает: овладЕть). 2) придирчИвый (-чив-), хитрЕнький (-еньк-). 3) совестлИвый (-лив-), ширИна (неизменяемый суффикс -ин-) — везде И. 4) корчЁвка (отглагольное сущ., пишем Ё), решЁнный (причастие, после шипящих в суффиксе пишем Ё) — везде Ё. 5) клетчАтый (-чат-), запростО (за окнО).',
+    hint: 'В 4-м ряду оба слова образованы от глаголов («корчевать» и «решить»), поэтому после шипящих в суффиксах пишется Ё.',
+  },
+  {
+    id: 'ege-11-row-base-28',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'фасол..вый', expectedLetter: 'е' },
+          { template: 'ситц..вый', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'подчёрк..вать', expectedLetter: 'и' },
+          { template: 'откле..ваться', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'улыбч..вый', expectedLetter: 'и' },
+          { template: 'решётч..тый', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'снов..', expectedLetter: 'а' },
+          { template: 'издавн..', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'овлад..вать', expectedLetter: 'е' },
+          { template: 'со..вый', expectedLetter: 'е' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 2, 4, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 1245. 1) фасолЕвый (безудар. -ев-), ситцЕвый (безудар. -ев- после Ц) — везде Е. 2) подчёркИвать (подчёркиваю), отклеИваться (отклеиваюсь) — везде И. 3) улыбчИвый (-чив-), решётчАтый (-чат-). 4) сновА (с окнА), издавнА (из окнА) — везде А. 5) овладЕвать (овладЕть), соЕвый (безудар. -ев-) — везде Е.',
+    hint: 'В 1-м ряду в слове «ситцЕвый» ударение падает на корень, поэтому после Ц пишется безударный суффикс -ев-.',
+  },
+  {
+    id: 'ege-11-row-base-29',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'реч..вой', expectedLetter: 'е' },
+          { template: 'передёрг..вать', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: '(увидеть) справ..', expectedLetter: 'а' },
+          { template: 'крупитч..тый', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'обрад..ваться', expectedLetter: 'о' },
+          { template: 'полович..к', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'затм..вать', expectedLetter: 'е' },
+          { template: '(улицы) обезлюд..ли', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'дириж..р', expectedLetter: 'ё' },
+          { template: 'трещ..тка', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 4),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 24. 1) речЕвой (безудар. -ев-), передёргИвать (передёргиваю). 2) справА (с окнА), крупитчАтый (-чат-) — везде А. 3) обрадОваться (обрадуюсь), половичЕк (половичкА — гласная выпадает). 4) затмЕвать (слово-исключение с ударным -ва-), обезлюдЕли (непереходный глагол: сами стали безлюдными) — везде Е. 5) дирижЁр (суффикс -ёр- пишем через Ё), трещОтка (сущ., под ударением после шипящего О).',
+    hint: 'В 5-м ряду различайте суффикс -ёр- («дирижЁр» — всегда Ё) и обычный ударный суффикс существительного («трещОтка» — О).',
+  },
+  {
+    id: 'ege-11-row-base-30',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'преподават..ль', expectedLetter: 'е' },
+          { template: 'привередл..вый', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'спорщ..к', expectedLetter: 'и' },
+          { template: 'завис..ть (от других)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'программир..вать', expectedLetter: 'о' },
+          { template: 'распар..вать (швы)', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'кост..ная (нога)', expectedLetter: 'я' },
+          { template: 'дров..ной (сарай)', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: '(рыболовный) сач..к', expectedLetter: 'о' },
+          { template: 'девч..нка', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(4, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 45. 1) преподаватЕль (суффикс -тель-), привередлИвый (-лив-). 2) спорщИк (-щик-), зависЕть (глагол-исключение II спр. на -еть). 3) программирОвать (программирую), распарЫвать (распарываю). 4) костЯная (-ян-), дровЯной (-ян-) — везде Я. 5) сачОк (сущ., под ударением после шипящего О), девчОнка (сущ., под ударением после шипящего О) — везде О.',
+    hint: 'В 5-м ряду оба слова являются существительными, в суффиксах которых после шипящих под ударением пишется О.',
+  },
+  {
+    id: 'ege-11-row-base-31',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'разве..вать (сомнения)', expectedLetter: 'я' },
+          { template: 'причудл..вый', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'народнич..ство', expectedLetter: 'е' },
+          { template: 'настойч..вость', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'книж..ца', expectedLetter: 'и' },
+          { template: 'милост..вый (государь)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: '(вернуться) засветл..', expectedLetter: 'о' },
+          { template: '(вытереть) досух..', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'еж..вые (рукавицы)', expectedLetter: 'о' },
+          { template: 'ярлыч..к', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 35. 1) развеЯть сомнения (гласная Я из инфинитива), причудлИвый (-лив-). 2) народничЕство (-еств-), настойчИвость (от «настойчИвый» с суффиксом -чив-). 3) книжИца (сущ. жен. рода — суффикс -иц-), милостИвый (слово-исключение с суффиксом -ив-) — везде И. 4) засветлО (за окнО), досухА (до окнА). 5) ежОвые (прил., под ударением после шипящего О), ярлычОк (сущ., под ударением после шипящего О) — везде О.',
+    hint: 'В 3-м ряду сущ. женского рода на -иц- («книжИца») и слово-исключение «милостИвый» пишутся через И.',
+  },
+  {
+    id: 'ege-11-row-base-32',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'никел..вый', expectedLetter: 'е' },
+          { template: 'милост..вый', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'плать..це', expectedLetter: 'и' },
+          { template: 'ландыш..вый', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'танц..р', expectedLetter: 'о' },
+          { template: 'засветл..', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'натри..вый', expectedLetter: 'е' },
+          { template: 'нищ..та', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'волгоград..кий', expectedLetter: 'с' },
+          { template: 'тунгус..кий', expectedLetter: 'с' },
+        ],
+,
+],
+correctRows: Array.of(3, 4, 5),
+ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 345. 1) никелЕвый (безудар. -ев-), милостИвый (исключение). 2) платьИце (сущ. ср. рода с ударением на основе — -иц-), ландышЕвый (безудар. -ев-). 3) танцОр (после Ц под ударением в русском суффиксе -ор- пишем О), засветлО (за окнО) — везде О. 4) натриЕвый (безудар. -ев-), нищЕта (неизменяемый суффикс -ет-) — везде Е. 5) волгоградСкий (основа на -д + -ск-), тунгусСкий (основа на -с + -ск-).',
+hint: 'В 3-м ряду запомните написание слова «танцОр» (суффикс -ор- под ударением после Ц пишется через О).',
+},
+{
+id: 'ege-11-row-base-33',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 11,
+topicTag: 'ЕГЭ · Задание 11',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'вкрадч..вый', expectedLetter: 'и' },
+{ template: 'отапл..вать', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'продл..вать', expectedLetter: 'е' },
+{ template: 'син..ва', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'леденц..вый', expectedLetter: 'о' },
+{ template: 'ухаж..р', expectedLetter: 'ё' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'экзотич..ский', expectedLetter: 'е' },
+{ template: 'увес..стый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'свидетельн..ца', expectedLetter: 'и' },
+{ template: 'задабр..ваемый', expectedLetter: 'и' },
+],
+},
+],
+correctRows: Array.of(1, 2, 5),
+ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 125. 1) вкрадчИвый (-чив-), отаплИвать (отапливаю) — везде И. 2) продлЕвать (исключение с ударным -ва-), синЕва (неизменяемый суффикс -ев-) — везде Е. 3) леденцОвый (под ударением после Ц пишем О), ухажЁр (суффикс -ёр- пишем через Ё). 4) экзотичЕский (суффикс -еск-), увесИстый (-ист-). 5) свидетельнИца (сущ. жен. рода — -иц-), задабрИваемый (от глагола «задабрИвать» — задабриваю) — везде И.',
+hint: 'В 5-м ряду причастие «задабрИваемый» проверяется по форме 1-го лица глагола «задабрИвать» («я задабриваю»).',
+},
+{
+id: 'ege-11-row-base-34',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 11,
+topicTag: 'ЕГЭ · Задание 11',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'мил..нький', expectedLetter: 'е' },
+{ template: 'сем..чко', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'разборч..вый', expectedLetter: 'и' },
+{ template: 'корч..вать', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'письм..цо', expectedLetter: 'е' },
+{ template: 'милост..вый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'недоум..вать', expectedLetter: 'е' },
+{ template: 'беж..вый', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'потч..вать', expectedLetter: 'е' },
+{ template: 'замоч..к', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(1, 4, 5),
+ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 145. 1) милЕнький (-еньк-), семЕчко (сущ. на -мя: в родит. падеже мн. ч. семян — суффикс -ечк-) — везде Е. 2) разборчИвый (-чив-), корчЕвать (корчую). 3) письмЕцо (сущ. ср. рода с ударением на окончании — -ец-), милостИвый (исключение). 4) недоумЕвать (недоумеваю), бежЕвый (безудар. -ев-) — везде Е. 5) потчЕвать (потчую), замочЕк (замочка — гласная выпадает) — везде Е.',
+hint: 'В 1-м ряду в слове «семЕчко» (от разносклоняемого существительного «семя») пишется суффикс -ечк-.',
+},
+{
+id: 'ege-11-row-base-35',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 11,
+topicTag: 'ЕГЭ · Задание 11',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'находч..вость', expectedLetter: 'и' },
+{ template: 'преодол..вать', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'подмиг..вать', expectedLetter: 'и' },
+{ template: 'Цариц..но', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'настойч..вый', expectedLetter: 'и' },
+{ template: 'милост..вый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'отч..ство', expectedLetter: 'е' },
+{ template: 'веч..вой (колокол)', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'революц..онный', expectedLetter: 'и' },
+{ template: 'син..нький', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(3, 4),
+ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 34. 1) находчИвость (находчИвый), преодолЕвать (преодолЕть). 2) подмигИвать (подмигиваю), ЦарицЫно (в суффиксе притяжательных прилагательных -ын- после Ц пишется Ы). 3) настойчИвый (-чив-), милостИвый (исключение с суффиксом -ив-) — везде И. 4) отчЕство (-еств-), вечЕвой (безудар. -ев-) — везде Е. 5) революцИонный (после Ц в суффиксе -ионн- пишем И), синЕнький (-еньк-).',
+hint: 'Во 2-м ряду вспомните правило: после Ц в суффиксе -ын- («ЦарицЫно», «сестрицЫн») пишется буква Ы.',
+},
+{
+id: 'ege-11-row-base-36',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 11,
+topicTag: 'ЕГЭ · Задание 11',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'переноч..вать', expectedLetter: 'е' },
+{ template: 'усидч..вый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'вкрадч..вый', expectedLetter: 'и' },
+{ template: 'юрод..вый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'алюмини..вый', expectedLetter: 'е' },
+{ template: 'сидень..це', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'застр..вать', expectedLetter: 'е' },
+{ template: 'бел..зна', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'худ..нький', expectedLetter: 'е' },
+{ template: 'врач..вать', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(2, 5),
+ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 25. 1) переночЕвать (переночую), усидчИвый (-чив-). 2) вкрадчИвый (-чив-), юродИвый (слово-исключение с безударным суффиксом -ив-) — везде И. 3) алюминиЕвый (безудар. -ев-), сиденьИце (сущ. ср. рода с ударением на основе — суффикс -иц-). 4) застрЕвать (исключение с ударным -ва-), белИзна (неизменяемый суффикс -изн-). 5) худЕнький (-еньк-), врачЕвать (врачую) — везде Е.',
+hint: 'Во 2-м ряду запомните второе слово-исключение с безударным суффиксом -ив-: «юродИвый» (наряду с «милостИвый»).',
 },
 ];
 
