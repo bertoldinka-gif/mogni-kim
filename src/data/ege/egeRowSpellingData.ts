@@ -2316,7 +2316,6 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
           { template: 'н..илучший', expectedLetter: 'а' },
         ],
       },
-      [
   {
     id: 'ege-10-row-base-2',
     type: 'ege_row_spelling',
