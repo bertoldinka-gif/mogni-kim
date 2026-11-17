@@ -4291,7 +4291,7 @@ hint: 'В 4-м ряду запомните слова-исключения с б
           { template: 'волгоград..кий', expectedLetter: 'с' },
           { template: 'тунгус..кий', expectedLetter: 'с' },
         ],
-,
+        },
 ],
 correctRows: Array.of(3, 4, 5),
 ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
