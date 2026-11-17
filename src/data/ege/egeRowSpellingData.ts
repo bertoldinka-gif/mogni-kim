@@ -5305,4 +5305,304 @@ export const ege12RowQuestions: EgeRowSpellingQuestion[] = [
       'Верные ряды — 135. 1) чуЮт (чуять, I спр.), колЮщиеся (колоть, I спр.) — везде Ю. 2) неотъемлЕмый (от глагола отнять, I спр.), держИшься (держать, II спр. искл.). 3) затерЯнный (затерЯть → Я сохраняется), обидЯтся (обидеть, II спр. искл.) — везде Я. 4) грохочУщий (грохотать, I спр.), назначАт (назначИть, II спр.). 5) колышУтся (колыхать, I спр.), брызжУщий фонтан (брызгать — «метать капли», I спр.) — везде У.',
     hint: 'В 5-м ряду различайте «брызгать» (кропить, разбрасывать капли — I спр., «брызжУщий») и «брезжить» (про рассвет — разноспрягаемый глагол, поэтому брезжУщий, но брезжИт).',
   },
+    {
+    id: 'ege-12-row-base-8',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: '(родители) тревож..тся', expectedLetter: 'а' },
+          { template: '(автомобили) движ..тся', expectedLetter: 'у' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'выдел..шь (цветом)', expectedLetter: 'и' },
+          { template: 'просмотр..шь (фильм)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'постро..вшие (дом)', expectedLetter: 'и' },
+          { template: 'колебл..шься', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'завис..вший (от нас)', expectedLetter: 'е' },
+          { template: 'необита..мый (остров)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'щур..щийся (от солнца)', expectedLetter: 'я' },
+          { template: 'терп..щий (бедствие)', expectedLetter: 'я' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 4, 5),
+    ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 245. 1) тревожАтся (тревожИться, II спр.), движУтся (двигать, I спр.). 2) выделИшь (выделИть, II спр.), просмотрИшь (смотреть, II спр. искл.) — везде И. 3) построИвшие (построИть → -вш-), колеблЕшься (колебаться, I спр.). 4) зависЕвший (зависЕть → перед -вш- гласная инфинитива), необитаЕмый (обитать, I спр.) — везде Е. 5) щурЯщийся (щурИться, II спр.), терпЯщий (терпеть, II спр. искл.) — везде Я.',
+    hint: 'В действительных причастиях прошедшего времени с суффиксом -вш- («зависЕвший», «построИвшие») сохраняется гласная инфинитива.',
+  },
+  {
+    id: 'ege-12-row-base-9',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'проветр..шь (помещение)', expectedLetter: 'и' },
+          { template: 'замет..вший (ошибку)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'дорогосто..щие (препараты)', expectedLetter: 'я' },
+          { template: 'ла..щая (собака)', expectedLetter: 'ю' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пряч..шься', expectedLetter: 'е' },
+          { template: 'огранич..вший (расходы)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: '(они) держ..т (дома собак)', expectedLetter: 'а' },
+          { template: '(шнурки) развяж..тся', expectedLetter: 'у' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'довер..нное (лицо)', expectedLetter: 'е' },
+          { template: '(запечатлеть словами) увид..нное', expectedLetter: 'е' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 5),
+    ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 15. 1) проветрИшь (проветрИть, II спр.), заметИвший (заметИть → -вш-) — везде И. 2) дорогостоЯщие (стоИть, II спр.), лаЮщая (лаять, I спр.). 3) прячЕшься (прятаться, I спр.), ограничИвший (ограничИть → -вш-). 4) держАт (держать, II спр. искл.), развяжУтся (развязаться, I спр.). 5) доверЕнное (доверИть → -енн-), увидЕнное (увидЕть → гласная Е из инфинитива сохраняется) — везде Е.',
+    hint: 'В 5-м ряду в причастии «увидЕнное» сохраняется гласная Е инфинитива «увидЕть», а в «доверЕнное» гласная -и- глагола «доверИть» меняется на суффикс -енн-.',
+  },
+  {
+    id: 'ege-12-row-base-10',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'муч..мый (жаждой)', expectedLetter: 'и' },
+          { template: 'полощ..шь (бельё)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'разве..нные (сомнения)', expectedLetter: 'я' },
+          { template: 'отча..нный (крик)', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'стел..тся (туман)', expectedLetter: 'е' },
+          { template: 'несгиба..мая (воля)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: '(лица) сия..т (радостью)', expectedLetter: 'ю' },
+          { template: '(дежурные) помо..т (посуду)', expectedLetter: 'ю' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: '(дети) жмур..тся', expectedLetter: 'я' },
+          { template: '(спортсмены) бор..тся (за победу)', expectedLetter: 'ю' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3, 4),
+    ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 234. 1) мучИмый (от «мучИть», II спр.), полощЕшь (полоскать, I спр.). 2) развеЯнные (развеЯть → Я сохраняется), отчаЯнный (отчаЯться → Я сохраняется) — везде Я. 3) стелЕтся (стелить, I спр. искл.), несгибаЕмая (сгибать, I спр.) — везде Е. 4) сияЮт (сиять, I спр.), помоЮт (помыть, I спр.) — везде Ю. 5) жмурЯтся (жмурИться, II спр.), борЮтся (бороться, I спр.).',
+    hint: 'Вспомните глаголы-исключения I спряжения «брить, стелить» (в 3-м ряду «стелЕтся» пишется через Е).',
+  },
+  {
+    id: 'ege-12-row-base-11',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'бре..шься', expectedLetter: 'е' },
+          { template: 'крикн..шь', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'терп..щий (бедствие)', expectedLetter: 'я' },
+          { template: 'обла..нный (собакой)', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: '(травы) колыш..тся', expectedLetter: 'у' },
+          { template: '(дети) спряч..тся', expectedLetter: 'у' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'напомн..вший (о прошлом)', expectedLetter: 'и' },
+          { template: 'умнож..вший (на два)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'волну..щийся (отец)', expectedLetter: 'ю' },
+          { template: 'вер..щий (в добро)', expectedLetter: 'я' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 2, 3, 4),
+    ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 1234. 1) бреЕшься (брить, I спр. искл.), крикнЕшь (крикнуть, I спр.) — везде Е. 2) терпЯщий (терпеть, II спр. искл.), облаЯнный (облаЯть → Я сохраняется) — везде Я. 3) колышУтся (колыхать, I спр.), спрячУтся (спрятаться, I спр.) — везде У. 4) напомнИвший (напомнИть → -вш-), умножИвший (умножИть → -вш-) — везде И. 5) волнуЮщийся (волноваться, I спр.), верЯщий (верИть, II спр.).',
+    hint: 'В 1-м ряду глагол «брить» относится к исключениям I спряжения («бреЕшься»), а во 2-м — «терпеть» относится к исключениям II спряжения («терпЯщий»).',
+  },
+  {
+    id: 'ege-12-row-base-12',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'разве..шь (сомнения)', expectedLetter: 'е' },
+          { template: '(ветер) перемен..тся', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'сброш..нный (на землю)', expectedLetter: 'е' },
+          { template: 'несдерж..нный (человек)', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'ненавид..мый', expectedLetter: 'и' },
+          { template: 'требу..мые (правила)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: '(учителя) науч..т', expectedLetter: 'а' },
+          { template: '(звуки) слыш..тся', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пляш..щие (люди)', expectedLetter: 'у' },
+          { template: 'ищ..щий (правду)', expectedLetter: 'у' },
+        ],
+      },
+    ],
+    correctRows: Array.of(4, 5),
+    ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 45. 1) развеЕшь (развеять, I спр.), переменИтся (переменИться, II спр.). 2) сброшЕнный (сбросИть → -енн-), несдержАнный (сдержАть → А сохраняется). 3) ненавидИмый (ненавидеть, II спр. искл.), требуЕмые (требовать, I спр.). 4) научАт (научИть, II спр.), слышАтся (слышать, II спр. искл.) — везде А. 5) пляшУщие (плясать, I спр.), ищУщий (искать, I спр.) — везде У.',
+    hint: 'Во 2-м ряду различайте образование страдательных причастий: от глаголов на -ить пишем -енн- («сброшЕнный»), а от глаголов на -ать сохраняем А («несдержАнный»).',
+  },
+  {
+    id: 'ege-12-row-base-13',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 12,
+    topicTag: 'ЕГЭ · Задание 12',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'скоропорт..щиеся (продукты)', expectedLetter: 'я' },
+          { template: 'се..щий (пшеницу)', expectedLetter: 'ю' },
+        ],
+      },
+      {
+rowNumber: 2,
+words: [
+{ template: 'обид..шься', expectedLetter: 'и' },
+{ template: '(он всё) вытерп..т', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'дремл..щий', expectedLetter: 'ю' },
+{ template: 'завис..щий', expectedLetter: 'я' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'незыбл..мые (законы)', expectedLetter: 'е' },
+{ template: 'догоня..мый', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'ненавид..вший', expectedLetter: 'е' },
+{ template: '(он) смотр..т', expectedLetter: 'и' },
+],
+},
+],
+correctRows: Array.of(2, 4),
+ruleTitle: 'Личные окончания глаголов и суффиксы причастий (Задание 12 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 24. 1) скоропортЯщиеся (портИться, II спр.), сеЮщий (сеять, I спр.). 2) обидИшься (обидеть, II спр. искл.), вытерпИт (терпеть, II спр. искл.) — везде И. 3) дремлЮщий (дремать, I спр.), зависЯщий (зависеть, II спр. искл.). 4) незыблЕмые (зыбать, I спр.), догоняЕмый (догонять, I спр.) — везде Е. 5) ненавидЕвший (ненавидЕть → перед -вш- гласная Е инфинитива), смотрИт (смотреть, II спр. искл.).',
+hint: 'В 5-м ряду не путайте формы одного и того же глагола-исключения: в причастии прошедшего времени «ненавидЕвший» пишется Е (из инфинитива), а в настоящем времени — «ненавидИт» (II спряжение).',
+},
 ];
