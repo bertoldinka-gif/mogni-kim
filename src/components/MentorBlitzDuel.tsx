@@ -301,10 +301,10 @@ export const MentorBlitzDuel: React.FC<MentorBlitzDuelProps> = ({
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-white">
                   {won ? 'Ты могнул наставника!' : 'Наставник оказался быстрее'}
 {xpEarned > 0 && (
-              <span className="font-mono-num px-3.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/50 text-sm font-bold text-amber-200 w-fit">
-                +{xpEarned} XP
-              </span>
-            )}
+
++{xpEarned} XP
+
+)}
 {/* Final Duel Scoreboard */}
 
 
@@ -325,58 +325,43 @@ export const MentorBlitzDuel: React.FC<MentorBlitzDuelProps> = ({
 {accuracy}%
 
 
-            <span>Отвечено вопросов: {answeredCount}</span>
-            <span>Макс. серия: ×{maxStreak}</span>
-          </div>
+Отвечено вопросов: {answeredCount}
+Макс. серия: ×{maxStreak}
+{/* Mentor Reaction Card */}
 
-          {/* Mentor Reaction Card */}
-          <div className="p-4 rounded-xl bg-[#080B14]/85 border border-slate-800/80 flex items-center gap-4">
-            {activeMentor ? (
-              <MentorAvatar
-                mentor={activeMentor}
-                size="md"
-                ringTone={won ? 'emerald' : 'amber'}
-                mood={won ? 'mistake' : 'combo'}
-                reactionTrigger={1}
-              />
-            ) : (
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-900 ring-2 ring-violet-500/50 flex items-center justify-center shrink-0">
-                <LogoMark size={30} />
-              </div>
-            )}
-            <div className="min-w-0 space-y-1">
-              <div className="text-xs font-semibold text-slate-300">
-                {mentorName}
-              </div>
-              <p className="text-xs sm:text-sm text-slate-200 italic leading-relaxed">
-                «{endQuote}»
-              </p>
-            </div>
-          </div>
+{activeMentor ? (
+<MentorAvatar
+mentor={activeMentor}
+size="md"
+ringTone={won ? 'emerald' : 'amber'}
+mood={won ? 'mistake' : 'combo'}
+reactionTrigger={1}
+/>
+) : (
 
-          <div className="flex flex-wrap items-center justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onExit}
-              className="px-4 py-2.5 rounded-lg bg-[#080B14]/90 border border-slate-700 hover:border-slate-600 text-sm font-medium text-slate-200 transition-colors cursor-pointer"
-            >
-              Выйти в меню
-            </button>
-            <button
-              type="button"
-              onClick={resetDuel}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-violet-600 hover:from-amber-400 hover:to-violet-500 text-sm font-semibold text-white shadow-lg shadow-amber-950/30 transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Реванш!</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  const isLowTime = timeLeft < 10;
+
+)}
+
+
+{mentorName}
+
+
+«{endQuote}»
+
+
+Выйти в меню
+
+
+
+Реванш!
+
+
+
+
+);
+}
+const isLowTime = timeLeft < 10;
 return (
 
 {/* Top Return & Mode Bar */}
