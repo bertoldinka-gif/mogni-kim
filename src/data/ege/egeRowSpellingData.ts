@@ -2324,7 +2324,7 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     hint: 'Обратите внимание на неизменяемые приставки (пред-, от-, под-, рас-, подо-, наи-) и правило И/Ы после приставок.',
   },
   {
-    id: 'ege-10-row-base-2',
+    id: 'ege-10-row-base-1',
     type: 'ege_row_spelling',
     difficulty: 'base',
     kimTaskNumber: 10,
@@ -2378,7 +2378,7 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     hint: 'Проверьте правило И/Ы после приставок (исключения для иноязычных приставок и меж-, сверх-), значения приставок ПРЕ-/ПРИ-, правило разделительного Ъ и правило приставок на -З/-С.'
   },
   {
-    id: 'ege-10-row-base-3',
+    id: 'ege-10-row-base-2',
     type: 'ege_row_spelling',
     difficulty: 'base',
     kimTaskNumber: 10,
@@ -2432,7 +2432,7 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     hint: 'Обратите внимание на разделительный Ъ, значения приставок ПРЕ-/ПРИ-, а также на правило И/Ы после приставок.'
   },
   {
-    id: 'ege-10-row-base-4',
+    id: 'ege-10-row-base-3',
     type: 'ege_row_spelling',
     difficulty: 'base',
     kimTaskNumber: 10,
@@ -2486,7 +2486,7 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     hint: 'Проверьте правописание приставок ПРЕ-/ПРИ-, приставок на -З/-С, а также разделительных Ъ и Ь.'
   },
   {
-    id: 'ege-10-row-base-5',
+    id: 'ege-10-row-base-4',
     type: 'ege_row_spelling',
     difficulty: 'base',
     kimTaskNumber: 10,
@@ -2540,7 +2540,7 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     hint: 'Обратите внимание на приставки ПРЕ-/ПРИ-, правило И/Ы после приставок, а также приставки ПРА-/ПРО-.'
   },
   {
-    id: 'ege-10-row-base-6',
+    id: 'ege-10-row-base-5',
     type: 'ege_row_spelling',
     difficulty: 'base',
     kimTaskNumber: 10,
@@ -2593,9 +2593,6 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
     ruleExplanation: 'Верные ряды — 1, 4. 1) раСчётливый, беСпринципный, череСчур (приставки на -С перед глухими согласными). 4) прЕинтересный (значение «очень»), прЕступник (близко к «пере-»), прЕкратить (близко к «пере-»). Ряд 2: рАспорядок (рос- без ударения), пОникли (по-), порАссуждать (рас- без ударения). Ряд 3: обЪект (Ъ), изЪездить (Ъ), сошЬют (Ь). Ряд 5: безЫсходность (Ы), суперИгра (иноязычная приставка), разЫскать (Ы).',
     hint: 'Вспомните правила написания приставок на -З/-С, значения приставок ПРЕ-/ПРИ-, а также правописание разделительных Ъ и Ь.'
   }
-    ],
-    hint: 'Обратите внимание на неизменяемые приставки (пред-, от-, под-, рас-, подо-, наи-) и правило И/Ы после приставок.',
-  },
 ];
 
 /**
