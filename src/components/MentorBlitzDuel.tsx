@@ -301,10 +301,10 @@ export const MentorBlitzDuel: React.FC<MentorBlitzDuelProps> = ({
                 <h2 className="font-display text-xl sm:text-2xl font-bold text-white">
                   {won ? 'Ты могнул наставника!' : 'Наставник оказался быстрее'}
 {xpEarned > 0 && (
-
-+{xpEarned} XP
-
-)}
+              <span className="font-mono-num px-3.5 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/50 text-sm font-bold text-amber-200 w-fit">
+                +{xpEarned} XP
+              </span>
+            )}
 {/* Final Duel Scoreboard */}
 
 
