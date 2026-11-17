@@ -2316,6 +2316,278 @@ export const ege10RowQuestions: EgeRowSpellingQuestion[] = [
           { template: 'н..илучший', expectedLetter: 'а' },
         ],
       },
+      [
+  {
+    id: 'ege-10-row-base-2',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: 'Укажите варианты ответов, в которых во всех словах одного ряда пропущена одна и та же буква. Запишите номера ответов.',
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'сверх..дея', expectedLetter: 'и' },
+          { template: 'под..скать', expectedLetter: 'ы' },
+          { template: 'из..мать', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'пр..брежный', expectedLetter: 'и' },
+          { template: 'пр..мудрый', expectedLetter: 'е' },
+          { template: 'пр..ступить (к делу)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'меж..гровой', expectedLetter: 'и' },
+          { template: 'мед..нститут', expectedLetter: 'и' },
+          { template: 'дез..нформация', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'бе..болезненно', expectedLetter: 'з' },
+          { template: 'и..бавиться', expectedLetter: 'з' },
+          { template: 'ра..жечь (костёр)', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'вз..ерошить (волосы)', expectedLetter: 'ъ' },
+          { template: 'неот..емлемая (часть)', expectedLetter: 'ъ' },
+          { template: 'с..естной', expectedLetter: 'ъ' },
+        ],
+      },
+    ],
+    correctRows: [3, 5],
+    ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ)',
+    ruleExplanation: 'Верные ряды — 3, 5. 3) межИгровой (после меж- буква И не меняется на Ы), медИнститут (после гласной), дезИнформация (после иноязычной приставки дез-). 5) взЪерошить, неотЪемлемая, сЪестной (разделительный Ъ после приставок на согласную перед Е, Ё, Ю, Я). Ряд 1: сверхИдея (И), подЫскать (Ы), изЫмать (Ы). Ряд 2: прИбрежный (И), прЕмудрый (Е), прИступить (И). Ряд 4: беЗболезненно (З), иЗбавиться (З), раСжечь (С).',
+    hint: 'Проверьте правило И/Ы после приставок (исключения для иноязычных приставок и меж-, сверх-), значения приставок ПРЕ-/ПРИ-, правило разделительного Ъ и правило приставок на -З/-С.'
+  },
+  {
+    id: 'ege-10-row-base-3',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: 'Укажите варианты ответов, в которых во всех словах одного ряда пропущена одна и та же буква. Запишите номера ответов.',
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'от..бравший', expectedLetter: 'о' },
+          { template: 'под..двинуть', expectedLetter: 'о' },
+          { template: 'нед..работанный', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'в..юга', expectedLetter: 'ъ' },
+          { template: 'в..ехать', expectedLetter: 'ъ' },
+          { template: 'под..езд', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'и..пуганный', expectedLetter: 'с' },
+          { template: 'не..гибаемый', expectedLetter: 'с' },
+          { template: 'бе..характерный', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'беспр..станный', expectedLetter: 'е' },
+          { template: '(камень) пр..ткновения', expectedLetter: 'е' },
+          { template: 'пр..мудрость', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пред..юльский', expectedLetter: 'ъ' },
+          { template: 'без..скусный', expectedLetter: 'ы' },
+          { template: 'меж..здательский', expectedLetter: 'и' },
+        ],
+      },
+    ],
+    correctRows: [2, 4],
+    ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ)',
+    ruleExplanation: 'Верные ряды — 2, 4. 2) вЪюга, вЪехать, подЪезд (разделительный Ъ после приставок на согласную перед Е, Ё, Ю, Я). 4) беспрЕстанный, прЕткновения, прЕмудрость (приставка ПРЕ- в значении «очень» или близка к «пере-»). Ряд 1: Отобрать, подОдвинуть, недОработанный (приставки ОТ-, ПОДО-, НЕДО-). Ряд 3: иСпуганный, неСгибаемый, беСхарактерный (приставки на -С перед глухими). Ряд 5: предЪюльский (Ъ), безЫскусный (Ы), межИздательский (И).',
+    hint: 'Обратите внимание на разделительный Ъ, значения приставок ПРЕ-/ПРИ-, а также на правило И/Ы после приставок.'
+  },
+  {
+    id: 'ege-10-row-base-4',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: 'Укажите варианты ответов, в которых во всех словах одного ряда пропущена одна и та же буква. Запишите номера ответов.',
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пре..полагать', expectedLetter: 'д' },
+          { template: 'на..рёберный', expectedLetter: 'д' },
+          { template: 'по..палить', expectedLetter: 'д' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'и..траченный', expectedLetter: 'с' },
+          { template: 'ра..чищенный', expectedLetter: 'с' },
+          { template: 'бе..хозный', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пр..ображённый', expectedLetter: 'е' },
+          { template: 'пр..неприятный', expectedLetter: 'е' },
+          { template: 'пр..града', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'пост..ндустриальный', expectedLetter: 'и' },
+          { template: 'из..сканность', expectedLetter: 'ы' },
+          { template: 'под..тоженный', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'с..ёмщик', expectedLetter: 'ъ' },
+          { template: 'суб..ект', expectedLetter: 'ъ' },
+          { template: 'конс..ерж', expectedLetter: 'ъ' },
+        ],
+      },
+    ],
+    correctRows: [2, 3],
+    ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ)',
+    ruleExplanation: 'Верные ряды — 2, 3. 2) иСтраченный, раСчищенный, беСхозный (приставки на -С перед глухими согласными). 3) прЕображённый (близко к «пере-»), прЕнеприятный (значение «очень»), прЕграда (близко к «пере-»). Ряд 1: преДполагать (пред-), наДрёберный (над-), поДпалить (под-). Ряд 4: постИндустриальный (иноязычная приставка), изЫсканность (Ы), подЫтоженный (Ы). Ряд 5: сЪёмщик (Ъ), субЪект (Ъ), консЬерж (Ь).',
+    hint: 'Проверьте правописание приставок ПРЕ-/ПРИ-, приставок на -З/-С, а также разделительных Ъ и Ь.'
+  },
+  {
+    id: 'ege-10-row-base-5',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: 'Укажите варианты ответов, в которых во всех словах одного ряда пропущена одна и та же буква. Запишите номера ответов.',
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'сверх..зящный', expectedLetter: 'и' },
+          { template: 'под..тожить', expectedLetter: 'ы' },
+          { template: 'вз..мание (штрафа)', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'с..язвить', expectedLetter: 'ъ' },
+          { template: 'об..яснение', expectedLetter: 'ъ' },
+          { template: 'трёх..язычный', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'непр..одолимый', expectedLetter: 'е' },
+          { template: 'пр..даваться (мечтам)', expectedLetter: 'е' },
+          { template: 'пр..успевающий', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'бе..шовный', expectedLetter: 'с' },
+          { template: 'во..противиться', expectedLetter: 'с' },
+          { template: 'не..балансированный', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..отцы', expectedLetter: 'а' },
+          { template: 'пр..редить', expectedLetter: 'о' },
+          { template: 'пр..дедушка', expectedLetter: 'а' },
+        ],
+      },
+    ],
+    correctRows: [2, 4],
+    ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ)',
+    ruleExplanation: 'Верные ряды — 2, 4. 2) сЪязвить, обЪяснение, трёхЪязычный (разделительный Ъ после приставок на согласную перед Е, Ё, Ю, Я). 4) беСшовный, воСпротивиться, неСбалансированный (приставки на -С перед глухими согласными). Ряд 1: сверхИзящный (И), подЫтожить (Ы), взЫмание (Ы). Ряд 3: непрЕодолимый (Е), прЕдаваться (Е), прЕуспевающий (Е). Ряд 5: прАотцы (пра-), прОредить (про-), прАдедушка (пра-).',
+    hint: 'Обратите внимание на приставки ПРЕ-/ПРИ-, правило И/Ы после приставок, а также приставки ПРА-/ПРО-.'
+  },
+  {
+    id: 'ege-10-row-base-6',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: 'Укажите варианты ответов, в которых во всех словах одного ряда пропущена одна и та же буква. Запишите номера ответов.',
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'ра..чётливый', expectedLetter: 'с' },
+          { template: 'бе..принципный', expectedLetter: 'с' },
+          { template: 'чере..чур', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'р..спорядок', expectedLetter: 'а' },
+          { template: 'п..никли (цветы без воды)', expectedLetter: 'о' },
+          { template: 'пор..ссуждать', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'об..ект', expectedLetter: 'ъ' },
+          { template: 'из..ездить (всю землю)', expectedLetter: 'ъ' },
+          { template: 'сош..ют (костюм)', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'пр..интересный', expectedLetter: 'е' },
+          { template: 'пр..ступник', expectedLetter: 'е' },
+          { template: 'пр..кратить', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'без..сходность', expectedLetter: 'ы' },
+          { template: 'супер..гра', expectedLetter: 'и' },
+          { template: 'раз..скать', expectedLetter: 'ы' },
+        ],
+      },
+    ],
+    correctRows: [1, 4],
+    ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ)',
+    ruleExplanation: 'Верные ряды — 1, 4. 1) раСчётливый, беСпринципный, череСчур (приставки на -С перед глухими согласными). 4) прЕинтересный (значение «очень»), прЕступник (близко к «пере-»), прЕкратить (близко к «пере-»). Ряд 2: рАспорядок (рос- без ударения), пОникли (по-), порАссуждать (рас- без ударения). Ряд 3: обЪект (Ъ), изЪездить (Ъ), сошЬют (Ь). Ряд 5: безЫсходность (Ы), суперИгра (иноязычная приставка), разЫскать (Ы).',
+    hint: 'Вспомните правила написания приставок на -З/-С, значения приставок ПРЕ-/ПРИ-, а также правописание разделительных Ъ и Ь.'
+  }
+]
     ],
     correctRows: [1, 3],
     ruleTitle: 'Правописание приставок (Задание 10 ЕГЭ · Хард)',
