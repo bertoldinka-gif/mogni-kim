@@ -2799,6 +2799,256 @@ export const ege11RowQuestions: EgeRowSpellingQuestion[] = [
       'Верные ряды — 235. 2) затмЕвать, увещЕвать (исключения с ударным -ва-, пишется Е) — везде Е. 3) проповедОвать (проповедую), заведОвать (заведую) — везде О. 5) досытА, докраснА (приставка до- -> суффикс -а-) — везде А.',
     hint: 'Запомните слова-ловушки: «затмевать», «застревать», «увещевать», «намереваться».',
   },
+    {
+    id: 'ege-11-row-base-3',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'передёрг..вая', expectedLetter: 'и' },
+          { template: 'обессил..ть (врага)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ветр..ная (мельница)', expectedLetter: 'я' },
+          { template: 'плат..ной (шкаф)', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'матрос..кий', expectedLetter: 'к' },
+          { template: 'француз..кий', expectedLetter: 'к' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'собач..нка', expectedLetter: 'о' },
+          { template: '(нам) хорош..', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'разнос..ик', expectedLetter: 'ч' },
+          { template: 'бан..ик (работник бани)', expectedLetter: 'щ' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 2, 3, 4),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 1234. 1) передёргИвая (передёргиваю), обессилИть врага (переходный глагол: лишить сил кого-то) — везде И. 2) ветрЯная мельница (исключение с суффиксом -ян-), платЯной шкаф (-ян-) — везде Я. 3) матросСкий (основа на -с + -ск-), французСкий (основа на -з + -ск-) — везде К. 4) собачОнка (сущ., под ударением после шипящего О), хорошО (наречие, под ударением после шипящего О) — везде О. 5) разносЧик (после С пишем -чик-), банЩик (после Н пишем -щик-).',
+    hint: 'Вспомните переходность глаголов на -еть/-ить («обессилИть кого-то» — И), правило суффиксов -к-/-ск- и разницу между -чик- (после д, т, з, с, ж) и -щик-.',
+  },
+  {
+    id: 'ege-11-row-base-4',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'шеств..вать (по улице)', expectedLetter: 'о' },
+          { template: 'опазд..вать', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'глин..ный (кувшин)', expectedLetter: 'я' },
+          { template: 'ветр..ный (день)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'ускор..ли (темп)', expectedLetter: 'и' },
+          { template: 'бел..зна', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'вежл..вый', expectedLetter: 'и' },
+          { template: '(наш) кормил..ц', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'миндал..вый', expectedLetter: 'е' },
+          { template: 'продл..вать', expectedLetter: 'е' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 35. 1) шествОвать (шествую), опаздЫвать (опаздываю). 2) глинЯный (-ян-), ветрЕный (исключение). 3) ускорИли (перед -л- сохраняется гласная инфинитива ускорИть), белИзна (неизменяемый суффикс -изн-) — везде И. 4) вежлИвый (-лив-), кормилЕц (сущ. муж. рода с беглой гласной: кормильца). 5) миндалЕвый (безудар. -ев-), продлЕвать (ударный -ва- выпадает: продлИть — исключение с Е) — везде Е.',
+    hint: 'В 5-м ряду глагол «продлЕвать» относится к словам с ударным суффиксом -ва- (проверяем без -ва-: продлИть, но в «продлевать» пишется Е).',
+  },
+  {
+    id: 'ege-11-row-base-5',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'раздва..ваться', expectedLetter: 'и' },
+          { template: 'дымч..тый', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ливн..вый', expectedLetter: 'е' },
+          { template: 'овлад..вать', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'застенч..вый', expectedLetter: 'и' },
+          { template: 'застр..вать', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'недоум..вая', expectedLetter: 'е' },
+          { template: 'вермишел..вый', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: '(говяжья) туш..нка', expectedLetter: 'ё' },
+          { template: 'напряж..нный', expectedLetter: 'ё' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 4, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 245. 1) раздваИваться (раздваиваюсь), дымчАтый (-чат-). 2) ливнЕвый (безудар. -ев-), овладЕвать (ударный -ва-, овладЕть) — везде Е. 3) застенчИвый (-чив-), застрЕвать (слово-исключение с ударным -ва-). 4) недоумЕвая (недоумеваю), вермишелЕвый (безудар. -ев-) — везде Е. 5) тушЁнка (отглагольное сущ., пишем Ё), напряжЁнный (причастие, после шипящих в суффиксе пишем Ё) — везде Ё.',
+    hint: 'В 5-м ряду оба слова образованы от глаголов («тушить», «напрячь»), поэтому после шипящих в суффиксах пишется Ё.',
+  },
+  {
+    id: 'ege-11-row-base-6',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'студенч..ство', expectedLetter: 'е' },
+          { template: 'масл..нистое (вещество)', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'недооцен..вать', expectedLetter: 'и' },
+          { template: 'опрометч..во', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'привередл..вый', expectedLetter: 'и' },
+          { template: 'затверд..вающий', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'навед..ваться', expectedLetter: 'ы' },
+          { template: 'собесед..вание', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'дымч..тый', expectedLetter: 'а' },
+          { template: 'издавн..', expectedLetter: 'а' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 5),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 25. 1) студенчЕство (суффикс -еств-), маслЯнистое (от «маслЯный» — пропитанное маслом). 2) недооценИвать (недооцениваю), опрометчИво (от «опрометчИвый» с суффиксом -чив-) — везде И. 3) привередлИвый (-лив-), затвердЕвающий (затвердЕть). 4) наведЫваться (наведываюсь), собеседОвание (от «собеседОвать» — собеседую). 5) дымчАтый (-чат-), издавнА (приставка из- + окно → из окнА) — везде А.',
+    hint: 'В 1-м ряду различайте «маслЯнистый» (содержащий масло — Я) и «маслЕный» (намазанный маслом — Е).',
+  },
+  {
+    id: 'ege-11-row-base-7',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 11,
+    topicTag: 'ЕГЭ · Задание 11',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'хитр..цы', expectedLetter: 'е' },
+          { template: 'завистл..вый', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'серебр..ный', expectedLetter: 'я' },
+          { template: 'раста..ли', expectedLetter: 'я' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'реч..вой (этикет)', expectedLetter: 'е' },
+          { template: 'расстра..ваться', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'проветр..вать', expectedLetter: 'и' },
+          { template: 'влюбч..вость', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'развед..вательный', expectedLetter: 'ы' },
+          { template: '(прийти) засветл..', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 4),
+    ruleTitle: 'Суффиксы разных частей речи (Задание 11 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 24. 1) хитрЕцы (сущ. муж. рода с беглой гласной: хитреца), завистлИвый (-лив-). 2) серебрЯный (-ян-), растаЯли (перед -л- сохраняется гласная инфинитива растаЯть) — везде Я. 3) речЕвой (безудар. -ев-), расстраИваться (расстраиваюсь). 4) проветрИвать (проветриваю), влюбчИвость (от «влюбчИвый» с суффиксом -чив-) — везде И. 5) разведЫвательный (от «разведЫвать» — разведываю), засветлО (приставка за- + окно → за окнО).',
+    hint: 'В 2-м ряду глагол «растаЯли» проверяется по инфинитиву «растаЯть», а в 5-м наречие «засветлО» проверяется правилом окна («за окнО»).',
+  },
 ];
 
 /**
