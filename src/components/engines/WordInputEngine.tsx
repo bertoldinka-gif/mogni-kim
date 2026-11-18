@@ -578,14 +578,26 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     const matchedNums = new Set(getTask21MatchedNumbers());
     const blocks = passage.split(/(?=\(\d+\))/g);
 
-    return blocks.map((block, bIdx) => {
+        return blocks.map((block, bIdx) => {
       const numMatch = block.match(/^\((\d+)\)/);
-      const sentNum = numMatch ? numMatch.slice(1, 2).join('') : `b${bIdx}`;
+      const sentNum = numMatch ? numMatch[1] : `b${bIdx}`;
       const isSentenceMatched = Boolean(numMatch) && matchedNums.has(sentNum);
-      const tokens = block.split(/(\s+)/);
+      const bodyText = numMatch ? block.slice(numMatch[0].length) : block;
+      const tokens = bodyText.split(/(\s+)/);
 
       return (
         <React.Fragment key={`t21-blk-${bIdx}`}>
+          {numMatch && (
+            <span
+              className={`inline-block mr-0.5 px-1.5 py-0.5 rounded font-mono-num text-xs font-bold transition-colors ${
+                isSentenceMatched
+                  ? 'bg-emerald-500/30 border border-emerald-400 text-emerald-200 shadow-sm'
+                  : 'text-violet-300'
+              }`}
+            >
+              {numMatch[0]}
+            </span>
+          )}
           {tokens.map((tok, tIdx) => {
             if (!tok) return null;
             if (/^\s+$/.test(tok)) {
@@ -593,21 +605,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                 <React.Fragment key={`t21-sp-${bIdx}-${tIdx}`}>
                   {tok}
                 </React.Fragment>
-              );
-            }
-
-            if (tIdx === 0 && numMatch) {
-              return (
-                <span
-                  key={`t21-num-${bIdx}`}
-                  className={`inline-block mr-1 px-1.5 py-0.5 rounded font-mono-num text-xs font-bold transition-colors ${
-                    isSentenceMatched
-                      ? 'bg-emerald-500/30 border border-emerald-400 text-emerald-200 shadow-sm'
-                      : 'text-violet-300'
-                  }`}
-                >
-                  {tok}
-                </span>
               );
             }
 
