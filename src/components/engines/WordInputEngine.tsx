@@ -143,7 +143,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   const [wordMarks, setWordMarks] = useState<
     Record<string, Exclude<MarkerTool, 'none'>>
   >({});
-  const [sentenceRules, setSentenceRules] = useState<Record<string, string>>({});
+    const [sentenceRules, setSentenceRules] = useState<Record<string, string[]>>({});
   const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -386,7 +386,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       );
     });
   };
-  const isTask21Punctuation =
+    const isTask21Punctuation =
     question.kimTaskNumber === 21 ||
     (question.topicTag || '').toLowerCase().includes('задание 21');
 
@@ -400,7 +400,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       'Подлежащее — сказуемое',
       'Приложение',
       'БСП',
-      'Вводное / вставка',
+      'Вставная конструкция',
       'Неполное',
       'Обобщающее слово',
       'Прямая речь',
@@ -410,7 +410,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       targetSign = 'colon';
       signTitle = 'ДВОЕТОЧИЕ (:)';
       rulePresets = [
-        'БСП (причина / пояснение)',
+        'БСП',
         'Обобщающее слово',
         'Прямая речь',
       ];
@@ -422,10 +422,14 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
         'ССП',
         'СПП',
         'БСП',
-        'Причастный / деепр.',
+        'Об. определение',
+        'Деепричастный об.',
         'Приложение',
-        'Вводное / обращение',
-        'Уточнение / сравнение',
+        'Вводное',
+        'Сравн. оборот',
+        'Уточн. обст.',
+        'Об. дополнение',
+        'Обращение',
       ];
     }
 
@@ -451,11 +455,11 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
 
     const ruleGroups: Record<string, string[]> = {};
     matchingSentences.forEach(({ num }) => {
-      const r = sentenceRules[num];
-      if (r) {
+      const rules = sentenceRules[num] ?? [];
+      rules.forEach((r) => {
         if (!ruleGroups[r]) ruleGroups[r] = [];
         ruleGroups[r].push(num);
-      }
+      });
     });
 
     const matchedGroupEntry = Object.entries(ruleGroups).find(
@@ -463,7 +467,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     );
 
     const hasAnyBoardInput =
-      Object.keys(sentenceRules).length > 0 ||
+      Object.values(sentenceRules).some((arr) => arr.length > 0) ||
       Object.values(sentenceNotes).some((v) => v.trim().length > 0);
 
     return (
@@ -475,7 +479,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
               <span className="text-amber-300 font-bold">{signTitle}</span>:
             </span>
             <span className="text-[11px] text-slate-400">
-              выберите правило для каждого номера — совпадения подсветятся
+              отметьте все правила в предложении — совпадения подсветятся
             </span>
           </div>
 
@@ -511,9 +515,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
 
         <div className="space-y-2">
           {matchingSentences.map(({ num, text }) => {
-            const chosenRule = sentenceRules[num] || '';
-            const isMatched =
-              Boolean(chosenRule) && (ruleGroups[chosenRule]?.length ?? 0) >= 2;
+            const chosenRules = sentenceRules[num] ?? [];
+            const isMatched = chosenRules.some(
+              (r) => (ruleGroups[r]?.length ?? 0) >= 2
+            );
 
             return (
               <div
@@ -556,25 +561,25 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   {rulePresets.map((preset) => {
-                    const active = chosenRule === preset;
+                    const active = chosenRules.includes(preset);
+                    const presetMatched =
+                      active && (ruleGroups[preset]?.length ?? 0) >= 2;
                     return (
                       <button
                         key={preset}
                         type="button"
                         onClick={() =>
                           setSentenceRules((prev) => {
-                            const next = { ...prev };
-                            if (next[num] === preset) {
-                              delete next[num];
-                            } else {
-                              next[num] = preset;
-                            }
-                            return next;
+                            const current = prev[num] ?? [];
+                            const next = current.includes(preset)
+                              ? current.filter((item) => item !== preset)
+                              : [...current, preset];
+                            return { ...prev, [num]: next };
                           })
                         }
                         className={`px-2 py-0.5 rounded-md border text-[11px] font-medium transition-all cursor-pointer ${
                           active
-                            ? isMatched
+                            ? presetMatched
                               ? 'bg-emerald-500/25 border-emerald-400 text-emerald-100 font-semibold'
                               : 'bg-indigo-500/30 border-indigo-400 text-white font-semibold'
                             : 'bg-[#080B14]/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -592,6 +597,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       </div>
     );
   };
+
 
   const renderScratchpadToolbar = () => {
     if (!showScratchpad) return null;
