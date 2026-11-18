@@ -2978,6 +2978,1546 @@ ruleExplanation:
 'Верные ряды — 245. 1) непрИемлемый (запомнить с И), прИобнял (неполнота действия), прЕдъюбилейный (пред-). 2) иСследователь (перед глухим С), ниСходить (перед глухим Х), обеСцветить (перед глухим Ц) — везде С. 3) сЫмпровизировал (после русской приставки с- пишем Ы), педИнститут (сложносокращённое слово, И сохраняется), контрИгра (после иноязычной приставки контр- И сохраняется). 4) обЪективный (Ъ после приставки об- перед Е), обЪявить (Ъ после приставки об- перед Я), трёхЪядерный (Ъ после числительного трёх- перед Я) — везде Ъ. 5) прИобрёл (присоединение), прИозёрный (близость), непрИглядный (запомнить с И) — везде И.',
 hint: 'В 3-м ряду помните правило: буква И сохраняется после иноязычных приставок («контрИгра», «суперИгра»), после приставок «меж-», «сверх-» и в сложносокращённых словах («педИнститут»).',
 },
+    {
+    id: 'ege-10-row-base-14',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..открыть', expectedLetter: 'и' },
+          { template: 'пр..стройка', expectedLetter: 'и' },
+          { template: 'пр..возмочь (самого себя)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ра..ширяться', expectedLetter: 'с' },
+          { template: 'ро..пись (на стене)', expectedLetter: 'с' },
+          { template: 'чере..полосица', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пост..нфарктный', expectedLetter: 'и' },
+          { template: 'вз..мать (плату)', expectedLetter: 'и' },
+          { template: 'мед..нститут', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'раз..ём (в телефоне)', expectedLetter: 'ъ' },
+          { template: 'двух..язычный', expectedLetter: 'ъ' },
+          { template: 'дет..ясли', expectedLetter: '-' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..славянский (язык)', expectedLetter: 'а' },
+          { template: 'пр..европейские (интересы)', expectedLetter: 'о' },
+          { template: 'прот..тип (героя)', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3),
+    ruleTitle: 'Правописание приставок, гласных Ы/И и разделительного Ъ (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 23. 1) прИоткрыть (неполнота действия), прИстройка (присоединение), прЕвозмочь (= пересилить). 2) раСширяться (перед глухим Ш), роСпись (перед глухим П), череСполосица (перед глухим П) — везде С. 3) постИнфарктный (после иноязычной приставки пост- И сохраняется), взИмать (исключение с И), медИнститут (сложносокращённое слово, И сохраняется) — везде И. 4) разЪём (Ъ после приставки раз- перед Ё), двухЪязычный (Ъ после числительного двух- перед Я), детясли (сложносокращённое слово, Ъ не пишется). 5) прАславянский (древность), прОевропейские (приставка про- в значении «сторонник»), протОтип (часть прото-).',
+    hint: 'В 4-м ряду запомните: в сложносокращённых словах («детясли», «госязык») разделительный Ъ не пишется.',
+  },
+  {
+    id: 'ege-10-row-base-15',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'сверх..нвестиции', expectedLetter: 'и' },
+          { template: 'на..граться', expectedLetter: 'и' },
+          { template: 'вз..мание (платы)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'пр..задумался', expectedLetter: 'и' },
+          { template: 'пр..одоление', expectedLetter: 'е' },
+          { template: 'непр..ходящие (ценности)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'по..кладка', expectedLetter: 'д' },
+          { template: 'о..бойный', expectedLetter: 'т' },
+          { template: 'на..строчный', expectedLetter: 'д' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'под..брать', expectedLetter: 'о' },
+          { template: 'запр..кинуть', expectedLetter: 'о' },
+          { template: 'нед..стача', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..встать', expectedLetter: 'и' },
+          { template: 'пр..смотреться', expectedLetter: 'и' },
+          { template: 'пр..домовая (территория)', expectedLetter: 'и' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 4, 5),
+    ruleTitle: 'Правописание гласных Ы/И после приставок и приставок ПРЕ-/ПРИ- (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 145. 1) сверхИнвестиции (после приставки сверх- И сохраняется), наИграться (после приставки на гласную И сохраняется), взИмание (от исключения «взИмать» — пишем И) — везде И. 2) прИзадумался (неполнота действия), прЕодоление (= пересилить), непрЕходящие ценности (не переходящие, вечные). 3) поДкладка (неизменяемая под-), оТбойный (неизменяемая от-), наДстрочный (неизменяемая над-). 4) подОбрать (подо-), запрОкинуть (про-), недОстача (до-) — везде О. 5) прИвстать (неполнота действия), прИсмотреться (неполнота действия), прИдомовая (близость) — везде И.',
+    hint: 'Во 2-м ряду различайте омофоны: «непрЕходящие ценности» (вечные, не проходящие мимо — через Е) и «прИходящий вовремя» (через И).',
+  },
+  {
+    id: 'ege-10-row-base-16',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..увеличение', expectedLetter: 'е' },
+          { template: 'пр..рвать (полёт)', expectedLetter: 'е' },
+          { template: 'беспр..пятственно', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'не..данный (экзамен)', expectedLetter: 'с' },
+          { template: '..жатие', expectedLetter: 'с' },
+          { template: 'бе..вкусный', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'раз..скать (родственника)', expectedLetter: 'ы' },
+          { template: 'роз..грыш', expectedLetter: 'ы' },
+          { template: 'пред..нфарктный', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'друз..я', expectedLetter: 'ь' },
+          { template: 'лос..он', expectedLetter: 'ь' },
+          { template: 'кур..ёзный (случай)', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..верить (работу)', expectedLetter: 'о' },
+          { template: 'пр..ткнуть (иглой)', expectedLetter: 'о' },
+          { template: 'пр..поведник', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 3, 4, 5),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, гласной Ы после приставок и разделительного Ь (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 1345. 1) прЕувеличение (= очень), прЕрвать (= перервать), беспрЕпятственно (запомнить с Е) — везде Е. 2) неСданный (неизменяемая приставка с-), Сжатие (неизменяемая с-), беЗвкусный (перед звонким В пишем З). 3) разЫскать (после русской приставки раз- пишем Ы), розЫгрыш (после русской приставки роз- пишем Ы), предЫнфарктный (после русской приставки пред- пишем Ы) — везде Ы. 4) друзЬя, лосЬон, курЬёзный (разделительный Ь в корне перед Я, О, Ё) — везде Ь. 5) прОверить (про-), прОткнуть (про-), прОповедник (про-) — везде О.',
+    hint: 'Во 2-м ряду в слове «неСданный» две приставки: не- и неизменяемая приставка с- (приставки з- не бывает).',
+  },
+  {
+    id: 'ege-10-row-base-17',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..мкнуть', expectedLetter: 'и' },
+          { template: 'пр..слать', expectedLetter: 'и' },
+          { template: 'пр..говор', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'от..рвать', expectedLetter: 'о' },
+          { template: 'п..знавательный', expectedLetter: 'о' },
+          { template: 'под..браться', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'по..бородок', expectedLetter: 'д' },
+          { template: 'о..бросить', expectedLetter: 'т' },
+          { template: 'пре..сказать', expectedLetter: 'д' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'бе..звёздный', expectedLetter: 'з' },
+          { template: 'и..мельчить', expectedLetter: 'з' },
+          { template: 'бе..пробудный', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'под..язычный', expectedLetter: 'ъ' },
+          { template: 'об..ятия', expectedLetter: 'ъ' },
+          { template: 'из..ян', expectedLetter: 'ъ' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 2, 5),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, неизменяемых приставок и разделительного Ъ (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 125. 1) прИмкнуть (присоединение), прИслать (приближение), прИговор (запомнить с И) — везде И. 2) отОрвать (ото-), пОзнавательный (по-), подОбраться (подо-) — везде О. 3) поДбородок (неизменяемая под-), оТбросить (неизменяемая от-), преДсказать (неизменяемая пред-). 4) беЗзвёздный (перед звонким З), иЗмельчить (перед звонким М), беСпробудный (перед глухим П). 5) подЪязычный (Ъ после приставки под- перед Я), обЪятия (Ъ после приставки об- перед Я), изЪян (Ъ после исторической приставки из- перед Я) — везде Ъ.',
+    hint: 'В 5-м ряду запомните написание слова «изЪян» (пишется с разделительным Ъ перед Я).',
+  },
+  {
+    id: 'ege-10-row-base-18',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..дать (друга)', expectedLetter: 'е' },
+          { template: 'пр..бывать (в городе)', expectedLetter: 'е' },
+          { template: 'пр..пятствие', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: '(дать) ..дачу', expectedLetter: 'с' },
+          { template: 'не..гораемый', expectedLetter: 'с' },
+{ template: 'не..дешний', expectedLetter: 'з' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пред..стория', expectedLetter: 'ы' },
+{ template: 'меж..гровой', expectedLetter: 'и' },
+{ template: 'раз..скать', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'двух..ярусный', expectedLetter: 'ъ' },
+{ template: 'трёх..язычный', expectedLetter: 'ъ' },
+{ template: 'супер..ядро', expectedLetter: 'ъ' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'пр..язык', expectedLetter: 'а' },
+{ template: 'вр..ссыпную', expectedLetter: 'а' },
+{ template: 'пр..дедушка', expectedLetter: 'а' },
+],
+},
+],
+correctRows: Array.of(1, 4, 5),
+ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, З/С и разделительного Ъ (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 145. 1) прЕдать друга (= передать врагу), прЕбывать в городе (= находиться), прЕпятствие (запомнить с Е) — везде Е. 2) Сдача (неизменяемая с-), неСгораемый (неизменяемая с-), неЗдешний (буква З входит в корень слова «здесь»). 3) предЫстория (после русской приставки пред- пишем Ы), межИгровой (после приставки меж- И сохраняется), разЫскать (после русской приставки раз- пишем Ы). 4) двухЪярусный (Ъ после двух- перед Я), трёхЪязычный (Ъ после трёх- перед Я), суперЪядро (Ъ после иноязычной приставки супер- перед Я) — везде Ъ. 5) прАязык (древность), врАссыпную (приставка рас-), прАдедушка (прямое родство) — везде А.',
+hint: 'Во 2-м ряду в слове «неЗдешний» корень «здеш-» (от «здесь»), поэтому пишется буква З, а в словах «сдача» и «несгораемый» — неизменяемая приставка с-.',
+},
+{
+id: 'ege-10-row-base-19',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'и..подлобья', expectedLetter: 'с' },
+{ template: 'мирово..зрение', expectedLetter: 'з' },
+{ template: 'ра..жать', expectedLetter: 'з' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'нед..верие', expectedLetter: 'о' },
+{ template: 'поз..вчера', expectedLetter: 'а' },
+{ template: 'пр..славяне', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'без..нвентарный', expectedLetter: 'ы' },
+{ template: 'под..тожить', expectedLetter: 'ы' },
+{ template: 'сверх..скусный', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'с..ёжиться', expectedLetter: 'ъ' },
+{ template: 'необ..езженный', expectedLetter: 'ъ' },
+{ template: 'от..единить', expectedLetter: 'ъ' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'Пр..уралье', expectedLetter: 'и' },
+{ template: 'пр..танцовывать', expectedLetter: 'и' },
+{ template: 'пр..поднять', expectedLetter: 'и' },
+],
+},
+],
+correctRows: Array.of(4, 5),
+ruleTitle: 'Правописание разделительного Ъ и приставки ПРИ- (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 45. 1) иСподлобья (перед глухим П), мировоЗзрение (перед звонким З), раЗжать (перед звонким Ж). 2) недОверие (до-), позАвчера (за-), прАславяне (пра-). 3) безЫнвентарный (после без- пишем Ы), подЫтожить (после под- пишем Ы), сверхИскусный (после приставки сверх- И сохраняется). 4) сЪёжиться (Ъ после приставки с- перед Ё), необЪезженный (Ъ после об- перед Е), отЪединить (Ъ после от- перед Е) — везде Ъ. 5) ПрИуралье (близость), прИтанцовывать (сопутствующее действие), прИподнять (неполнота действия) — везде И.',
+hint: 'В 3-м ряду помните исключения из правила замены И на Ы после приставок на согласную: после «меж-» и «сверх-» всегда пишется И («сверхИскусный»).',
+},
+    {
+    id: 'ege-10-row-base-20',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'фотооб..ектив', expectedLetter: 'ъ' },
+          { template: 'р..яный', expectedLetter: 'ь' },
+          { template: 'в..езжать', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'и..брать', expectedLetter: 'з' },
+          { template: 'ни..послать', expectedLetter: 'с' },
+          { template: 'ра..жечь', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'с..змала', expectedLetter: 'ы' },
+          { template: 'сверх..зысканный', expectedLetter: 'и' },
+          { template: 'об..ск', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'пр..злой', expectedLetter: 'е' },
+          { template: 'пр..рвать', expectedLetter: 'е' },
+          { template: '(камень) пр..ткновения', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'под..скать', expectedLetter: 'ы' },
+          { template: 'с..митировать', expectedLetter: 'ы' },
+          { template: 'без..скусный', expectedLetter: 'ы' },
+        ],
+      },
+    ],
+    correctRows: Array.of(4, 5),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, гласных Ы/И и разделительных Ъ и Ь (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 45. 1) фотообЪектив (Ъ после приставки об- перед Е), рЬяный (разделительный Ь в корне перед Я), вЪезжать (Ъ после приставки в- перед Е). 2) иЗбрать (перед звонким Б), ниСпослать (перед глухим П), раЗжечь (перед звонким Ж). 3) сЫзмала (после русской приставки с- пишем Ы), сверхИзысканный (после приставки сверх- И сохраняется), обЫск (после русской приставки об- пишем Ы). 4) прЕзлой (= очень), прЕрвать (= перервать), камень прЕткновения (запомнить с Е) — везде Е. 5) подЫскать (после под- пишем Ы), сЫмитировать (после с- пишем Ы), безЫскусный (после без- пишем Ы) — везде Ы.',
+    hint: 'В 1-м ряду слово «рЬяный» пишется с разделительным Ь в корне перед Я, а в 4-м запомните фразеологизм «камень прЕткновения» (через Е).',
+  },
+  {
+    id: 'ege-10-row-base-21',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..интересный', expectedLetter: 'е' },
+          { template: 'пр..успеть', expectedLetter: 'е' },
+          { template: 'пр..творить (в жизнь)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'р..спорядок', expectedLetter: 'а' },
+          { template: 'поз..горать', expectedLetter: 'а' },
+          { template: 'под..звать', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'об..ект', expectedLetter: 'ъ' },
+          { template: 'из..ездить', expectedLetter: 'ъ' },
+          { template: 'фел..етонный', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'ра..чётливый', expectedLetter: 'с' },
+          { template: '..бивчивый (рассказ)', expectedLetter: 'с' },
+          { template: 'чере..чур', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'без..сходность', expectedLetter: 'ы' },
+          { template: 'супер..гра', expectedLetter: 'и' },
+          { template: 'раз..скать', expectedLetter: 'ы' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 4),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, З/С и разделительных Ъ и Ь (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 14. 1) прЕинтересный (= очень), прЕуспеть (= очень, достичь успеха), прЕтворить в жизнь (= воплотить) — везде Е. 2) рАспорядок (безударная приставка рас-), позАгорать (за-), подОзвать (подо-). 3) обЪект (Ъ после об- перед Е), изЪездить (Ъ после из- перед Е), фелЬетонный (разделительный Ь в корне перед Е). 4) раСчётливый (перед глухим Ч пишется одна С), Сбивчивый (неизменяемая с-), череСчур (перед глухим Ч) — везде С. 5) безЫсходность (после без- пишем Ы), суперИгра (после иноязычной приставки супер- И сохраняется), разЫскать (после раз- пишем Ы).',
+    hint: 'В 4-м ряду в слове «раСчётливый» корень «чёт» (ср. «вычет», «прочёт»), поэтому перед Ч пишется одна буква С.',
+  },
+  {
+    id: 'ege-10-row-base-22',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..ступить (к занятиям)', expectedLetter: 'и' },
+          { template: 'пр..верженец', expectedLetter: 'и' },
+          { template: 'непр..емлемый', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'от..бравший', expectedLetter: 'о' },
+          { template: 'под..двинуть', expectedLetter: 'о' },
+          { template: 'пр..язык', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'сверх..естественный', expectedLetter: 'ъ' },
+          { template: 'трёх..язычный', expectedLetter: 'ъ' },
+          { template: 'с..естной', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'меж..нтернатский', expectedLetter: 'и' },
+          { template: 'пред..нсультное (состояние)', expectedLetter: 'ы' },
+          { template: 'вз..скать', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..обладать', expectedLetter: 'е' },
+          { template: 'пр..стол', expectedLetter: 'е' },
+          { template: 'пр..творить (в жизнь)', expectedLetter: 'е' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 3, 5),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ- и разделительного Ъ (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 135. 1) прИступить к занятиям (начать действие), прИверженец (приближение/присоединение), непрИемлемый (запомнить с И) — везде И. 2) отОбравший (ото-), подОдвинуть (подо-), прАязык (приставка пра- в значении древности). 3) сверхЪестественный (Ъ после приставки сверх- перед Е), трёхЪязычный (Ъ после трёх- перед Я), сЪестной (Ъ после с- перед Е) — везде Ъ. 4) межИнтернатский (после меж- И сохраняется), предЫнсультное (после пред- пишем Ы), взЫскать (после вз- пишем Ы). 5) прЕобладать (= перевешивать), прЕстол (запомнить с Е), прЕтворить в жизнь (= воплотить) — везде Е.',
+    hint: 'В 1-м ряду различайте омофоны: «прИступить к делу» (начать — через И) и «прЕступить закон» (переступить — через Е).',
+  },
+  {
+    id: 'ege-10-row-base-23',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пред..стория', expectedLetter: 'ы' },
+          { template: 'меж..нститутский', expectedLetter: 'и' },
+          { template: 'без..мянный', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'в..едливый (сторож)', expectedLetter: 'ъ' },
+          { template: 'р..яный (поклонник)', expectedLetter: 'ь' },
+          { template: 'об..ёмный', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'бе..вкусный', expectedLetter: 'з' },
+          { template: 'мирово..зрение', expectedLetter: 'з' },
+          { template: 'и..желта-красный', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'пр..людно (высказаться)', expectedLetter: 'и' },
+          { template: 'пр..емственность', expectedLetter: 'е' },
+          { template: 'пр..рвать (общение)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..славянский', expectedLetter: 'а' },
+          { template: 'р..зыскать', expectedLetter: 'а' },
+          { template: 'н..дкусанное (яблоко)', expectedLetter: 'а' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 5),
+    ruleTitle: 'Правописание приставок на З/С и безударных гласных в приставках (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 35. 1) предЫстория (Ы), межИнститутский (И после меж-), безЫмянный (Ы). 2) вЪедливый (Ъ после в- перед Е), рЬяный (Ь в корне перед Я), обЪёмный (Ъ после об- перед Ё). 3) беЗвкусный (перед звонким В), мировоЗзрение (перед звонким З), иЗжелта-красный (перед звонким Ж) — везде З. 4) прИлюдно (при людях), прЕемственность (= передача), прЕрвать (= перервать). 5) прАславянский (пра-), рАзыскать (безударная приставка раз-), нАдкусанное (над-) — везде А.',
+    hint: 'В 5-м ряду в слове «рАзыскать» пишется безударная приставка раз- с буквой А (под ударением пишется О: «рОзыск»).',
+  },
+  {
+    id: 'ege-10-row-base-24',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: '(в) пре..дверии', expectedLetter: 'д' },
+          { template: '(чашка) на..треснула', expectedLetter: 'д' },
+          { template: 'по..пустить (близко)', expectedLetter: 'д' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'бе..шовный', expectedLetter: 'с' },
+          { template: 'не..кончаемый', expectedLetter: 'с' },
+          { template: 'ра..щедриться', expectedLetter: 'с' },
+        ],
+      },
+      {
+rowNumber: 3,
+words: [
+{ template: 'трёх..мпульсный', expectedLetter: 'и' },
+{ template: 'супер..гра', expectedLetter: 'и' },
+{ template: 'вз..скание', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'интерв..юировать', expectedLetter: 'ь' },
+{ template: 'барел..еф', expectedLetter: 'ь' },
+{ template: 'п..янящий', expectedLetter: 'ь' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'пр..сытиться', expectedLetter: 'е' },
+{ template: 'непр..ступная (крепость)', expectedLetter: 'и' },
+{ template: 'пр..скорбный', expectedLetter: 'е' },
+],
+},
+],
+correctRows: Array.of(1, 2, 4),
+ruleTitle: 'Правописание неизменяемых приставок, приставок на З/С и разделительного Ь (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 124. 1) преДдверии (неизменяемая пред-), наДтреснула (неизменяемая над-), поДпустить (неизменяемая под-) — везде Д. 2) беСшовный (перед глухим Ш), неСкончаемый (неизменяемая с-), раСщедриться (перед глухим Щ) — везде С. 3) трёхИмпульсный (в сложных словах после числительных И сохраняется), суперИгра (после иноязычной приставки супер- И сохраняется), взЫскание (после русской приставки вз- пишем Ы). 4) интервЬюировать, барелЬеф, пЬянящий (разделительный Ь в корне перед Ю, Е, Я) — везде Ь. 5) прЕсытиться (= очень), непрИступная (нельзя подступиться), прЕскорбный (= очень).',
+hint: 'В 3-м ряду в слове «трёхИмпульсный» (сложное слово с первой частью «трёх-») начальная буква И второго корня сохраняется.',
+},
+{
+id: 'ege-10-row-base-25',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'от..скать', expectedLetter: 'ы' },
+{ template: 'транс..ранский', expectedLetter: 'и' },
+{ template: 'пред..нфарктный', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'о..дающий', expectedLetter: 'т' },
+{ template: 'на..бровная (дуга)', expectedLetter: 'д' },
+{ template: 'пре..положительно', expectedLetter: 'д' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'и..тратить', expectedLetter: 'с' },
+{ template: 'и..чезать', expectedLetter: 'с' },
+{ template: 'и..подтишка', expectedLetter: 'с' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'пр..пираться (с родителями)', expectedLetter: 'е' },
+{ template: 'пр..болел', expectedLetter: 'и' },
+{ template: 'пр..ходящий (на время)', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'от..явленный (негодяй)', expectedLetter: 'ъ' },
+{ template: 'под..язычная (железа)', expectedLetter: 'ъ' },
+{ template: 'меж..ярусное (пространство)', expectedLetter: 'ъ' },
+],
+},
+],
+correctRows: Array.of(3, 5),
+ruleTitle: 'Правописание приставок на З/С и разделительного Ъ (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 35. 1) отЫскать (после от- пишем Ы), трансИранский (после иноязычной приставки транс- И сохраняется), предЫнфарктный (после пред- пишем Ы). 2) оТдающий (неизменяемая от-), наДбровная (неизменяемая над-), преДположительно (неизменяемая пред-). 3) иСтратить (перед глухим Т), иСчезать (перед глухим Ч), иСподтишка (перед глухим П) — везде С. 4) прЕпираться (запомнить с Е), прИболел (неполнота действия), прИходящий на время (приближение). 5) отЪявленный (Ъ после приставки от- перед Я), подЪязычная (Ъ после под- перед Я), межЪярусное (Ъ после меж- перед Я) — везде Ъ.',
+hint: 'В 4-м ряду запомните написание глагола «прЕпираться» (спорить, ссориться — через Е).',
+},
+{
+id: 'ege-10-row-base-26',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'пред..стория', expectedLetter: 'ы' },
+{ template: 'пост..ндустриальный', expectedLetter: 'и' },
+{ template: 'сверх..нтенсивный', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'бе..церемонно', expectedLetter: 'с' },
+{ template: 'не..добровать', expectedLetter: 'с' },
+{ template: 'и..купление', expectedLetter: 'с' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пр..чудливый', expectedLetter: 'и' },
+{ template: 'пр..вередливый', expectedLetter: 'и' },
+{ template: 'непр..ступность (девушки)', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'трёх..этажный', expectedLetter: '-' },
+{ template: 'под..езд', expectedLetter: 'ъ' },
+{ template: 'сверх..естественный', expectedLetter: 'ъ' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'р..зыскивать', expectedLetter: 'а' },
+{ template: 'пр..отцы', expectedLetter: 'а' },
+{ template: 'поз..вчера', expectedLetter: 'а' },
+],
+},
+],
+correctRows: Array.of(2, 3, 5),
+ruleTitle: 'Правописание приставок на З/С, ПРИ- и безударных гласных в приставках (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 235. 1) предЫстория (Ы), постИндустриальный (И после иноязычной приставки пост-), сверхИнтенсивный (И после сверх-). 2) беСцеремонно (перед глухим Ц), неСдобровать (неизменяемая с-), иСкупление (перед глухим К) — везде С. 3) прИчудливый (запомнить с И), прИвередливый (запомнить с И), непрИступность (нельзя подступиться) — везде И. 4) трёхэтажный (перед Э разделительный Ъ не пишется), подЪезд (Ъ после под- перед Е), сверхЪестественный (Ъ после сверх- перед Е). 5) рАзыскивать (безударная приставка раз-), прАотцы (приставка пра- в значении прямого родства), позАвчера (за-) — везде А.',
+hint: 'В 4-м ряду перед буквой Э («трёхэтажный», «сэкономить») разделительный Ъ никогда не пишется.',
+},
+    {
+    id: 'ege-10-row-base-27',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'об..ятия', expectedLetter: 'ъ' },
+          { template: 'в..юга', expectedLetter: 'ь' },
+          { template: 'ад..ютант', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'пр..зидент', expectedLetter: 'е' },
+          { template: 'пр..стиж', expectedLetter: 'е' },
+          { template: 'пр..бывать (в недоумении)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'бе..ценно', expectedLetter: 'с' },
+          { template: '..добный', expectedLetter: 'с' },
+          { template: 'не..дешний', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'нед..варил', expectedLetter: 'о' },
+          { template: 'п..забыл', expectedLetter: 'о' },
+          { template: 'под..рвать', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..терпеться', expectedLetter: 'и' },
+          { template: 'пр..чуда', expectedLetter: 'и' },
+          { template: 'пр..граничный', expectedLetter: 'и' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 4, 5),
+    ruleTitle: 'Правописание приставок ПРЕ-/ПРИ-, неизменяемых приставок и разделительных Ъ и Ь (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 245. 1) обЪятия (Ъ после об- перед Я), вЬюга (Ь в корне перед Ю), адЪютант (Ъ после исторической приставки ад- перед Ю). 2) прЕзидент, прЕстиж (словарные слова с Е), прЕбывать в недоумении (= находиться) — везде Е. 3) беСценно (перед глухим Ц), Сдобный (неизменяемая с-), неЗдешний (З в корне слова «здесь»). 4) недОварил (до-), пОзабыл (по-), подОрвать (подо-) — везде О. 5) прИтерпеться (привыкнуть), прИчуда (запомнить с И), прИграничный (близость) — везде И.',
+    hint: 'В 5-м ряду различайте омофоны: «прИтерпеться к боли» (привыкнуть — через И) и «прЕтерпеть лишения» (пережить — через Е).',
+  },
+  {
+    id: 'ege-10-row-base-28',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..бывать (за границей)', expectedLetter: 'е' },
+          { template: 'пр..берёг', expectedLetter: 'и' },
+          { template: 'пр..возмогая (боль)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'о..кормленный (бык)', expectedLetter: 'т' },
+          { template: 'по..толкнул', expectedLetter: 'д' },
+          { template: 'на..бровная (дуга)', expectedLetter: 'д' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'ра..задорился', expectedLetter: 'з' },
+          { template: 'бе..вкусица', expectedLetter: 'з' },
+          { template: 'во..дать (по заслугам)', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'раз..скать', expectedLetter: 'ы' },
+          { template: 'под..тожил', expectedLetter: 'ы' },
+          { template: 'без..нициативный', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'с..ехать', expectedLetter: 'ъ' },
+          { template: 'без..языкий', expectedLetter: 'ъ' },
+          { template: 'двух..ярусный', expectedLetter: 'ъ' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 4, 5),
+    ruleTitle: 'Правописание приставок на З/С, гласной Ы после приставок и разделительного Ъ (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 345. 1) прЕбывать за границей (= находиться), прИберёг (доведение действия до конца), прЕвозмогая (= пересиливая). 2) оТкормленный (неизменяемая от-), поДтолкнул (неизменяемая под-), наДбровная (неизменяемая над-). 3) раЗзадорился (перед звонким З), беЗвкусица (перед звонким В), воЗдать (перед звонким Д) — везде З. 4) разЫскать (после раз- пишем Ы), подЫтожил (после под- пишем Ы), безЫнициативный (после без- пишем Ы) — везде Ы. 5) сЪехать (Ъ после с- перед Е), безЪязыкий (Ъ после без- перед Я), двухЪярусный (Ъ после двух- перед Я) — везде Ъ.',
+    hint: 'В 5-м ряду во всех словах после приставки/числительного на согласную перед гласными Е и Я пишется разделительный Ъ.',
+  },
+  {
+    id: 'ege-10-row-base-29',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'бе..вестный', expectedLetter: 'з' },
+          { template: 'ра..цвет', expectedLetter: 'с' },
+          { template: 'во..никнуть', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'пр..людный', expectedLetter: 'и' },
+          { template: 'пр..чёска', expectedLetter: 'и' },
+          { template: 'пр..годный', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'под..йти', expectedLetter: 'о' },
+          { template: 'п..никли (цветы)', expectedLetter: 'о' },
+          { template: 'пр..российские (силы)', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'контр..гра', expectedLetter: 'и' },
+          { template: 'мед..нститут', expectedLetter: 'и' },
+          { template: 'спорт..нвентарь', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пре..сказал', expectedLetter: 'д' },
+          { template: 'о..делил', expectedLetter: 'т' },
+          { template: 'по..бодрить', expectedLetter: 'д' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3, 4),
+    ruleTitle: 'Правописание приставки ПРИ-, безударных гласных и И после иноязычных приставок (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 234. 1) беЗвестный (перед звонким В), раСцвет (перед глухим Ц), воЗникнуть (перед звонким Н). 2) прИлюдный (при людях), прИчёска (присоединение/результат), прИгодный (запомнить с И) — везде И. 3) подОйти (подо-), пОникли (по-), прОроссийские (приставка про- в значении «сторонник») — везде О. 4) контрИгра (после иноязычной приставки контр- И сохраняется), медИнститут, спортИнвентарь (сложносокращённые слова, И сохраняется) — везде И. 5) преДсказал (пред-), оТделил (от-), поДбодрить (под-).',
+    hint: 'В 4-м ряду после иноязычных приставок («контр-») и в сложносокращённых словах («медИнститут», «спортИнвентарь») начальная буква И сохраняется.',
+  },
+  {
+    id: 'ege-10-row-base-30',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: '(смотреть) и..подлобья', expectedLetter: 'с' },
+          { template: 'ни..падающий', expectedLetter: 'с' },
+          { template: 'в..бунтовался', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'павил..он', expectedLetter: 'ь' },
+          { template: 'фельд..егерь', expectedLetter: 'ъ' },
+          { template: 'п..едестал', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пр..вокзальный', expectedLetter: 'и' },
+          { template: 'пр..дирчивый', expectedLetter: 'и' },
+          { template: 'пр..твориться (спящим)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'пр..родители', expectedLetter: 'а' },
+          { template: 'р..счесать', expectedLetter: 'а' },
+          { template: 'пр..образ (героя)', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'сверх..ндустриализация', expectedLetter: 'и' },
+          { template: 'дез..нфекция', expectedLetter: 'и' },
+          { template: 'пост..нфарктный', expectedLetter: 'и' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 5),
+    ruleTitle: 'Правописание приставки ПРИ-, разделительных Ъ/Ь и И после приставок (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 35. 1) иСподлобья (перед глухим П), ниСпадающий (перед глухим П), вЗбунтовался (перед звонким Б). 2) павилЬон (Ь в корне перед О), фельдЪегерь (Ъ после иноязычной приставки фельд- перед Е), пЬедестал (Ь в корне перед Е). 3) прИвокзальный (близость), прИдирчивый (запомнить с И), прИтвориться спящим (запомнить с И) — везде И. 4) прАродители (пра- в значении родства), рАсчесать (безударная рас-), прОобраз (про- в значении первичности). 5) сверхИндустриализация (после сверх- И сохраняется), дезИнфекция (после иноязычной дез- И сохраняется), постИнфарктный (после иноязычной пост- И сохраняется) — везде И.',
+    hint: 'Во 2-м ряду запомните написание слова «фельдЪегерь» (пишется с разделительным Ъ после первой части фельд-).',
+  },
+  {
+    id: 'ege-10-row-base-31',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'беспр..страстный', expectedLetter: 'и' },
+          { template: 'пр..баутка', expectedLetter: 'и' },
+          { template: 'пр..ломление (лучей)', expectedLetter: 'е' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'кар..ера', expectedLetter: 'ь' },
+          { template: 'квартирос..ёмщик', expectedLetter: 'ъ' },
+          { template: 'фортеп..янный', expectedLetter: 'ь' },
+        ],
+      },
+      {
+rowNumber: 3,
+words: [
+{ template: 'вз..мать', expectedLetter: 'и' },
+{ template: 'меж..нститутский', expectedLetter: 'и' },
+{ template: 'контр..гра', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'об..злённый', expectedLetter: 'о' },
+{ template: 'п..забытый', expectedLetter: 'о' },
+{ template: 'пр..американские (настроения)', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'бе..жалостный', expectedLetter: 'з' },
+{ template: 'ра..твориться', expectedLetter: 'с' },
+{ template: 'и..давна', expectedLetter: 'з' },
+],
+},
+],
+correctRows: Array.of(3, 4),
+ruleTitle: 'Правописание гласной И после приставок и безударной О в приставках (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 34. 1) беспрИстрастный (запомнить с И), прИбаутка (запомнить с И), прЕломление (= переломить). 2) карЬера (Ь в корне), квартиросЪёмщик (Ъ после приставки с- перед Ё), фортепЬянный (Ь в корне). 3) взИмать (исключение с И), межИнститутский (после меж- И сохраняется), контрИгра (после иноязычной контр- И сохраняется) — везде И. 4) обОзлённый (обо-), пОзабытый (по-), прОамериканские (приставка про- в значении «сторонник») — везде О. 5) беЗжалостный (перед звонким Ж), раСтвориться (перед глухим Т), иЗдавна (перед звонким Д).',
+hint: 'В 3-м ряду собраны три классических случая сохранения буквы И после приставок: слово-исключение «взИмать», приставка «меж-» и иноязычная приставка «контр-».',
+},
+{
+id: 'ege-10-row-base-32',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'поз..вчерашний', expectedLetter: 'а' },
+{ template: 'н..двязать', expectedLetter: 'а' },
+{ template: 'р..ссматривать', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'об..ездить', expectedLetter: 'ъ' },
+{ template: 'интерв..юировать', expectedLetter: 'ь' },
+{ template: 'мед..институт', expectedLetter: '-' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пр..небрежение', expectedLetter: 'е' },
+{ template: 'пр..тендент', expectedLetter: 'е' },
+{ template: 'непр..рывный', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'пан..сламский', expectedLetter: 'и' },
+{ template: 'пред..нфарктный', expectedLetter: 'ы' },
+{ template: 'вз..скать', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'и..подлобья', expectedLetter: 'с' },
+{ template: 'и..далека', expectedLetter: 'з' },
+{ template: 'бе..шовный', expectedLetter: 'с' },
+],
+},
+],
+correctRows: Array.of(1, 3),
+ruleTitle: 'Правописание безударных приставок и приставки ПРЕ- (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 13. 1) позАвчерашний (за-), нАдвязать (над-), рАссматривать (безударная приставка рас-) — везде А. 2) обЪездить (Ъ после об- перед Е), интервЬюировать (Ь в корне перед Ю), мединститут (сложносокращённое слово, Ъ/Ь не пишется). 3) прЕнебрежение (запомнить с Е), прЕтендент (словарное с Е), непрЕрывный (= неперерывный) — везде Е. 4) панИсламский (после иноязычной приставки пан- И сохраняется), предЫнфарктный (после пред- пишем Ы), взЫскать (после вз- пишем Ы). 5) иСподлобья (перед глухим П), иЗдалека (перед звонким Д), беСшовный (перед глухим Ш).',
+hint: 'Во 2-м ряду в слове «мединститут» на стыке корней разделительные знаки не пишутся (в форме задания там прочерк).',
+},
+{
+id: 'ege-10-row-base-33',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'небез..звестный', expectedLetter: 'ы' },
+{ template: 'контр..грок', expectedLetter: 'и' },
+{ template: 'без..гольный', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'под..двинуть', expectedLetter: 'о' },
+{ template: 'перен..ладить', expectedLetter: 'а' },
+{ template: 'с..лгавший', expectedLetter: 'о' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пр..смирев', expectedLetter: 'и' },
+{ template: 'пр..нимать (гостей у себя)', expectedLetter: 'и' },
+{ template: 'пр..оритет', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'и..царапать', expectedLetter: 'с' },
+{ template: 'не..гораемый', expectedLetter: 'с' },
+{ template: '..дешний', expectedLetter: 'з' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'с..ехавший', expectedLetter: 'ъ' },
+{ template: 'суб..ект', expectedLetter: 'ъ' },
+{ template: 'ад..ютантский', expectedLetter: 'ъ' },
+],
+},
+],
+correctRows: Array.of(3, 5),
+ruleTitle: 'Правописание приставки ПРИ- и разделительного Ъ (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 35. 1) небезЫзвестный (после русской приставки без- пишем Ы), контрИгрок (после иноязычной приставки контр- И сохраняется), безЫгольный (после без- пишем Ы). 2) подОдвинуть (подо-), перенАладить (на-), сОлгавший (со-). 3) прИсмирев (неполнота действия/результат), прИнимать (приближение), прИоритет (словарное слово с И) — везде И. 4) иСцарапать (перед глухим Ц), неСгораемый (неизменяемая с-), Здешний (буква З входит в корень). 5) сЪехавший (Ъ после с- перед Е), субЪект (Ъ после иноязычной приставки суб- перед Е), адЪютантский (Ъ после исторической приставки ад- перед Ю) — везде Ъ.',
+hint: 'В 5-м ряду запомните написание заимствованных слов с разделительным Ъ после приставок: «субЪект», «обЪект», «адЪютант».',
+},
+{
+id: 'ege-10-row-base-34',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'правопр..емник', expectedLetter: 'е' },
+{ template: 'пр..обрёл', expectedLetter: 'и' },
+{ template: 'пр..дирчивый', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'бе..престанно', expectedLetter: 'с' },
+{ template: 'не..горевший', expectedLetter: 'с' },
+{ template: 'чере..чур', expectedLetter: 'с' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'пред..стория', expectedLetter: 'ы' },
+{ template: 'сверх..звестный', expectedLetter: 'и' },
+{ template: 'транс..ранский', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'бе..радостный', expectedLetter: 'з' },
+{ template: 'не..говорчивый', expectedLetter: 'с' },
+{ template: 'в..дремнуть', expectedLetter: 'з' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'преп..даватель', expectedLetter: 'о' },
+{ template: 'под..двинуться', expectedLetter: 'о' },
+{ template: 'с..мневаться', expectedLetter: 'о' },
+],
+},
+],
+correctRows: Array.of(2, 5),
+ruleTitle: 'Правописание приставок на З/С и безударной О в приставках (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 25. 1) правопрЕемник (= перенять, получить по наследству), прИобрёл (присоединение), прИдирчивый (запомнить с И). 2) беСпрестанно (перед глухим П), неСгоревший (неизменяемая с-), череСчур (перед глухим Ч) — везде С. 3) предЫстория (Ы после русской приставки пред-), сверхИзвестный (И после сверх-), трансИранский (И после иноязычной приставки транс-). 4) беЗрадостный (перед звонким Р), неСговорчивый (неизменяемая с-), вЗдремнуть (перед звонким Д). 5) препОдаватель (по-), подОдвинуться (подо-), сОмневаться (со-) — везде О.',
+hint: 'В 1-м ряду различайте омофоны: «правопрЕемник» (наследник, перенимающий права — через Е) и «радиопрИёмник» (аппарат, принимающий сигнал — через И).',
+},
+{
+id: 'ege-10-row-base-35',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'пр..бабушка', expectedLetter: 'а' },
+{ template: 'р..зыскать', expectedLetter: 'а' },
+{ template: 'пр..родители', expectedLetter: 'а' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'с..ронизировать', expectedLetter: 'ы' },
+{ template: 'дез..нформация', expectedLetter: 'и' },
+{ template: 'сверх..нициативный', expectedLetter: 'и' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'сверх..естественный', expectedLetter: 'ъ' },
+{ template: 'ин..екция', expectedLetter: 'ъ' },
+{ template: 'об..ёмный', expectedLetter: 'ъ' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'ра..хваленный', expectedLetter: 'с' },
+{ template: 'ра..бить', expectedLetter: 'з' },
+{ template: '..дался (без боя)', expectedLetter: 'с' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'пр..падать (к земле)', expectedLetter: 'и' },
+{ template: 'пр..вокзальный', expectedLetter: 'и' },
+{ template: 'пр..обретатель', expectedLetter: 'и' },
+],
+},
+],
+correctRows: Array.of(1, 3, 5),
+ruleTitle: 'Правописание приставки ПРА-, разделительного Ъ и приставки ПРИ- (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 135. 1) прАбабушка (прямое родство), рАзыскать (безударная приставка раз-), прАродители (прямое родство) — везде А. 2) сЫронизировать (после русской приставки с- пишем Ы), дезИнформация (после иноязычной дез- И сохраняется), сверхИнициативный (после сверх- И сохраняется). 3) сверхЪестественный (Ъ после сверх- перед Е), инЪекция (Ъ после иноязычной приставки ин- перед Е), обЪёмный (Ъ после об- перед Ё) — везде Ъ. 4) раСхваленный (перед глухим Х), раЗбить (перед звонким Б), Сдался (неизменяемая с-). 5) прИпадать к земле (приближение), прИвокзальный (близость), прИобретатель (присоединение) — везде И.',
+hint: 'В 3-м ряду запомните написание заимствованного слова «инЪекция» (пишется с разделительным Ъ после приставки ин-).',
+},
+    {
+    id: 'ege-10-row-base-36',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'обез..яний', expectedLetter: 'ь' },
+          { template: 'интерв..юер', expectedLetter: 'ь' },
+          { template: 'п..янящий', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'н..кинутый', expectedLetter: 'а' },
+          { template: 'раз..гнуться', expectedLetter: 'о' },
+          { template: 'н..испособнейший', expectedLetter: 'а' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'об..скать', expectedLetter: 'ы' },
+          { template: 'вз..грать', expectedLetter: 'ы' },
+          { template: 'пред..дущий', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'чере..полосица', expectedLetter: 'с' },
+          { template: 'бе..тарифный', expectedLetter: 'с' },
+          { template: 'во..питание', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..пятствие', expectedLetter: 'е' },
+          { template: 'пр..следовать', expectedLetter: 'е' },
+          { template: 'пр..словутый', expectedLetter: 'е' },
+        ],
+      },
+    ],
+    correctRows: Array.of(1, 3, 4, 5),
+    ruleTitle: 'Правописание разделительного Ь, гласной Ы после приставок, З/С и ПРЕ- (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 1345. 1) обезЬяний, интервЬюер, пЬянящий (разделительный Ь в корне перед Я, Ю) — везде Ь. 2) нАкинутый (на-), разОгнуться (разо-), нАиспособнейший (наи-). 3) обЫскать (после русской приставки об- пишем Ы), взЫграть (после вз- пишем Ы), предЫдущий (после пред- пишем Ы) — везде Ы. 4) череСполосица (перед глухим П), беСтарифный (перед глухим Т), воСпитание (перед глухим П) — везде С. 5) прЕпятствие, прЕследовать, прЕсловутый (запомнить написание приставки пре- с буквой Е) — везде Е.',
+    hint: 'В 5-м ряду собраны три словарных слова с приставкой ПРЕ-, написание которых нужно запомнить: «прЕпятствие», «прЕследовать», «прЕсловутый».',
+  },
+  {
+    id: 'ege-10-row-base-37',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'пр..носящий (доход)', expectedLetter: 'и' },
+          { template: 'пр..восходить (противника)', expectedLetter: 'е' },
+          { template: 'пр..ют', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'приб..ёт', expectedLetter: 'ь' },
+          { template: 'с..едобный', expectedLetter: 'ъ' },
+          { template: 'пред..юбилейный', expectedLetter: 'ъ' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'п..обещать', expectedLetter: 'о' },
+          { template: 'раз..рвать', expectedLetter: 'о' },
+          { template: 'об..греватель', expectedLetter: 'о' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: '..доровье', expectedLetter: 'з' },
+          { template: 'во..мездие', expectedLetter: 'з' },
+          { template: 'ра..гадать', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..готовить', expectedLetter: 'и' },
+          { template: 'пр..бывать (к месту происшествия)', expectedLetter: 'и' },
+          { template: 'пр..страстие', expectedLetter: 'и' },
+        ],
+      },
+    ],
+    correctRows: Array.of(3, 4, 5),
+    ruleTitle: 'Правописание безударной О в приставках, буквы З и приставки ПРИ- (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 345. 1) прИносящий (приближение), прЕвосходить (= пересиливать), прИют (запомнить с И). 2) прибЬёт (Ь в корне перед Ё), сЪедобный (Ъ после приставки с- перед Е), предЪюбилейный (Ъ после пред- перед Ю). 3) пОобещать (по-), разОрвать (разо-), обОгреватель (обо-) — везде О. 4) Здоровье (буква З входит в корень), воЗмездие (перед звонким М), раЗгадать (перед звонким Г) — везде З. 5) прИготовить (доведение действия до результата), прИбывать к месту (приближение), прИстрастие (запомнить с И) — везде И.',
+    hint: 'В 4-м ряду в слове «Здоровье» нет приставки — буква З является частью корня, как и в словах «здание», «здесь», «ни зги».',
+  },
+  {
+    id: 'ege-10-row-base-38',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'небез..звестный', expectedLetter: 'ы' },
+          { template: 'вз..мать (дань)', expectedLetter: 'и' },
+          { template: 'раз..скать', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ра..будить', expectedLetter: 'з' },
+          { template: 'чре..мерный', expectedLetter: 'з' },
+          { template: 'бе..вкусный', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пр..шить (к рукаву)', expectedLetter: 'и' },
+          { template: 'пр..ручить', expectedLetter: 'и' },
+          { template: 'пр..школьный', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'под..езд', expectedLetter: 'ъ' },
+          { template: 'об..явление', expectedLetter: 'ъ' },
+          { template: 'комп..ютер', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'пр..будить', expectedLetter: 'о' },
+          { template: 'р..зыграть', expectedLetter: 'а' },
+          { template: 'с..чувствовать', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3),
+    ruleTitle: 'Правописание приставок на З/С и приставки ПРИ- (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 23. 1) небезЫзвестный (после русской приставки без- пишем Ы), взИмать (слово-исключение с И), разЫскать (после раз- пишем Ы). 2) раЗбудить (перед звонким Б), чреЗмерный (перед звонким М), беЗвкусный (перед звонким В) — везде З. 3) прИшить (присоединение), прИручить (присоединение/приближение), прИшкольный (близость) — везде И. 4) подЪезд (Ъ после под- перед Е), обЪявление (Ъ после об- перед Я), компЬютер (Ь в корне перед Ю). 5) прОбудить (про-), рАзыграть (безударная приставка раз-), сОчувствовать (со-).',
+    hint: 'В 5-м ряду в глаголе «рАзыграть» пишется безударная приставка раз- с буквой А (ср. под ударением: «рОзыгрыш»).',
+  },
+  {
+    id: 'ege-10-row-base-39',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'небез..звестный', expectedLetter: 'ы' },
+          { template: 'от..скать', expectedLetter: 'ы' },
+          { template: 'об..ндеветь (на морозе)', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ра..сказать', expectedLetter: 'с' },
+          { template: 'чере..чур', expectedLetter: 'с' },
+          { template: 'и..подтишка', expectedLetter: 'с' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пр..бить (гвоздём к стене)', expectedLetter: 'и' },
+          { template: 'непр..ступный (утёс)', expectedLetter: 'и' },
+          { template: 'пр..морский', expectedLetter: 'и' },
+        ],
+      },
+      {
+        rowNumber: 4,
+        words: [
+          { template: 'двух..ярусный', expectedLetter: 'ъ' },
+          { template: 'об..ективный', expectedLetter: 'ъ' },
+          { template: 'в..юга', expectedLetter: 'ь' },
+        ],
+      },
+      {
+        rowNumber: 5,
+        words: [
+          { template: 'р..здавать', expectedLetter: 'а' },
+          { template: 'п..знавать', expectedLetter: 'о' },
+          { template: 'под..йти', expectedLetter: 'о' },
+        ],
+      },
+    ],
+    correctRows: Array.of(2, 3),
+    ruleTitle: 'Правописание приставок на З/С и приставки ПРИ- (Задание 10 ЕГЭ)',
+    ruleExplanation:
+      'Верные ряды — 23. 1) небезЫзвестный (Ы после без-), отЫскать (Ы после от-), обИндеветь (глагол образован от «иней» с приставкой о- + суффикс -ин-, либо приставка об- + корень индев-, где в этом слове пишется И — запомнить: «обИндеветь»). 2) раСсказать (перед глухим С), череСчур (перед глухим Ч), иСподтишка (перед глухим П) — везде С. 3) прИбить (присоединение), непрИступный утёс (нельзя подступиться), прИморский (близость) — везде И. 4) двухЪярусный (Ъ), обЪективный (Ъ), вЬюга (Ь). 5) рАздавать (безударная раз-), пОзнавать (по-), подОйти (подо-).',
+    hint: 'В 1-м ряду запомните написание глагола «обИндеветь» (покрыться инеем — пишется с буквой И).',
+  },
+  {
+    id: 'ege-10-row-base-40',
+    type: 'ege_row_spelling',
+    difficulty: 'base',
+    kimTaskNumber: 10,
+    topicTag: 'ЕГЭ · Задание 10',
+    prompt: OFFICIAL_ROW_INSTRUCTION,
+    rows: [
+      {
+        rowNumber: 1,
+        words: [
+          { template: 'под..грать', expectedLetter: 'ы' },
+          { template: 'пред..нфарктный', expectedLetter: 'ы' },
+          { template: 'без..скусный', expectedLetter: 'ы' },
+        ],
+      },
+      {
+        rowNumber: 2,
+        words: [
+          { template: 'ра..валить', expectedLetter: 'з' },
+          { template: 'ра..чистить', expectedLetter: 'с' },
+          { template: 'ни..вергнуть', expectedLetter: 'з' },
+        ],
+      },
+      {
+        rowNumber: 3,
+        words: [
+          { template: 'пр..ходящий (успех)', expectedLetter: 'е' },
+          { template: 'пр..брежный', expectedLetter: 'и' },
+{ template: 'пр..ломление (лучей)', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'ш..ёт', expectedLetter: 'ь' },
+{ template: 'обез..яна', expectedLetter: 'ь' },
+{ template: 'павил..он', expectedLetter: 'ь' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'п..дтолкнуть', expectedLetter: 'о' },
+{ template: 'об..знаться', expectedLetter: 'о' },
+{ template: 'р..ссыпать', expectedLetter: 'а' },
+],
+},
+],
+correctRows: Array.of(1, 4),
+ruleTitle: 'Правописание гласной Ы после приставок и разделительного Ь (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 14. 1) подЫграть (после русской приставки под- пишем Ы), предЫнфарктный (после пред- пишем Ы), безЫскусный (после без- пишем Ы) — везде Ы. 2) раЗвалить (перед звонким В), раСчистить (перед глухим Ч), ниЗвергнуть (перед звонким В). 3) прЕходящий успех (временный, проходящий мимо — пишем Е), прИбрежный (близость), прЕломление (= переломить). 4) шЬёт, обезЬяна, павилЬон (разделительный Ь в корне перед Ё, Я, О) — везде Ь. 5) пОдтолкнуть (под-), обОзнаться (обо-), рАссыпать (безударная приставка рас-).',
+hint: 'В 3-м ряду различайте омофоны: «прЕходящий успех» (временный, недолговечный — через Е) и «прИходящий домой» (приближающийся — через И).',
+},
+{
+id: 'ege-10-row-base-41',
+type: 'ege_row_spelling',
+difficulty: 'base',
+kimTaskNumber: 10,
+topicTag: 'ЕГЭ · Задание 10',
+prompt: OFFICIAL_ROW_INSTRUCTION,
+rows: [
+{
+rowNumber: 1,
+words: [
+{ template: 'и..подтишка', expectedLetter: 'с' },
+{ template: 'не..говорчивый', expectedLetter: 'с' },
+{ template: 'ни..послать', expectedLetter: 'с' },
+],
+},
+{
+rowNumber: 2,
+words: [
+{ template: 'пр..валировать', expectedLetter: 'е' },
+{ template: 'пр..чудливый', expectedLetter: 'и' },
+{ template: 'непр..ложные (истины)', expectedLetter: 'е' },
+],
+},
+{
+rowNumber: 3,
+words: [
+{ template: 'с..язвить', expectedLetter: 'ъ' },
+{ template: 'пан..европейский', expectedLetter: 'ъ' },
+{ template: 'суб..ективный', expectedLetter: 'ъ' },
+],
+},
+{
+rowNumber: 4,
+words: [
+{ template: 'пред..нфарктный', expectedLetter: 'ы' },
+{ template: 'воз..меть', expectedLetter: 'ы' },
+{ template: 'без..нициативный', expectedLetter: 'ы' },
+],
+},
+{
+rowNumber: 5,
+words: [
+{ template: 'по..тверждение', expectedLetter: 'д' },
+{ template: 'о..дать', expectedLetter: 'т' },
+{ template: 'пре..видеть', expectedLetter: 'д' },
+],
+},
+],
+correctRows: Array.of(1, 3, 4),
+ruleTitle: 'Правописание приставок на З/С, разделительного Ъ и гласной Ы после приставок (Задание 10 ЕГЭ)',
+ruleExplanation:
+'Верные ряды — 134. 1) иСподтишка (перед глухим П), неСговорчивый (неизменяемая приставка с-), ниСпослать (перед глухим П) — везде С. 2) прЕвалировать (словарное с Е), прИчудливый (запомнить с И), непрЕложные истины (непереложные, незыблемые — через Е). 3) сЪязвить (Ъ после русской приставки с- перед Я), панЪевропейский (Ъ после иноязычной приставки пан- перед Е), субЪективный (Ъ после иноязычной приставки суб- перед Е) — везде Ъ. 4) предЫнфарктный (после пред- пишем Ы), возЫметь (после воз- пишем Ы), безЫнициативный (после без- пишем Ы) — везде Ы. 5) поДтверждение (неизменяемая под-), оТдать (неизменяемая от-), преДвидеть (неизменяемая пред-).',
+hint: 'В 3-м ряду разделительный Ъ пишется не только после русских приставок, но и после иноязычных («панЪевропейский», «субЪективный», «обЪект») перед гласными Е, Ё, Ю, Я.',
+},
 ];
 
 /**
