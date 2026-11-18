@@ -139,10 +139,12 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-  const [activeTool, setActiveTool] = useState<MarkerTool>('none');
+    const [activeTool, setActiveTool] = useState<MarkerTool>('none');
   const [wordMarks, setWordMarks] = useState<
     Record<string, Exclude<MarkerTool, 'none'>>
   >({});
+  const [sentenceRules, setSentenceRules] = useState<Record<string, string>>({});
+  const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -163,8 +165,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-    setActiveTool('none');
+        setActiveTool('none');
     setWordMarks({});
+    setSentenceRules({});
+    setSentenceNotes({});
     if (!savedState) {
       setTimeout(() => {
         inputRef.current?.focus();
@@ -382,6 +386,212 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       );
     });
   };
+  const isTask21Punctuation =
+    question.kimTaskNumber === 21 ||
+    (question.topicTag || '').toLowerCase().includes('задание 21');
+
+  const renderTask21AnalysisBoard = () => {
+    if (!isTask21Punctuation || !question.passage) return null;
+
+    const promptLower = question.prompt.toLowerCase();
+    let targetSign: 'dash' | 'colon' | 'comma' = 'dash';
+    let signTitle = 'ТИРЕ (—)';
+    let rulePresets: string[] = [
+      'Подлежащее — сказуемое',
+      'Приложение',
+      'БСП',
+      'Вводное / вставка',
+      'Неполное',
+      'Обобщающее слово',
+      'Прямая речь',
+    ];
+
+    if (promptLower.includes('двоеточ')) {
+      targetSign = 'colon';
+      signTitle = 'ДВОЕТОЧИЕ (:)';
+      rulePresets = [
+        'БСП (причина / пояснение)',
+        'Обобщающее слово',
+        'Прямая речь',
+      ];
+    } else if (promptLower.includes('запят')) {
+      targetSign = 'comma';
+      signTitle = 'ЗАПЯТАЯ (,)';
+      rulePresets = [
+        'Однородные члены',
+        'ССП',
+        'СПП',
+        'БСП',
+        'Причастный / деепр.',
+        'Приложение',
+        'Вводное / обращение',
+        'Уточнение / сравнение',
+      ];
+    }
+
+    const sentenceMatches = Array.from(
+      question.passage.matchAll(/\((\d+)\)([^(]+)/g)
+    ).map((m) => ({
+      num: m[1],
+      text: m[2].trim(),
+    }));
+
+    const matchingSentences = sentenceMatches.filter(({ text }) => {
+      if (targetSign === 'dash') {
+        const withoutNumericRanges = text.replace(/\d+\s*[–—-]\s*\d+/g, '');
+        return /[—–]|\s-\s/.test(withoutNumericRanges);
+      }
+      if (targetSign === 'colon') {
+        return text.includes(':');
+      }
+      return text.includes(',');
+    });
+
+    if (matchingSentences.length === 0) return null;
+
+    const ruleGroups: Record<string, string[]> = {};
+    matchingSentences.forEach(({ num }) => {
+      const r = sentenceRules[num];
+      if (r) {
+        if (!ruleGroups[r]) ruleGroups[r] = [];
+        ruleGroups[r].push(num);
+      }
+    });
+
+    const matchedGroupEntry = Object.entries(ruleGroups).find(
+      ([, nums]) => nums.length >= 2
+    );
+
+    const hasAnyBoardInput =
+      Object.keys(sentenceRules).length > 0 ||
+      Object.values(sentenceNotes).some((v) => v.trim().length > 0);
+
+    return (
+      <div className="p-3 sm:p-4 rounded-xl bg-[#080B14]/80 border border-slate-800/90 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-slate-200">
+              Черновой разбор предложений со знаком{' '}
+              <span className="text-amber-300 font-bold">{signTitle}</span>:
+            </span>
+            <span className="text-[11px] text-slate-400">
+              выберите правило для каждого номера — совпадения подсветятся
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {matchedGroupEntry && !submitted && (
+              <button
+                type="button"
+                onClick={() => setAnswer(matchedGroupEntry[1].join(''))}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/60 hover:bg-emerald-500/30 text-[11px] font-semibold text-emerald-200 transition-all cursor-pointer"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                <span>
+                  Подставить {matchedGroupEntry[1].join('')} в ответ
+                </span>
+              </button>
+            )}
+
+            {hasAnyBoardInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSentenceRules({});
+                  setSentenceNotes({});
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Очистить</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {matchingSentences.map(({ num, text }) => {
+            const chosenRule = sentenceRules[num] || '';
+            const isMatched =
+              Boolean(chosenRule) && (ruleGroups[chosenRule]?.length ?? 0) >= 2;
+
+            return (
+              <div
+                key={`board-${num}`}
+                className={`p-2.5 rounded-lg border transition-colors space-y-2 ${
+                  isMatched
+                    ? 'bg-emerald-500/10 border-emerald-500/45'
+                    : 'bg-slate-900/65 border-slate-800/80'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <span
+                      className={`px-2 py-0.5 rounded font-mono-num text-xs font-bold shrink-0 ${
+                        isMatched
+                          ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-400/50'
+                          : 'bg-violet-500/20 text-violet-200 border border-violet-400/40'
+                      }`}
+                    >
+                      ({num})
+                    </span>
+                    <span className="text-xs text-slate-300 line-clamp-1">
+                      {text}
+                    </span>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={sentenceNotes[num] ?? ''}
+                    onChange={(e) =>
+                      setSentenceNotes((prev) => ({
+                        ...prev,
+                        [num]: e.target.value,
+                      }))
+                    }
+                    placeholder="Заметка (основа / конструкция)..."
+                    className="w-full sm:w-56 px-2.5 py-1 rounded-md bg-[#080B14]/90 border border-slate-800 focus:border-violet-400 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none shrink-0"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {rulePresets.map((preset) => {
+                    const active = chosenRule === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() =>
+                          setSentenceRules((prev) => {
+                            const next = { ...prev };
+                            if (next[num] === preset) {
+                              delete next[num];
+                            } else {
+                              next[num] = preset;
+                            }
+                            return next;
+                          })
+                        }
+                        className={`px-2 py-0.5 rounded-md border text-[11px] font-medium transition-all cursor-pointer ${
+                          active
+                            ? isMatched
+                              ? 'bg-emerald-500/25 border-emerald-400 text-emerald-100 font-semibold'
+                              : 'bg-indigo-500/30 border-indigo-400 text-white font-semibold'
+                            : 'bg-[#080B14]/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   const renderScratchpadToolbar = () => {
     if (!showScratchpad) return null;
@@ -558,6 +768,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                 : renderPassageWithBlanks(question.passage)}
             </div>
           )}
+          {renderTask21AnalysisBoard()}
 
           <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
             {question.prompt}
