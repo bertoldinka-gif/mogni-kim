@@ -149,8 +149,9 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-  const [activeTool, setActiveTool] = useState<MarkerTool>('none');
+   const [activeTool, setActiveTool] = useState<MarkerTool>('none');
   const [wordMarks, setWordMarks] = useState<Record<string, Exclude<MarkerTool, 'none'>>>({});
+  const [optionCommas, setOptionCommas] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setSelectedIndices(savedState?.userState?.selectedIndices ?? []);
@@ -162,6 +163,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     setMentorQuote(savedState?.mentorQuote ?? null);
     setActiveTool('none');
     setWordMarks({});
+    setOptionCommas({});
   }, [question.id, savedState]);
 
   const canAffordHint = userXp >= 5;
@@ -536,9 +538,11 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           );
         }
 
-        if (showScratchpad && !hasOptionQuotes) {
+                if (showScratchpad && !hasOptionQuotes) {
           const cleaned = stripLeadingOptionNumber(option);
+          const commaCount = isTask16CommaMode ? countCommasForOption(idx) : 0;
           const useTargetParen =
+            !isTask16CommaMode &&
             activeTool === 'none' &&
             Object.keys(wordMarks).length === 0 &&
             cleaned.includes('(') &&
@@ -589,18 +593,34 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
                     activeTool !== 'none' ? 'cursor-text' : ''
                   }`}
                 >
-                  {useTargetParen
+                  {isTask16CommaMode
+                    ? renderCommaInteractiveText(cleaned, idx)
+                    : useTargetParen
                     ? renderOptionWithTargetHighlights(option)
                     : renderMarkableText(cleaned, `opt-${idx}`, true)}
                 </span>
               </div>
 
-              {submitted && optionIsRight && (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              )}
-              {submitted && isSelected && !optionIsRight && (
-                <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {isTask16CommaMode && commaCount > 0 && (
+                  <span
+                    className={`px-2 py-0.5 rounded-md border font-mono-num text-[11px] font-bold whitespace-nowrap ${
+                      commaCount === 1
+                        ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200'
+                        : 'bg-amber-500/20 border-amber-400/60 text-amber-200'
+                    }`}
+                  >
+                    {commaCount === 1 ? '1 запятая' : `${commaCount} зап.`}
+                  </span>
+                )}
+
+                {submitted && optionIsRight && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                {submitted && isSelected && !optionIsRight && (
+                  <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                )}
+              </div>
             </div>
           );
         }
