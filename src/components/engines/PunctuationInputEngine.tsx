@@ -220,6 +220,26 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
       return next;
     });
   };
+    const toggleDigitClick = (digit: string) => {
+    if (submitted) return;
+    const validNums = Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1]);
+    const raw = digitsInput.replace(/\D/g, '');
+    const selected: string[] = [];
+    let i = 0;
+    while (i < raw.length) {
+      if (i + 1 < raw.length && validNums.includes(raw.slice(i, i + 2))) {
+        selected.push(raw.slice(i, i + 2));
+        i += 2;
+      } else {
+        if (validNums.includes(raw[i])) selected.push(raw[i]);
+        i += 1;
+      }
+    }
+    const next = selected.includes(digit)
+      ? selected.filter((d) => d !== digit)
+      : [...selected, digit].sort((a, b) => Number(a) - Number(b));
+    setDigitsInput(Array.from(new Set(next)).join(''));
+  };
 
   const focusSlot = (index: number) => {
     if (index < 0 || index >= slotCount) return;
@@ -386,11 +406,26 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     });
   };
 
-  const renderDigitSentence = () => {
-    const expectedSet = new Set(
-      (question.expectedDigits ?? '').replace(/\D/g, '').split('')
-    );
-    const userSet = new Set(digitsInput.replace(/\D/g, '').split(''));
+    const renderDigitSentence = () => {
+    const validNums = Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1]);
+    const parseSet = (str: string) => {
+      const clean = str.replace(/\D/g, '');
+      const res = new Set<string>();
+      let i = 0;
+      while (i < clean.length) {
+        if (i + 1 < clean.length && validNums.includes(clean.slice(i, i + 2))) {
+          res.add(clean.slice(i, i + 2));
+          i += 2;
+        } else {
+          res.add(clean[i]);
+          i += 1;
+        }
+      }
+      return res;
+    };
+
+    const expectedSet = parseSet(question.expectedDigits ?? '');
+    const userSet = parseSet(digitsInput);
     const parts = question.sentenceTemplate.split(/(\(\d+\))/g);
 
     return parts.map((part, pIdx) => {
@@ -401,7 +436,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
         const userSelected = userSet.has(digit);
 
         let badgeClass =
-          'bg-violet-500/20 border-violet-400/50 text-violet-200';
+          'bg-violet-500/20 border-violet-400/50 text-violet-200 hover:bg-violet-500/35 hover:border-violet-300';
         let label = part;
 
         if (submitted) {
@@ -419,7 +454,23 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
             label = part;
           }
         } else if (userSelected) {
-          badgeClass = 'bg-indigo-500/30 border-indigo-400 text-white shadow-sm';
+          badgeClass =
+            'bg-indigo-500/35 border-indigo-300 text-white shadow-sm shadow-indigo-500/30 ring-1 ring-indigo-400/50';
+          label = `(${digit},)`;
+        }
+
+        if (!submitted) {
+          return (
+            <button
+              key={`num-${pIdx}`}
+              type="button"
+              onClick={() => toggleDigitClick(digit)}
+              aria-pressed={userSelected}
+              className={`inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-all cursor-pointer select-none active:scale-95 ${badgeClass}`}
+            >
+              {label}
+            </button>
+          );
         }
 
         return (
@@ -430,6 +481,11 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
             {label}
           </span>
         );
+      }
+
+      return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
+    });
+  };
       }
 
       return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
