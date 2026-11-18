@@ -374,6 +374,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     ) ||
     (combinedLabel.includes('егэ') &&
       /задание\s*(2|3)\b/.test(combinedLabel));
+    const isTask16CommaMode =
+    question.kimTaskNumber === 16 ||
+    sessionId === 'ege-16' ||
+    /задани[ея]\s*16\b/.test(combinedLabel);
 
   const isShortGrammarOrLexicon =
     /орфоэп|пароним/.test(combinedLabel) ||
