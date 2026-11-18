@@ -139,10 +139,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-    const [activeTool, setActiveTool] = useState<MarkerTool>('none');
-  const [wordMarks, setWordMarks] = useState<
-    Record<string, Exclude<MarkerTool, 'none'>>
-  >({});
       const [activeTool, setActiveTool] = useState<MarkerTool>('none');
   const [wordMarks, setWordMarks] = useState<
     Record<string, Exclude<MarkerTool, 'none'>>
