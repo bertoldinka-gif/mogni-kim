@@ -177,9 +177,16 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   const slotCount = isDigitMode ? 0 : Math.max(0, segments.length - 1);
   const expectedMarks = question.expectedMarks ?? [];
 
-  const templateDigitTokens = isDigitMode
-    ? Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1])
-    : [];
+  const templateDigitTokens: string[] = [];
+  if (isDigitMode) {
+    const tokenRegex = /\((\d+)\)/g;
+    let tokMatch: RegExpExecArray | null = null;
+    while ((tokMatch = tokenRegex.exec(question.sentenceTemplate)) !== null) {
+      if (tokMatch[1]) {
+        templateDigitTokens.push(tokMatch[1]);
+      }
+    }
+  }
 
   const [values, setValues] = useState<string[]>(
     () => savedState?.userState?.values ?? Array(slotCount).fill('')
@@ -218,7 +225,8 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
         if (isDigitMode) {
           digitsInputRef.current?.focus();
         } else {
-          inputRefs.current[0]?.focus();
+          const firstInput = inputRefs.current.find((el) => Boolean(el));
+          firstInput?.focus();
         }
       }, 30);
     }
@@ -341,16 +349,14 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     }
     const lastChar = raw.slice(-1);
     const normalized = normalizeMark(lastChar);
-    if (normalized === ',' || normalized === ':' || normalized === '-') {
-      setSlotValue(index, normalized, true);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (submitted) return;
-
-    let allCorrect = false;
-    if (isDigitMode) {
+if (normalized === ',' || normalized === ':' || normalized === '-') {
+setSlotValue(index, normalized, true);
+}
+};
+const handleSubmit = () => {
+if (submitted) return;
+let allCorrect = false;
+if (isDigitMode) {
 const normalizedUser = normalizeDigitCode(digitsInput, templateDigitTokens);
 const normalizedExpected = normalizeDigitCode(
 question.expectedDigits ?? '',
@@ -430,7 +436,7 @@ extractDigitTokens(digitsInput, templateDigitTokens)
 const parts = question.sentenceTemplate.split(/(\d+)/g);
 return parts.map((part, pIdx) => {
 const match = part.match(/^(\d+)$/);
-if (match) {
+if (match && match[1]) {
 const digit = match[1];
 const expectedComma = expectedSet.has(digit);
 const userSelected = userSet.has(digit);
