@@ -423,8 +423,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
       }
       return res;
     };
-
-    const expectedSet = parseSet(question.expectedDigits ?? '');
+        const expectedSet = parseSet(question.expectedDigits ?? '');
     const userSet = parseSet(digitsInput);
     const parts = question.sentenceTemplate.split(/(\(\d+\))/g);
 
@@ -481,10 +480,6 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
             {label}
           </span>
         );
-
-      return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
-    });
-  };
       }
 
       return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
