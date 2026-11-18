@@ -83,6 +83,55 @@ const MARKER_STYLE_BY_ID: Record<Exclude<MarkerTool, 'none'>, string> = {
   conjunction: 'bg-fuchsia-500/25 text-fuchsia-200 rounded px-1',
 };
 
+function normalizeMark(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed === '—' || trimmed === '–' || trimmed === '-') return '-';
+  if (trimmed === ',' || trimmed === ':') return trimmed;
+  return '';
+}
+
+function formatMarkLabel(mark: string): string {
+  if (mark === ',') return ', (запятая)';
+  if (mark === ':') return ': (двоеточие)';
+  if (mark === '-') return '— (тире)';
+  return 'знак не нужен';
+}
+
+function extractDigitTokens(raw: string, validTokens?: string[]): string[] {
+  const cleaned = raw.replace(/\D/g, '');
+  if (!cleaned) return [];
+
+  if (!validTokens || validTokens.length === 0) {
+    return Array.from(new Set(cleaned.split(''))).sort((a, b) => Number(a) - Number(b));
+  }
+
+  const validSet = new Set(validTokens);
+  const found: string[] = [];
+  let i = 0;
+
+  while (i < cleaned.length) {
+    if (i + 1 < cleaned.length) {
+      const twoDigit = cleaned.slice(i, i + 2);
+      if (validSet.has(twoDigit)) {
+        found.push(twoDigit);
+        i += 2;
+        continue;
+      }
+    }
+    const oneDigit = cleaned[i];
+    if (validSet.has(oneDigit)) {
+      found.push(oneDigit);
+    }
+    i += 1;
+  }
+
+  return Array.from(new Set(found)).sort((a, b) => Number(a) - Number(b));
+}
+
+function normalizeDigitCode(raw: string, validTokens?: string[]): string {
+  return extractDigitTokens(raw, validTokens).join('');
+}
+
 export interface PunctuationSavedState {
   values: string[];
   digitsInput: string;
@@ -108,26 +157,6 @@ interface PunctuationInputEngineProps {
   onMarkLearned?: (questionId: string) => void;
 }
 
-function normalizeMark(raw: string): string {
-  const trimmed = raw.trim();
-  if (trimmed === '—' || trimmed === '–') return '-';
-  return trimmed;
-}
-
-function formatMarkLabel(mark: string): string {
-  if (mark === '') return 'без знака';
-  if (mark === '-') return '— (тире)';
-  if (mark === ',') return ', (запятая)';
-  if (mark === ':') return ': (двоеточие)';
-  return mark;
-}
-
-function normalizeDigitCode(raw: string): string {
-  const digits = raw.replace(/\D/g, '');
-  if (!digits) return '';
-  return Array.from(new Set(digits.split(''))).sort().join('');
-}
-
 export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   question,
   isReviewMode = false,
@@ -147,6 +176,10 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   const segments = isDigitMode ? [] : question.sentenceTemplate.split('[_]');
   const slotCount = isDigitMode ? 0 : Math.max(0, segments.length - 1);
   const expectedMarks = question.expectedMarks ?? [];
+
+  const templateDigitTokens = isDigitMode
+    ? Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1])
+    : [];
 
   const [values, setValues] = useState<string[]>(
     () => savedState?.userState?.values ?? Array(slotCount).fill('')
@@ -221,26 +254,31 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     });
   };
 
+  const toggleDigitSelection = (digit: string) => {
+    if (submitted) return;
+    const currentTokens = extractDigitTokens(digitsInput, templateDigitTokens);
+    const nextTokens = currentTokens.includes(digit)
+      ? currentTokens.filter((d) => d !== digit)
+      : [...currentTokens, digit].sort((a, b) => Number(a) - Number(b));
+    setDigitsInput(nextTokens.join(''));
+  };
+
   const focusSlot = (index: number) => {
     if (index < 0 || index >= slotCount) return;
     setFocusedSlot(index);
     inputRefs.current[index]?.focus();
   };
 
-  const setSlotValue = (index: number, rawChar: string, advance = true) => {
-    if (submitted) return;
-    const normalized = normalizeMark(rawChar);
-    const allowed = ['', ',', ':', '-'];
-    const nextChar = allowed.includes(normalized) ? normalized : '';
-
+  const setSlotValue = (index: number, nextMark: string, advance: boolean) => {
+    if (submitted || index < 0 || index >= slotCount) return;
+    const normalized = normalizeMark(nextMark);
     setValues((prev) => {
       const copy = [...prev];
-      copy[index] = nextChar;
+      copy[index] = normalized;
       return copy;
     });
-
     if (advance && index + 1 < slotCount) {
-      setTimeout(() => focusSlot(index + 1), 0);
+      focusSlot(index + 1);
     }
   };
 
@@ -313,443 +351,370 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
 
     let allCorrect = false;
     if (isDigitMode) {
-      const normalizedUser = normalizeDigitCode(digitsInput);
-      const normalizedExpected = normalizeDigitCode(question.expectedDigits ?? '');
-      if (!normalizedUser && normalizedExpected !== '') return;
-      allCorrect = normalizedUser === normalizedExpected;
-    } else {
-      allCorrect =
-        expectedMarks.length === slotCount &&
-        expectedMarks.every((exp, i) => normalizeMark(values[i] ?? '') === normalizeMark(exp));
-    }
+const normalizedUser = normalizeDigitCode(digitsInput, templateDigitTokens);
+const normalizedExpected = normalizeDigitCode(
+question.expectedDigits ?? '',
+templateDigitTokens
+);
+if (!normalizedUser && normalizedExpected !== '') return;
+allCorrect = normalizedUser === normalizedExpected;
+} else {
+allCorrect =
+expectedMarks.length === slotCount &&
+expectedMarks.every((exp, i) => normalizeMark(values[i] ?? '') === normalizeMark(exp));
+}
+let quote: string | null = null;
+if (activeMentor) {
+if (!allCorrect) {
+quote = pickRandomQuote(activeMentor.mistakeQuotes);
+} else if (comboStreak + 1 >= 2) {
+quote = pickRandomQuote(activeMentor.comboQuotes);
+}
+setMentorQuote(quote);
+}
+setSubmitted(true);
+setIsCorrect(allCorrect);
+onAnswered(allCorrect, { values, digitsInput }, quote);
+};
+const correctHighlight = isDigitMode
+? question.expectedDigits || 'Запятые не требуются'
+: expectedMarks
+.map((mark, idx) => (${idx + 1}) ${formatMarkLabel(normalizeMark(mark))})
+.join(' · ');
+const renderMarkableTokens = (text: string, prefix: string) => {
+const tokens = text.split(/(\s+)/);
+return tokens.map((tok, tokIdx) => {
+if (!tok) return null;
+if (/^\s+$/.test(tok)) {
+return <React.Fragment key={${prefix}-sp-${tokIdx}}>{tok}</React.Fragment>;
+}
+const tokenKey = ${prefix}-${tokIdx};
+const appliedMark = wordMarks[tokenKey];
+const markClass = appliedMark ? MARKER_STYLE_BY_ID[appliedMark] : '';
+if (activeTool === 'none') {
+return (
+<span
+key={tokenKey}
+className={inline transition-colors ${markClass}}
+>
+{tok}
 
-    let quote: string | null = null;
-    if (activeMentor) {
-      if (!allCorrect) {
-        quote = pickRandomQuote(activeMentor.mistakeQuotes);
-      } else if (comboStreak + 1 >= 2) {
-        quote = pickRandomQuote(activeMentor.comboQuotes);
-      }
-      setMentorQuote(quote);
-    }
+);
+}
+return (
+<span
+key={tokenKey}
+role="button"
+tabIndex={0}
+onClick={() => toggleWordMark(tokenKey)}
+onKeyDown={(e) => {
+if (e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+toggleWordMark(tokenKey);
+}
+}}
+className={inline cursor-pointer select-none transition-all hover:bg-slate-800/75 rounded-sm ${markClass}}
+>
+{tok}
 
-    setSubmitted(true);
-    setIsCorrect(allCorrect);
-    onAnswered(allCorrect, { values, digitsInput }, quote);
-  };
+);
+});
+};
+const renderDigitSentence = () => {
+const expectedSet = new Set(
+extractDigitTokens(question.expectedDigits ?? '', templateDigitTokens)
+);
+const userSet = new Set(
+extractDigitTokens(digitsInput, templateDigitTokens)
+);
+const parts = question.sentenceTemplate.split(/(\d+)/g);
+return parts.map((part, pIdx) => {
+const match = part.match(/^(\d+)$/);
+if (match) {
+const digit = match[1];
+const expectedComma = expectedSet.has(digit);
+const userSelected = userSet.has(digit);
+let badgeClass =
+'bg-violet-500/20 border-violet-400/50 text-violet-200 hover:bg-violet-500/35 hover:border-violet-300';
+let label = part;
+if (submitted) {
+if (expectedComma && userSelected) {
+badgeClass = 'bg-emerald-500/25 border-emerald-400 text-emerald-200';
+label = (${digit},);
+} else if (!expectedComma && !userSelected) {
+badgeClass = 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300';
+label = part;
+} else if (expectedComma && !userSelected) {
+badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200';
+label = (${digit} + ,);
+} else {
+badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200 line-through';
+label = part;
+}
+} else if (userSelected) {
+badgeClass =
+'bg-indigo-500/35 border-indigo-300 text-white shadow-sm shadow-indigo-500/30 ring-1 ring-indigo-400/50';
+label = (${digit},);
+}
+if (!submitted) {
+return (
+<button
+key={num-${pIdx}}
+type="button"
+onClick={() => toggleDigitSelection(digit)}
+title={
+userSelected
+? Убрать запятую на позиции ${digit}
+: Поставить запятую на позиции ${digit}
+}
+aria-pressed={userSelected}
+className={inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-all cursor-pointer select-none active:scale-95 ${badgeClass}}
+>
+{label}
 
-  const correctHighlight = isDigitMode
-    ? question.expectedDigits || 'Запятые не требуются'
-    : expectedMarks
-        .map((mark, idx) => `(${idx + 1}) ${formatMarkLabel(normalizeMark(mark))}`)
-        .join(' · ');
+);
+}
+return (
+<span
+key={num-${pIdx}}
+className={inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-colors ${badgeClass}}
+>
+{label}
 
-  const renderMarkableTokens = (text: string, prefix: string) => {
-    const tokens = text.split(/(\s+)/);
-    return tokens.map((tok, tokIdx) => {
-      if (!tok) return null;
-      if (/^\s+$/.test(tok)) {
-        return <React.Fragment key={`${prefix}-sp-${tokIdx}`}>{tok}</React.Fragment>;
-      }
-      const tokenKey = `${prefix}-${tokIdx}`;
-      const appliedMark = wordMarks[tokenKey];
-      const markClass = appliedMark ? MARKER_STYLE_BY_ID[appliedMark] : '';
+);
+}
+return <React.Fragment key={seg-${pIdx}}>{renderMarkableTokens(part, d-${pIdx})}</React.Fragment>;
+});
+};
+return (
 
-      if (activeTool === 'none') {
-        return (
-          <span
-            key={tokenKey}
-            className={`inline transition-colors ${markClass}`}
-          >
-            {tok}
-          </span>
-        );
-      }
+{/* Left Column: Interactive Sentence */}
 
-      return (
-        <span
-          key={tokenKey}
-          role="button"
-          tabIndex={0}
-          onClick={() => toggleWordMark(tokenKey)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              toggleWordMark(tokenKey);
-            }
-          }}
-          className={`inline cursor-pointer select-none transition-all hover:bg-slate-800/75 rounded-sm ${markClass}`}
-        >
-          {tok}
-        </span>
-      );
-    });
-  };
 
-  const renderDigitSentence = () => {
-    const expectedSet = new Set(
-      (question.expectedDigits ?? '').replace(/\D/g, '').split('')
-    );
-    const userSet = new Set(digitsInput.replace(/\D/g, '').split(''));
-    const parts = question.sentenceTemplate.split(/(\(\d+\))/g);
 
-    return parts.map((part, pIdx) => {
-      const match = part.match(/^\((\d+)\)$/);
-      if (match) {
-        const digit = match[1];
-        const expectedComma = expectedSet.has(digit);
-        const userSelected = userSet.has(digit);
 
-        let badgeClass =
-          'bg-violet-500/20 border-violet-400/50 text-violet-200';
-        let label = part;
+{question.topicTag || 'Пунктуация'} ·{' '}
+{isDigitMode
+? 'Нажмите на цифры в тексте или введите ответ'
+: 'Введите знаки с клавиатуры'}
 
-        if (submitted) {
-          if (expectedComma && userSelected) {
-            badgeClass = 'bg-emerald-500/25 border-emerald-400 text-emerald-200';
-            label = `(${digit},)`;
-          } else if (!expectedComma && !userSelected) {
-            badgeClass = 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300';
-            label = part;
-          } else if (expectedComma && !userSelected) {
-            badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200';
-            label = `(${digit} + ,)`;
-          } else {
-            badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200 line-through';
-            label = part;
-          }
-        } else if (userSelected) {
-          badgeClass = 'bg-indigo-500/30 border-indigo-400 text-white shadow-sm';
-        }
+{question.hint && !submitted && (
+<button
+type="button"
+disabled={!hintUnlocked && !canAffordHint}
+title={
+!hintUnlocked && !canAffordHint
+? 'Недостаточно XP для подсказки (нужно 5 XP)'
+: undefined
+}
+onClick={handleToggleHint}
+className="lg:hidden inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
+>
 
-        return (
-          <span
-            key={`num-${pIdx}`}
-            className={`inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-colors ${badgeClass}`}
-          >
-            {label}
-          </span>
-        );
-      }
 
-      return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
-    });
-  };
+{showHint
+? 'Скрыть подсказку'
+: hintUnlocked
+? 'Подсказка'
+: 'Подсказка (-5 XP)'}
 
-  return (
-    <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start max-w-6xl mx-auto">
-      {/* Left Column: Interactive Sentence */}
-      <div className="lg:col-span-7 p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-slate-400">
-              {question.topicTag || 'Пунктуация'} ·{' '}
-              {isDigitMode ? 'Укажите цифры ответа (формат ФИПИ)' : 'Введите знаки с клавиатуры'}
-            </span>
-            {question.hint && !submitted && (
-              <button
-                type="button"
-                disabled={!hintUnlocked && !canAffordHint}
-                title={
-                  !hintUnlocked && !canAffordHint
-                    ? 'Недостаточно XP для подсказки (нужно 5 XP)'
-                    : undefined
-                }
-                onClick={handleToggleHint}
-                className="lg:hidden inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
-              >
-                <Lightbulb className="w-3.5 h-3.5" />
-                <span>
-                  {showHint
-                    ? 'Скрыть подсказку'
-                    : hintUnlocked
-                    ? 'Подсказка'
-                    : 'Подсказка (-5 XP)'}
-                </span>
-              </button>
-            )}
-          </div>
 
-          <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
-            {question.prompt}
-          </h3>
-        </div>
+)}
+{question.prompt}
 
-        {/* Interactive "Маркер / Черновик" Scratchpad Toolbar */}
-        <div className="p-2.5 sm:p-3 rounded-xl bg-[#080B14]/75 border border-slate-800/85 space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-              <Highlighter className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Маркер / Черновик (не влияет на оценку):</span>
-            </span>
+{/* Interactive "Маркер / Черновик" Scratchpad Toolbar */}
 
-            {Object.keys(wordMarks).length > 0 && (
-              <button
-                type="button"
-                onClick={() => setWordMarks({})}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 hover:border-rose-500/50 text-[11px] text-slate-300 hover:text-rose-200 transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Сбросить пометки</span>
-              </button>
-            )}
-          </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {MARKER_TOOLS.map((tool) => {
-              const isSelected = activeTool === tool.id;
-              return (
-                <button
-                  key={tool.id}
-                  type="button"
-                  onClick={() => setActiveTool(tool.id)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                    isSelected
-                      ? tool.btnActiveClass
-                      : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                  }`}
-                >
-                  <span>{tool.label}</span>
-                  {tool.id !== 'none' && (
-                    <span className="font-mono-num text-[10px] opacity-80">
-                      {tool.shortDesc}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Interactive Sentence Workspace */}
-        <div className="p-4 sm:p-6 rounded-xl bg-[#080B14]/85 border border-slate-800/90 leading-loose text-base sm:text-lg text-slate-100">
-          {isDigitMode
-            ? renderDigitSentence()
-            : segments.map((seg, idx) => {
-                const hasSlot = idx < slotCount;
-                const userVal = normalizeMark(values[idx] ?? '');
-                const expectedVal = normalizeMark(expectedMarks[idx] ?? '');
-                const slotOk = userVal === expectedVal;
 
-                let slotClass =
-                  focusedSlot === idx
-                    ? 'bg-violet-500/20 border-violet-400 text-white ring-2 ring-violet-500/30'
-                    : 'bg-slate-900 border-slate-700 text-slate-100 hover:border-violet-500/60';
+Маркер / Черновик (не влияет на оценку):
+{Object.keys(wordMarks).length > 0 && (
+<button
+type="button"
+onClick={() => setWordMarks({})}
+className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 hover:border-rose-500/50 text-[11px] text-slate-300 hover:text-rose-200 transition-colors cursor-pointer"
+>
 
-                if (submitted) {
-                  slotClass = slotOk
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                    : 'bg-rose-500/20 border-rose-500 text-rose-300';
-                }
+Сбросить пометки
 
-                return (
-                  <React.Fragment key={idx}>
-                    <span>{renderMarkableTokens(seg, `${idx}`)}</span>
-                    {hasSlot && (
-                      <span className="inline-flex items-center align-baseline mx-1 gap-1">
-                        <span className="relative inline-flex items-center">
-                          <input
-                            ref={(el) => {
-                              inputRefs.current[idx] = el;
-                            }}
-                            type="text"
-                            inputMode="text"
-                            maxLength={1}
-                            disabled={submitted}
-                            aria-label={`Позиция ${idx + 1}`}
-                            value={userVal === '-' ? '—' : userVal}
-                            placeholder="_"
-                            onFocus={() => setFocusedSlot(idx)}
-                            onKeyDown={(e) => handleKeyDown(idx, e)}
-                            onChange={(e) => handleChange(idx, e)}
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg border text-center font-mono-num text-base font-bold placeholder:text-slate-600 focus:outline-none transition-all ${slotClass}`}
-                          />
-                          <span className="ml-0.5 text-[10px] font-mono-num text-slate-500 select-none">
-                            {idx + 1}
-                          </span>
-                        </span>
+)}
+{MARKER_TOOLS.map((tool) => {
+const isSelected = activeTool === tool.id;
+return (
+<button
+key={tool.id}
+type="button"
+onClick={() => setActiveTool(tool.id)}
+className={inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${ isSelected ? tool.btnActiveClass : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700' }}
+>
+{tool.label}
+{tool.id !== 'none' && (
 
-                        {submitted && !slotOk && (
-                          <span
-                            title={`Ожидалось: ${formatMarkLabel(expectedVal)}`}
-                            className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/40 text-xs font-mono-num font-bold text-emerald-300"
-                          >
-                            → {expectedVal === '' ? '∅' : expectedVal === '-' ? '—' : expectedVal}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-        </div>
+{tool.shortDesc}
 
-        {/* Bottom Controls: Numeric Input (ФИПИ digit mode) or Quick Punctuation Toolbar (slot mode) */}
-        {isDigitMode ? (
-          <div className="space-y-2.5 pt-1">
-            <label
-              htmlFor={`punct-digits-${question.id}`}
-              className="block text-sm font-semibold text-slate-200"
-            >
-              Ответ (цифры, на месте которых должны стоять запятые):
-            </label>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              <div className="relative flex-1">
-                <Keyboard className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  id={`punct-digits-${question.id}`}
-                  ref={digitsInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  disabled={submitted}
-                  value={digitsInput}
-                  onChange={(e) => {
-                    if (!submitted) setDigitsInput(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (submitted) onNext();
-                      else handleSubmit();
-                    }
-                  }}
-                  placeholder="Например: 124 (порядок и пробелы не важны)"
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-mono-num font-bold tracking-widest placeholder:text-slate-600 placeholder:text-xs sm:placeholder:text-sm placeholder:font-sans placeholder:tracking-normal placeholder:font-normal focus:outline-none transition-all ${
-                    submitted
-                      ? isCorrect
-                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-200'
-                        : 'bg-rose-500/15 border-rose-500 text-rose-200'
-                      : 'bg-[#080B14]/90 border-slate-700 text-white focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30'
-                  }`}
-                />
-              </div>
+)}
 
-              {!submitted && (
-                <button
-                  type="button"
-                  disabled={!digitsInput.replace(/\D/g, '')}
-                  onClick={handleSubmit}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium shadow-lg shadow-indigo-500/25 text-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Проверить</span>
-                </button>
-              )}
-            </div>
+);
+})}
 
-            {submitted && (
-              <div className="flex items-center gap-2 text-xs pt-0.5">
-                {isCorrect ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span className="text-emerald-300 font-medium">
-                      Верно! Все запятые определены точно.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span className="text-rose-300 font-medium">
-                      Верные цифры:{' '}
-                      <strong className="font-mono-num text-emerald-300">
-                        {question.expectedDigits || '—'}
-                      </strong>{' '}
-                      (проверьте подсвеченные позиции в предложении).
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        ) : !submitted ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-slate-400 mr-1">
-                Слот №{focusedSlot + 1}:
-              </span>
-              {[
-                { val: ',', label: ', Запятая' },
-                { val: ':', label: ': Двоеточие' },
-                { val: '-', label: '— Тире' },
-              ].map((btn) => (
-                <button
-                  key={btn.val}
-                  type="button"
-                  onClick={() => setSlotValue(focusedSlot, btn.val, true)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#080B14]/80 border border-slate-700 hover:border-violet-500/60 text-xs font-mono-num font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer"
-                >
-                  {btn.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setSlotValue(focusedSlot, '', true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-slate-600 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-              >
-                <Eraser className="w-3.5 h-3.5" />
-                <span>Пропуск</span>
-              </button>
-            </div>
+{/* Interactive Sentence Workspace */}
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white font-medium shadow-lg shadow-indigo-500/25 text-sm transition-all cursor-pointer whitespace-nowrap ml-auto"
-            >
-              <Send className="w-4 h-4" />
-              <span>Проверить</span>
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">
-            {isCorrect ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-emerald-300 font-medium">
-                  Все знаки препинания расставлены верно.
-                </span>
-              </>
-            ) : (
-              <>
-                <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                <span className="text-rose-300 font-medium">
-                  Проверьте выделенные красным позиции — справа от них указан верный знак (∅ — знак не нужен).
-                </span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+{isDigitMode
+? renderDigitSentence()
+: segments.map((seg, idx) => {
+const hasSlot = idx < slotCount;
+const userVal = normalizeMark(values[idx] ?? '');
+const expectedVal = normalizeMark(expectedMarks[idx] ?? '');
+const slotOk = userVal === expectedVal;
+let slotClass =
+focusedSlot === idx
+? 'bg-violet-500/20 border-violet-400 text-white ring-2 ring-violet-500/30'
+: 'bg-slate-900 border-slate-700 text-slate-100 hover:border-violet-500/60';
+if (submitted) {
+slotClass = slotOk
+? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+: 'bg-rose-500/20 border-rose-500 text-rose-300';
+}
+return (
+);
+})}
+{/* Bottom Controls: Numeric Input (ФИПИ digit mode) or Quick Punctuation Toolbar (slot mode) */}
+{isDigitMode ? (
+Ответ (цифры, на месте которых должны стоять запятые):
+<input
+id={punct-digits-${question.id}}
+ref={digitsInputRef}
+type="text"
+inputMode="numeric"
+disabled={submitted}
+value={digitsInput}
+onChange={(e) => {
+if (!submitted) setDigitsInput(e.target.value);
+}}
+onKeyDown={(e) => {
+if (e.key === 'Enter') {
+e.preventDefault();
+if (submitted) onNext();
+else handleSubmit();
+}
+}}
+placeholder="Нажмите на цифры выше или введите: 124"
+className={w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-mono-num font-bold tracking-widest placeholder:text-slate-600 placeholder:text-xs sm:placeholder:text-sm placeholder:font-sans placeholder:tracking-normal placeholder:font-normal focus:outline-none transition-all ${ submitted ? isCorrect ? 'bg-emerald-500/15 border-emerald-500 text-emerald-200' : 'bg-rose-500/15 border-rose-500 text-rose-200' : 'bg-[#080B14]/90 border-slate-700 text-white focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30' }}
+/>
+{!submitted && (
+<button
+type="button"
+disabled={!digitsInput.replace(/\D/g, '')}
+onClick={handleSubmit}
+className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium shadow-lg shadow-indigo-500/25 text-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
+>
 
-      {/* Right Column (Desktop) / Stacked + Fixed Bottom Bar (Mobile) */}
-      <TrainerSidePanel
-        submitted={submitted}
-        isCorrect={isCorrect}
-        ruleTitle={question.ruleTitle}
-        ruleExplanation={question.ruleExplanation}
-        hint={question.hint}
-        showHint={showHint}
-        hintUnlocked={hintUnlocked}
-        canAffordHint={canAffordHint}
-        onToggleHint={handleToggleHint}
-        correctAnswerHighlight={correctHighlight}
-        isReviewMode={isReviewMode}
-        isLastQuestion={isLastQuestion}
-        canGoPrev={canGoPrev}
-        learnedClicked={learnedClicked}
-        activeMentor={activeMentor}
-        mentorQuote={mentorQuote}
-        onMarkLearned={
-          onMarkLearned
-            ? () => {
-                setLearnedClicked(true);
-                onMarkLearned(question.id);
-              }
-            : undefined
-        }
-        onPrev={onPrev}
-        onNext={onNext}
-      />
-    </div>
-  );
+Проверить
+
+)}
+{submitted && (
+
+{isCorrect ? (
+<>
+
+
+Верно! Все запятые определены точно.
+
+</>
+) : (
+<>
+
+
+Верные цифры:{' '}
+
+{question.expectedDigits || '—'}
+{' '}
+(проверьте подсвеченные позиции в предложении).
+
+</>
+)}
+
+)}
+
+) : !submitted ? (
+
+
+
+Слот №{focusedSlot + 1}:
+
+{[
+{ val: ',', label: ', Запятая' },
+{ val: ':', label: ': Двоеточие' },
+{ val: '-', label: '— Тире' },
+].map((btn) => (
+<button
+key={btn.val}
+type="button"
+onClick={() => setSlotValue(focusedSlot, btn.val, true)}
+className="px-2.5 py-1.5 rounded-lg bg-[#080B14]/80 border border-slate-700 hover:border-violet-500/60 text-xs font-mono-num font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer"
+>
+{btn.label}
+
+))}
+<button
+type="button"
+onClick={() => setSlotValue(focusedSlot, '', true)}
+className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-slate-600 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+>
+
+Пропуск
+
+Проверить
+
+
+) : (
+
+{isCorrect ? (
+<>
+
+
+Все знаки препинания расставлены верно.
+
+</>
+) : (
+<>
+
+
+Проверьте выделенные красным позиции — справа от них указан верный знак (∅ — знак не нужен).
+
+</>
+)}
+
+)}
+{/* Right Column (Desktop) / Stacked + Fixed Bottom Bar (Mobile) */}
+<TrainerSidePanel
+submitted={submitted}
+isCorrect={isCorrect}
+ruleTitle={question.ruleTitle}
+ruleExplanation={question.ruleExplanation}
+hint={question.hint}
+showHint={showHint}
+hintUnlocked={hintUnlocked}
+canAffordHint={canAffordHint}
+onToggleHint={handleToggleHint}
+correctAnswerHighlight={correctHighlight}
+isReviewMode={isReviewMode}
+isLastQuestion={isLastQuestion}
+canGoPrev={canGoPrev}
+learnedClicked={learnedClicked}
+activeMentor={activeMentor}
+mentorQuote={mentorQuote}
+onMarkLearned={
+onMarkLearned
+? () => {
+setLearnedClicked(true);
+onMarkLearned(question.id);
+}
+: undefined
+}
+onPrev={onPrev}
+onNext={onNext}
+/>
+
+);
 };
