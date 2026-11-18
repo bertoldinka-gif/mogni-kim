@@ -201,6 +201,122 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       return next;
     });
   };
+  const toggleOptionComma = (commaKey: string) => {
+    if (submitted) return;
+    setOptionCommas((prev) => {
+      const next = { ...prev };
+      if (next[commaKey]) {
+        delete next[commaKey];
+      } else {
+        next[commaKey] = true;
+      }
+      return next;
+    });
+  };
+
+  const countCommasForOption = (optIdx: number): number => {
+    const prefix = `c-${optIdx}-`;
+    return Object.keys(optionCommas).filter((k) => k.startsWith(prefix) && optionCommas[k]).length;
+  };
+
+  const renderCommaInteractiveText = (text: string, optIdx: number) => {
+    const parts = text.split(/(\s+)/);
+    let wordCounter = 0;
+
+    return parts.map((part, pIdx) => {
+      if (!part) return null;
+
+      if (/^\s+$/.test(part)) {
+        const commaKey = `c-${optIdx}-${wordCounter - 1}`;
+        const hasComma = Boolean(optionCommas[commaKey]);
+
+        if (activeTool !== 'none') {
+          return (
+            <React.Fragment key={`sp-${optIdx}-${pIdx}`}>
+              {hasComma && (
+                <span className="inline-flex items-center justify-center px-1 mx-0.5 rounded bg-amber-400/25 border border-amber-400 text-amber-200 font-bold">
+                  ,
+                </span>
+              )}
+              {part}
+            </React.Fragment>
+          );
+        }
+
+        if (submitted) {
+          return (
+            <React.Fragment key={`sp-${optIdx}-${pIdx}`}>
+              {hasComma && (
+                <span className="inline-flex items-center justify-center px-1 mx-0.5 rounded bg-indigo-500/25 border border-indigo-400 text-indigo-200 font-bold">
+                  ,
+                </span>
+              )}
+              {part}
+            </React.Fragment>
+          );
+        }
+
+        return (
+          <React.Fragment key={`sp-${optIdx}-${pIdx}`}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleOptionComma(commaKey);
+              }}
+              title={hasComma ? 'Убрать запятую' : 'Поставить запятую здесь'}
+              aria-label={hasComma ? 'Убрать запятую' : 'Поставить запятую'}
+              className={
+                hasComma
+                  ? 'inline-flex items-center justify-center min-w-[1.15rem] h-5 px-1 mx-0.5 rounded bg-amber-400 text-slate-950 font-extrabold text-sm leading-none shadow-sm shadow-amber-500/40 hover:bg-amber-300 transition-all cursor-pointer align-baseline'
+                  : 'inline-flex items-center justify-center w-3.5 h-5 mx-0.5 rounded border border-transparent hover:border-amber-400/60 hover:bg-amber-400/20 text-transparent hover:text-amber-300 text-xs font-bold leading-none transition-all cursor-pointer align-baseline'
+              }
+            >
+              ,
+            </button>
+          </React.Fragment>
+        );
+      }
+
+      const tokNum = wordCounter++;
+      const markKey = `opt-${optIdx}-${tokNum}`;
+      const mark = wordMarks[markKey];
+      const markClass = mark ? MARKER_STYLE_BY_ID[mark] : '';
+
+      if (activeTool === 'none') {
+        if (!markClass) {
+          return <React.Fragment key={markKey}>{part}</React.Fragment>;
+        }
+        return (
+          <span key={markKey} className={markClass}>
+            {part}
+          </span>
+        );
+      }
+
+      return (
+        <span
+          key={markKey}
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWordMark(markKey);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleWordMark(markKey);
+            }
+          }}
+          className={`inline cursor-pointer rounded px-0.5 transition-colors hover:bg-violet-500/20 ${markClass}`}
+        >
+          {part}
+        </span>
+      );
+    });
+  };
 
   const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
     const segments = text.split(/(\*\*[^*]+\*\*)/g);
