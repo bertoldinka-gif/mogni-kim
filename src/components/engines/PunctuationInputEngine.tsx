@@ -379,23 +379,23 @@ onAnswered(allCorrect, { values, digitsInput }, quote);
 const correctHighlight = isDigitMode
 ? question.expectedDigits || 'Запятые не требуются'
 : expectedMarks
-.map((mark, idx) => (${idx + 1}) ${formatMarkLabel(normalizeMark(mark))})
+.map((mark, idx) => '(' + (idx + 1) + ') ' + formatMarkLabel(normalizeMark(mark)))
 .join(' · ');
 const renderMarkableTokens = (text: string, prefix: string) => {
 const tokens = text.split(/(\s+)/);
 return tokens.map((tok, tokIdx) => {
 if (!tok) return null;
 if (/^\s+$/.test(tok)) {
-return <React.Fragment key={${prefix}-sp-${tokIdx}}>{tok}</React.Fragment>;
+return <React.Fragment key={prefix + '-sp-' + tokIdx}>{tok}</React.Fragment>;
 }
-const tokenKey = ${prefix}-${tokIdx};
+const tokenKey = prefix + '-' + tokIdx;
 const appliedMark = wordMarks[tokenKey];
 const markClass = appliedMark ? MARKER_STYLE_BY_ID[appliedMark] : '';
 if (activeTool === 'none') {
 return (
 <span
 key={tokenKey}
-className={inline transition-colors ${markClass}}
+className={'inline transition-colors ' + markClass}
 >
 {tok}
 
@@ -413,7 +413,7 @@ e.preventDefault();
 toggleWordMark(tokenKey);
 }
 }}
-className={inline cursor-pointer select-none transition-all hover:bg-slate-800/75 rounded-sm ${markClass}}
+className={'inline cursor-pointer select-none transition-all hover:bg-slate-800/75 rounded-sm ' + markClass}
 >
 {tok}
 
@@ -440,13 +440,13 @@ let label = part;
 if (submitted) {
 if (expectedComma && userSelected) {
 badgeClass = 'bg-emerald-500/25 border-emerald-400 text-emerald-200';
-label = (${digit},);
+label = '(' + digit + ',)';
 } else if (!expectedComma && !userSelected) {
 badgeClass = 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300';
 label = part;
 } else if (expectedComma && !userSelected) {
 badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200';
-label = (${digit} + ,);
+label = '(' + digit + ' + ,)';
 } else {
 badgeClass = 'bg-rose-500/25 border-rose-400 text-rose-200 line-through';
 label = part;
@@ -454,21 +454,24 @@ label = part;
 } else if (userSelected) {
 badgeClass =
 'bg-indigo-500/35 border-indigo-300 text-white shadow-sm shadow-indigo-500/30 ring-1 ring-indigo-400/50';
-label = (${digit},);
+label = '(' + digit + ',)';
 }
 if (!submitted) {
 return (
 <button
-key={num-${pIdx}}
+key={'num-' + pIdx}
 type="button"
 onClick={() => toggleDigitSelection(digit)}
 title={
 userSelected
-? Убрать запятую на позиции ${digit}
-: Поставить запятую на позиции ${digit}
+? 'Убрать запятую на позиции ' + digit
+: 'Поставить запятую на позиции ' + digit
 }
 aria-pressed={userSelected}
-className={inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-all cursor-pointer select-none active:scale-95 ${badgeClass}}
+className={
+'inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-all cursor-pointer select-none active:scale-95 ' +
+badgeClass
+}
 >
 {label}
 
@@ -476,14 +479,17 @@ className={inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-
 }
 return (
 <span
-key={num-${pIdx}}
-className={inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-colors ${badgeClass}}
+key={'num-' + pIdx}
+className={
+'inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md border font-mono-num text-xs sm:text-sm font-bold align-baseline transition-colors ' +
+badgeClass
+}
 >
 {label}
 
 );
 }
-return <React.Fragment key={seg-${pIdx}}>{renderMarkableTokens(part, d-${pIdx})}</React.Fragment>;
+return <React.Fragment key={'seg-' + pIdx}>{renderMarkableTokens(part, 'd-' + pIdx)}</React.Fragment>;
 });
 };
 return (
@@ -545,7 +551,12 @@ return (
 key={tool.id}
 type="button"
 onClick={() => setActiveTool(tool.id)}
-className={inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${ isSelected ? tool.btnActiveClass : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700' }}
+className={
+'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-all cursor-pointer whitespace-nowrap ' +
+(isSelected
+? tool.btnActiveClass
+: 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700')
+}
 >
 {tool.label}
 {tool.id !== 'none' && (
@@ -582,7 +593,7 @@ return (
 {isDigitMode ? (
 Ответ (цифры, на месте которых должны стоять запятые):
 <input
-id={punct-digits-${question.id}}
+id={'punct-digits-' + question.id}
 ref={digitsInputRef}
 type="text"
 inputMode="numeric"
@@ -599,7 +610,14 @@ else handleSubmit();
 }
 }}
 placeholder="Нажмите на цифры выше или введите: 124"
-className={w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-mono-num font-bold tracking-widest placeholder:text-slate-600 placeholder:text-xs sm:placeholder:text-sm placeholder:font-sans placeholder:tracking-normal placeholder:font-normal focus:outline-none transition-all ${ submitted ? isCorrect ? 'bg-emerald-500/15 border-emerald-500 text-emerald-200' : 'bg-rose-500/15 border-rose-500 text-rose-200' : 'bg-[#080B14]/90 border-slate-700 text-white focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30' }}
+className={
+'w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-mono-num font-bold tracking-widest placeholder:text-slate-600 placeholder:text-xs sm:placeholder:text-sm placeholder:font-sans placeholder:tracking-normal placeholder:font-normal focus:outline-none transition-all ' +
+(submitted
+? isCorrect
+? 'bg-emerald-500/15 border-emerald-500 text-emerald-200'
+: 'bg-rose-500/15 border-rose-500 text-rose-200'
+: 'bg-[#080B14]/90 border-slate-700 text-white focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30')
+}
 />
 {!submitted && (
 <button
