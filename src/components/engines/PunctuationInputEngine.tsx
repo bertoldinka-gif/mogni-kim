@@ -481,7 +481,6 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
             {label}
           </span>
         );
-      }
 
       return <React.Fragment key={`seg-${pIdx}`}>{renderMarkableTokens(part, `d-${pIdx}`)}</React.Fragment>;
     });
