@@ -143,8 +143,12 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   const [wordMarks, setWordMarks] = useState<
     Record<string, Exclude<MarkerTool, 'none'>>
   >({});
-    const [sentenceRules, setSentenceRules] = useState<Record<string, string[]>>({});
-  const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
+      const [activeTool, setActiveTool] = useState<MarkerTool>('none');
+  const [wordMarks, setWordMarks] = useState<
+    Record<string, Exclude<MarkerTool, 'none'>>
+  >({});
+  const [activeRuleId, setActiveRuleId] = useState<string>('none');
+  const [ruleWordMarks, setRuleWordMarks] = useState<Record<string, string>>({});
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -167,8 +171,11 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     setMentorQuote(savedState?.mentorQuote ?? null);
         setActiveTool('none');
     setWordMarks({});
-    setSentenceRules({});
-    setSentenceNotes({});
+        setActiveTool('none');
+    setWordMarks({});
+    setActiveRuleId('none');
+    setRuleWordMarks({});
+  
     if (!savedState) {
       setTimeout(() => {
         inputRef.current?.focus();
@@ -386,221 +393,363 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       );
     });
   };
-    const isTask21Punctuation =
+        const isTask21Punctuation =
     question.kimTaskNumber === 21 ||
     (question.topicTag || '').toLowerCase().includes('задание 21');
 
-  const renderTask21AnalysisBoard = () => {
-    if (!isTask21Punctuation || !question.passage) return null;
-
+  const getTask21RulePalette = () => {
     const promptLower = question.prompt.toLowerCase();
-    let targetSign: 'dash' | 'colon' | 'comma' = 'dash';
-    let signTitle = 'ТИРЕ (—)';
-    let rulePresets: string[] = [
-      'Подлежащее — сказуемое',
-      'Приложение',
-      'БСП',
-      'Вставная конструкция',
-      'Неполное',
-      'Обобщающее слово',
-      'Прямая речь',
-    ];
 
     if (promptLower.includes('двоеточ')) {
-      targetSign = 'colon';
-      signTitle = 'ДВОЕТОЧИЕ (:)';
-      rulePresets = [
-        'БСП',
-        'Обобщающее слово',
-        'Прямая речь',
-      ];
-    } else if (promptLower.includes('запят')) {
-      targetSign = 'comma';
-      signTitle = 'ЗАПЯТАЯ (,)';
-      rulePresets = [
-        'Однородные члены',
-        'ССП',
-        'СПП',
-        'БСП',
-        'Об. определение',
-        'Деепричастный об.',
-        'Приложение',
-        'Вводное',
-        'Сравн. оборот',
-        'Уточн. обст.',
-        'Об. дополнение',
-        'Обращение',
+      return [
+        {
+          id: 'bsp',
+          label: 'БСП',
+          pillClass: 'bg-amber-500/25 border-amber-400 text-amber-200',
+          markClass: 'bg-amber-500/30 text-amber-100 rounded px-0.5',
+        },
+        {
+          id: 'gen',
+          label: 'Обобщающее слово',
+          pillClass: 'bg-emerald-500/25 border-emerald-400 text-emerald-200',
+          markClass: 'bg-emerald-500/30 text-emerald-100 rounded px-0.5',
+        },
+        {
+          id: 'speech',
+          label: 'Прямая речь',
+          pillClass: 'bg-fuchsia-500/25 border-fuchsia-400 text-fuchsia-200',
+          markClass: 'bg-fuchsia-500/30 text-fuchsia-100 rounded px-0.5',
+        },
       ];
     }
 
-    const sentenceMatches = Array.from(
-      question.passage.matchAll(/\((\d+)\)([^(]+)/g)
-    ).map((m) => ({
-      num: m[1],
-      text: m[2].trim(),
-    }));
+    if (promptLower.includes('запят')) {
+      return [
+        {
+          id: 'hom',
+          label: 'Однородные члены',
+          pillClass: 'bg-violet-500/25 border-violet-400 text-violet-200',
+          markClass: 'bg-violet-500/30 text-violet-100 rounded px-0.5',
+        },
+        {
+          id: 'ssp',
+          label: 'ССП',
+          pillClass: 'bg-sky-500/25 border-sky-400 text-sky-200',
+          markClass: 'bg-sky-500/30 text-sky-100 rounded px-0.5',
+        },
+        {
+          id: 'spp',
+          label: 'СПП',
+          pillClass: 'bg-emerald-500/25 border-emerald-400 text-emerald-200',
+          markClass: 'bg-emerald-500/30 text-emerald-100 rounded px-0.5',
+        },
+        {
+          id: 'bsp',
+          label: 'БСП',
+          pillClass: 'bg-amber-500/25 border-amber-400 text-amber-200',
+          markClass: 'bg-amber-500/30 text-amber-100 rounded px-0.5',
+        },
+        {
+          id: 'part',
+          label: 'Причастный оборот / об. опред.',
+          pillClass: 'bg-cyan-500/25 border-cyan-400 text-cyan-200',
+          markClass: 'bg-cyan-500/30 text-cyan-100 rounded px-0.5',
+        },
+        {
+          id: 'advpart',
+          label: 'Деепричастный оборот / об. обст.',
+          pillClass: 'bg-teal-500/25 border-teal-400 text-teal-200',
+          markClass: 'bg-teal-500/30 text-teal-100 rounded px-0.5',
+        },
+        {
+          id: 'app',
+          label: 'Приложение',
+          pillClass: 'bg-orange-500/25 border-orange-400 text-orange-200',
+          markClass: 'bg-orange-500/30 text-orange-100 rounded px-0.5',
+        },
+        {
+          id: 'intro',
+          label: 'Вводное',
+          pillClass: 'bg-pink-500/25 border-pink-400 text-pink-200',
+          markClass: 'bg-pink-500/30 text-pink-100 rounded px-0.5',
+        },
+        {
+          id: 'addr',
+          label: 'Обращение',
+          pillClass: 'bg-rose-500/25 border-rose-400 text-rose-200',
+          markClass: 'bg-rose-500/30 text-rose-100 rounded px-0.5',
+        },
+        {
+          id: 'clar',
+          label: 'Уточняющая конструкция',
+          pillClass: 'bg-lime-500/25 border-lime-400 text-lime-200',
+          markClass: 'bg-lime-500/30 text-lime-100 rounded px-0.5',
+        },
+        {
+          id: 'comp',
+          label: 'Сравнительный оборот',
+          pillClass: 'bg-yellow-500/25 border-yellow-400 text-yellow-200',
+          markClass: 'bg-yellow-500/30 text-yellow-100 rounded px-0.5',
+        },
+        {
+          id: 'obj',
+          label: 'Обособленное дополнение',
+          pillClass: 'bg-indigo-500/25 border-indigo-400 text-indigo-200',
+          markClass: 'bg-indigo-500/30 text-indigo-100 rounded px-0.5',
+        },
+      ];
+    }
 
-    const matchingSentences = sentenceMatches.filter(({ text }) => {
-      if (targetSign === 'dash') {
-        const withoutNumericRanges = text.replace(/\d+\s*[–—-]\s*\d+/g, '');
-        return /[—–]|\s-\s/.test(withoutNumericRanges);
-      }
-      if (targetSign === 'colon') {
-        return text.includes(':');
-      }
-      return text.includes(',');
-    });
-
-    if (matchingSentences.length === 0) return null;
-
-    const ruleGroups: Record<string, string[]> = {};
-    matchingSentences.forEach(({ num }) => {
-      const rules = sentenceRules[num] ?? [];
-      rules.forEach((r) => {
-        if (!ruleGroups[r]) ruleGroups[r] = [];
-        ruleGroups[r].push(num);
-      });
-    });
-
-    const matchedGroupEntry = Object.entries(ruleGroups).find(
-      ([, nums]) => nums.length >= 2
-    );
-
-    const hasAnyBoardInput =
-      Object.values(sentenceRules).some((arr) => arr.length > 0) ||
-      Object.values(sentenceNotes).some((v) => v.trim().length > 0);
-
-    return (
-      <div className="p-3 sm:p-4 rounded-xl bg-[#080B14]/80 border border-slate-800/90 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-200">
-              Черновой разбор предложений со знаком{' '}
-              <span className="text-amber-300 font-bold">{signTitle}</span>:
-            </span>
-            <span className="text-[11px] text-slate-400">
-              отметьте все правила в предложении — совпадения подсветятся
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {matchedGroupEntry && !submitted && (
-              <button
-                type="button"
-                onClick={() => setAnswer(matchedGroupEntry[1].join(''))}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/60 hover:bg-emerald-500/30 text-[11px] font-semibold text-emerald-200 transition-all cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                <span>
-                  Подставить {matchedGroupEntry[1].join('')} в ответ
-                </span>
-              </button>
-            )}
-
-            {hasAnyBoardInput && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSentenceRules({});
-                  setSentenceNotes({});
-                }}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Очистить</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {matchingSentences.map(({ num, text }) => {
-            const chosenRules = sentenceRules[num] ?? [];
-            const isMatched = chosenRules.some(
-              (r) => (ruleGroups[r]?.length ?? 0) >= 2
-            );
-
-            return (
-              <div
-                key={`board-${num}`}
-                className={`p-2.5 rounded-lg border transition-colors space-y-2 ${
-                  isMatched
-                    ? 'bg-emerald-500/10 border-emerald-500/45'
-                    : 'bg-slate-900/65 border-slate-800/80'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-start gap-2 min-w-0">
-                    <span
-                      className={`px-2 py-0.5 rounded font-mono-num text-xs font-bold shrink-0 ${
-                        isMatched
-                          ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-400/50'
-                          : 'bg-violet-500/20 text-violet-200 border border-violet-400/40'
-                      }`}
-                    >
-                      ({num})
-                    </span>
-                    <span className="text-xs text-slate-300 line-clamp-1">
-                      {text}
-                    </span>
-                  </div>
-
-                  <input
-                    type="text"
-                    value={sentenceNotes[num] ?? ''}
-                    onChange={(e) =>
-                      setSentenceNotes((prev) => ({
-                        ...prev,
-                        [num]: e.target.value,
-                      }))
-                    }
-                    placeholder="Заметка (основа / конструкция)..."
-                    className="w-full sm:w-56 px-2.5 py-1 rounded-md bg-[#080B14]/90 border border-slate-800 focus:border-violet-400 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none shrink-0"
-                  />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {rulePresets.map((preset) => {
-                    const active = chosenRules.includes(preset);
-                    const presetMatched =
-                      active && (ruleGroups[preset]?.length ?? 0) >= 2;
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() =>
-                          setSentenceRules((prev) => {
-                            const current = prev[num] ?? [];
-                            const next = current.includes(preset)
-                              ? current.filter((item) => item !== preset)
-                              : [...current, preset];
-                            return { ...prev, [num]: next };
-                          })
-                        }
-                        className={`px-2 py-0.5 rounded-md border text-[11px] font-medium transition-all cursor-pointer ${
-                          active
-                            ? presetMatched
-                              ? 'bg-emerald-500/25 border-emerald-400 text-emerald-100 font-semibold'
-                              : 'bg-indigo-500/30 border-indigo-400 text-white font-semibold'
-                            : 'bg-[#080B14]/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
+    return [
+      {
+        id: 'subj',
+        label: 'Подлежащее — сказуемое',
+        pillClass: 'bg-violet-500/25 border-violet-400 text-violet-200',
+        markClass: 'bg-violet-500/30 text-violet-100 rounded px-0.5',
+      },
+      {
+        id: 'app',
+        label: 'Приложение',
+        pillClass: 'bg-orange-500/25 border-orange-400 text-orange-200',
+        markClass: 'bg-orange-500/30 text-orange-100 rounded px-0.5',
+      },
+      {
+        id: 'bsp',
+        label: 'БСП',
+        pillClass: 'bg-amber-500/25 border-amber-400 text-amber-200',
+        markClass: 'bg-amber-500/30 text-amber-100 rounded px-0.5',
+      },
+      {
+        id: 'ins',
+        label: 'Вставная конструкция',
+        pillClass: 'bg-rose-500/25 border-rose-400 text-rose-200',
+        markClass: 'bg-rose-500/30 text-rose-100 rounded px-0.5',
+      },
+      {
+        id: 'intro',
+        label: 'Вводная конструкция',
+        pillClass: 'bg-pink-500/25 border-pink-400 text-pink-200',
+        markClass: 'bg-pink-500/30 text-pink-100 rounded px-0.5',
+      },
+      {
+        id: 'inc',
+        label: 'Неполное',
+        pillClass: 'bg-sky-500/25 border-sky-400 text-sky-200',
+        markClass: 'bg-sky-500/30 text-sky-100 rounded px-0.5',
+      },
+      {
+        id: 'gen',
+        label: 'Обобщающее слово',
+        pillClass: 'bg-emerald-500/25 border-emerald-400 text-emerald-200',
+        markClass: 'bg-emerald-500/30 text-emerald-100 rounded px-0.5',
+      },
+      {
+        id: 'speech',
+        label: 'Прямая речь',
+        pillClass: 'bg-fuchsia-500/25 border-fuchsia-400 text-fuchsia-200',
+        markClass: 'bg-fuchsia-500/30 text-fuchsia-100 rounded px-0.5',
+      },
+    ];
   };
 
+  const getTask21MatchedNumbers = (): string[] => {
+    if (!isTask21Punctuation || !question.passage) return [];
+    const ruleToSentences: Record<string, Set<string>> = {};
 
-  const renderScratchpadToolbar = () => {
+    Object.entries(ruleWordMarks).forEach(([key, ruleId]) => {
+      const [, sentNum] = key.split('-');
+      if (!sentNum) return;
+      if (!ruleToSentences[ruleId]) {
+        ruleToSentences[ruleId] = new Set();
+      }
+      ruleToSentences[ruleId].add(sentNum);
+    });
+
+    const matchedEntry = Object.values(ruleToSentences).find(
+      (set) => set.size >= 2
+    );
+
+    return matchedEntry
+      ? Array.from(matchedEntry).sort((a, b) => Number(a) - Number(b))
+      : [];
+  };
+
+  const renderTask21ColorPassage = (passage: string) => {
+    const palette = getTask21RulePalette();
+    const markStyleMap = Object.fromEntries(
+      palette.map((item) => [item.id, item.markClass])
+    );
+    const matchedNums = new Set(getTask21MatchedNumbers());
+    const blocks = passage.split(/(?=\(\d+\))/g);
+
+    return blocks.map((block, bIdx) => {
+      const numMatch = block.match(/^\((\d+)\)/);
+      const sentNum = numMatch ? numMatch.slice(1, 2).join('') : `b${bIdx}`;
+      const isSentenceMatched = Boolean(numMatch) && matchedNums.has(sentNum);
+      const tokens = block.split(/(\s+)/);
+
+      return (
+        <React.Fragment key={`t21-blk-${bIdx}`}>
+          {tokens.map((tok, tIdx) => {
+            if (!tok) return null;
+            if (/^\s+$/.test(tok)) {
+              return (
+                <React.Fragment key={`t21-sp-${bIdx}-${tIdx}`}>
+                  {tok}
+                </React.Fragment>
+              );
+            }
+
+            if (tIdx === 0 && numMatch) {
+              return (
+                <span
+                  key={`t21-num-${bIdx}`}
+                  className={`inline-block mr-1 px-1.5 py-0.5 rounded font-mono-num text-xs font-bold transition-colors ${
+                    isSentenceMatched
+                      ? 'bg-emerald-500/30 border border-emerald-400 text-emerald-200 shadow-sm'
+                      : 'text-violet-300'
+                  }`}
+                >
+                  {tok}
+                </span>
+              );
+            }
+
+            const markKey = `t21-${sentNum}-${tIdx}`;
+            const appliedRuleId = ruleWordMarks[markKey];
+            const appliedClass = appliedRuleId
+              ? markStyleMap[appliedRuleId] || ''
+              : '';
+
+            if (activeRuleId === 'none') {
+              return appliedClass ? (
+                <span key={markKey} className={appliedClass}>
+                  {tok}
+                </span>
+              ) : (
+                <React.Fragment key={markKey}>{tok}</React.Fragment>
+              );
+            }
+
+            return (
+              <span
+                key={markKey}
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  setRuleWordMarks((prev) => {
+                    const next = { ...prev };
+                    if (next[markKey] === activeRuleId) {
+                      delete next[markKey];
+                    } else {
+                      next[markKey] = activeRuleId;
+                    }
+                    return next;
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setRuleWordMarks((prev) => {
+                      const next = { ...prev };
+                      if (next[markKey] === activeRuleId) {
+                        delete next[markKey];
+                      } else {
+                        next[markKey] = activeRuleId;
+                      }
+                      return next;
+                    });
+                  }
+                }}
+                className={`inline cursor-pointer rounded px-0.5 transition-colors hover:bg-slate-800/80 ${appliedClass}`}
+              >
+                {tok}
+              </span>
+            );
+          })}
+        </React.Fragment>
+      );
+    });
+  };
+
+    const renderScratchpadToolbar = () => {
     if (!showScratchpad) return null;
+
+    if (isTask21Punctuation) {
+      const palette = getTask21RulePalette();
+      const matchedNums = getTask21MatchedNumbers();
+      const hasAnyMarks = Object.keys(ruleWordMarks).length > 0;
+
+      return (
+        <div className="p-2.5 sm:p-3 rounded-xl bg-[#080B14]/75 border border-slate-800/80 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+              <Highlighter className="w-3.5 h-3.5 text-violet-400" />
+              <span>
+                Цветной маркер правил (выберите правило и кликайте по словам в тексте):
+              </span>
+            </span>
+
+            <div className="flex items-center gap-2">
+              {matchedNums.length >= 2 && !submitted && (
+                <button
+                  type="button"
+                  onClick={() => setAnswer(matchedNums.join(''))}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/60 hover:bg-emerald-500/30 text-[11px] font-semibold text-emerald-200 transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                  <span>Подставить {matchedNums.join('')} в ответ</span>
+                </button>
+              )}
+
+              {hasAnyMarks && (
+                <button
+                  type="button"
+                  onClick={() => setRuleWordMarks({})}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Сбросить цвета</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveRuleId('none')}
+              className={`px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
+                activeRuleId === 'none'
+                  ? 'bg-slate-800 border-slate-500 text-white'
+                  : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Чтение
+            </button>
+
+            {palette.map((item) => {
+              const isSelected = activeRuleId === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveRuleId(item.id)}
+                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    isSelected
+                      ? item.pillClass + ' font-semibold shadow-sm'
+                      : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const hasMarks = Object.keys(wordMarks).length > 0;
     return (
       <div className="p-2.5 sm:p-3 rounded-xl bg-[#080B14]/75 border border-slate-800/80 flex flex-wrap items-center gap-1.5">
@@ -761,20 +910,24 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
           {/* Syntactic Scratchpad Toolbar above reading passage when enabled (e.g., EGE Task 21) */}
           {renderScratchpadToolbar()}
 
-          {question.passage && (
+                    {question.passage && (
             <div
               className={`p-4 sm:p-5 rounded-xl bg-[#080B14]/85 border border-slate-800/90 text-sm sm:text-[15px] text-slate-200 leading-relaxed whitespace-pre-line ${
-                showScratchpad && activeTool !== 'none'
+                showScratchpad &&
+                (isTask21Punctuation
+                  ? activeRuleId !== 'none'
+                  : activeTool !== 'none')
                   ? 'ring-1 ring-violet-500/30 cursor-text'
                   : ''
               }`}
             >
-              {showScratchpad
+              {isTask21Punctuation
+                ? renderTask21ColorPassage(question.passage)
+                : showScratchpad
                 ? renderMarkablePassage(question.passage)
                 : renderPassageWithBlanks(question.passage)}
             </div>
           )}
-          {renderTask21AnalysisBoard()}
 
           <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
             {question.prompt}
