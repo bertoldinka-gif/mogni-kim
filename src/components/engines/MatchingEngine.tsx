@@ -93,9 +93,9 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   const [learnedClicked, setLearnedClicked] = useState(false);
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
-      const [activeLeftKey, setActiveLeftKey] = useState<string | null>(null);
-  const [activeRightNum, setActiveRightNum] = useState<number | null>(null);
   );
+  const [activeLeftKey, setActiveLeftKey] = useState<string | null>(null);
+  const [activeRightNum, setActiveRightNum] = useState<number | null>(null);
 
   useEffect(() => {
     if (savedState?.userState?.selectedMapping) {
