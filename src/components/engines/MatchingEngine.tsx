@@ -13,6 +13,34 @@ import { MentorCharacter, pickRandomQuote } from '../../data/petsData';
 import { MatchingQuestion, SavedQuestionState } from '../../types/platform';
 import { MentorAvatar } from '../MentorAvatar';
 
+const PAIR_STYLES = [
+  {
+    card: 'bg-violet-500/15 border-violet-400/70',
+    badge: 'bg-violet-500/30 border-violet-400 text-violet-100',
+    pill: 'bg-violet-500/25 border-violet-400/60 text-violet-100',
+  },
+  {
+    card: 'bg-sky-500/15 border-sky-400/70',
+    badge: 'bg-sky-500/30 border-sky-400 text-sky-100',
+    pill: 'bg-sky-500/25 border-sky-400/60 text-sky-100',
+  },
+  {
+    card: 'bg-emerald-500/15 border-emerald-400/70',
+    badge: 'bg-emerald-500/30 border-emerald-400 text-emerald-100',
+    pill: 'bg-emerald-500/25 border-emerald-400/60 text-emerald-100',
+  },
+  {
+    card: 'bg-amber-500/15 border-amber-400/70',
+    badge: 'bg-amber-500/30 border-amber-400 text-amber-100',
+    pill: 'bg-amber-500/25 border-amber-400/60 text-amber-100',
+  },
+  {
+    card: 'bg-fuchsia-500/15 border-fuchsia-400/70',
+    badge: 'bg-fuchsia-500/30 border-fuchsia-400 text-fuchsia-100',
+    pill: 'bg-fuchsia-500/25 border-fuchsia-400/60 text-fuchsia-100',
+  },
+];
+
 interface MatchingEngineProps {
   question: MatchingQuestion;
   isReviewMode?: boolean;
@@ -65,6 +93,8 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   const [learnedClicked, setLearnedClicked] = useState(false);
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
+      const [activeLeftKey, setActiveLeftKey] = useState<string | null>(null);
+  const [activeRightNum, setActiveRightNum] = useState<number | null>(null);
   );
 
   useEffect(() => {
@@ -83,6 +113,8 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
+        setActiveLeftKey(null);
+    setActiveRightNum(null);
   }, [question.id, question.leftItems, savedState]);
 
   const canAffordHint = userXp >= 5;
@@ -106,12 +138,53 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     (item) => typeof selectedMapping[item.key] === 'number'
   );
 
-  const handleSelectChange = (key: string, value: string) => {
+    const clearPairByLeft = (leftKey: string) => {
     if (submitted) return;
-    setSelectedMapping((prev) => ({
-      ...prev,
-      [key]: value === '' ? '' : Number(value),
-    }));
+    setSelectedMapping((prev) => ({ ...prev, [leftKey]: '' }));
+    if (activeLeftKey === leftKey) setActiveLeftKey(null);
+  };
+
+  const handleLeftCardClick = (leftKey: string) => {
+    if (submitted) return;
+    if (activeRightNum !== null) {
+      setSelectedMapping((prev) => {
+        const next = { ...prev };
+        for (const k of Object.keys(next)) {
+          if (next[k] === activeRightNum) next[k] = '';
+        }
+        next[leftKey] = activeRightNum;
+        return next;
+      });
+      setActiveRightNum(null);
+      setActiveLeftKey(null);
+      return;
+    }
+    setActiveLeftKey((prev) => (prev === leftKey ? null : leftKey));
+  };
+
+  const handleRightCardClick = (rightNum: number) => {
+    if (submitted) return;
+    if (activeLeftKey !== null) {
+      setSelectedMapping((prev) => {
+        const next = { ...prev };
+        for (const k of Object.keys(next)) {
+          if (next[k] === rightNum) next[k] = '';
+        }
+        next[activeLeftKey] = rightNum;
+        return next;
+      });
+      setActiveLeftKey(null);
+      setActiveRightNum(null);
+      return;
+    }
+    const existingLeftKey = Object.keys(selectedMapping).find(
+      (k) => selectedMapping[k] === rightNum
+    );
+    if (existingLeftKey) {
+      clearPairByLeft(existingLeftKey);
+      return;
+    }
+    setActiveRightNum((prev) => (prev === rightNum ? null : rightNum));
   };
 
   const handleSubmit = () => {
@@ -202,66 +275,129 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           )}
         </div>
 
-        {/* Full-Width Two-Column Matching Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Left Column: Lettered Items (А–Д) + Dropdowns */}
+                {/* Full-Width Two-Column Interactive Pair Matching Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
+          {/* Left Column: Lettered Items (А–Д) */}
           <div className={`${isTask22Mode ? 'md:col-span-7' : 'md:col-span-5'} space-y-2.5`}>
-            <div className="text-xs font-medium text-slate-400 px-1">
-              {leftTitle}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-medium text-slate-400">
+                {leftTitle}
+              </span>
+              {!submitted && (
+                <span className="text-[11px] text-slate-500">
+                  Нажмите на карточку слева, затем справа
+                </span>
+              )}
             </div>
-            {question.leftItems.map((item) => {
+
+            {question.leftItems.map((item, leftIdx) => {
               const selectedVal = selectedMapping[item.key];
               const expectedVal = question.correctMapping[item.key];
               const rowOk = selectedVal === expectedVal;
+              const isSelectedCard = activeLeftKey === item.key;
+              const pairColor = PAIR_STYLES[leftIdx % PAIR_STYLES.length];
+              const matchedRight =
+                typeof selectedVal === 'number'
+                  ? question.rightItems.find((r) => r.number === selectedVal)
+                  : undefined;
 
-              let rowClass = 'bg-[#080B14]/80 border-slate-800/90';
+              let rowClass =
+                'bg-[#080B14]/80 border-slate-800/90 hover:border-slate-700';
+
               if (submitted) {
                 rowClass = rowOk
                   ? 'bg-emerald-500/15 border-emerald-500/60'
                   : 'bg-rose-500/15 border-rose-500/60';
+              } else if (isSelectedCard) {
+                rowClass = `${pairColor.card} ring-2 ring-white/40 shadow-md`;
+              } else if (matchedRight) {
+                rowClass = pairColor.card;
               }
 
               return (
                 <div
                   key={item.key}
-                  className={`p-3 rounded-xl border transition-colors space-y-2 ${rowClass}`}
+                  role="button"
+                  tabIndex={submitted ? -1 : 0}
+                  onClick={() => handleLeftCardClick(item.key)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleLeftCardClick(item.key);
+                    }
+                  }}
+                  className={`p-3 rounded-xl border transition-all space-y-2 ${
+                    submitted ? 'cursor-default' : 'cursor-pointer'
+                  } ${rowClass}`}
                 >
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-6 h-6 rounded-md bg-violet-500/15 border border-violet-500/40 text-violet-300 text-xs font-mono-num font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      {item.key}
-                    </span>
-                    <span className="text-xs sm:text-sm text-slate-200 leading-snug">
-                      {item.text}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2 pl-8">
-                    <select
-                      aria-label={`Соответствие для ${item.key}`}
-                      disabled={submitted}
-                      value={selectedVal === '' ? '' : String(selectedVal)}
-                      onChange={(e) => handleSelectChange(item.key, e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 hover:border-violet-500/60 focus:border-violet-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs sm:text-sm font-mono-num font-semibold text-white disabled:opacity-80 cursor-pointer"
-                    >
-                      <option value="">Выберите №</option>
-                      {question.rightItems.map((r) => (
-                        <option key={r.number} value={r.number}>
-                          {isTask22Mode
-                            ? `${r.number} — ${r.text}`
-                            : `${optionPrefix} ${r.number}`}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <span
+                        className={`w-6 h-6 rounded-md border text-xs font-mono-num font-bold flex items-center justify-center shrink-0 mt-0.5 ${
+                          matchedRight || isSelectedCard
+                            ? pairColor.badge
+                            : 'bg-violet-500/15 border-violet-500/40 text-violet-300'
+                        }`}
+                      >
+                        {item.key}
+                      </span>
+                      <span className="text-xs sm:text-sm text-slate-200 leading-snug">
+                        {item.text}
+                      </span>
+                    </div>
 
                     {submitted &&
                       (rowOk ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-mono-num font-bold text-emerald-300 whitespace-nowrap shrink-0">
+                        <span className="inline-flex items-center gap-1 text-xs font-mono-num font-bold text-emerald-300 whitespace-nowrap shrink-0 mt-0.5">
                           <XCircle className="w-4 h-4 text-rose-400" />
                           <span>→ {expectedVal}</span>
                         </span>
                       ))}
+                  </div>
+
+                  {/* Selected Pair Pill or Prompt */}
+                  <div className="pl-8 flex items-center justify-between gap-2">
+                    {matchedRight ? (
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
+                          submitted
+                            ? rowOk
+                              ? 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200'
+                              : 'bg-rose-500/20 border-rose-400/60 text-rose-200'
+                            : pairColor.pill
+                        }`}
+                      >
+                        <strong className="font-mono-num">{matchedRight.number}</strong>
+                        <span className="truncate max-w-[260px] sm:max-w-[340px]">
+                          · {isTask22Mode ? matchedRight.text : `${optionPrefix} ${matchedRight.number}`}
+                        </span>
+                        {!submitted && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              clearPairByLeft(item.key);
+                            }}
+                            title="Убрать пару"
+                            className="ml-1 text-xs opacity-75 hover:opacity-100 cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-[11px] font-medium ${
+                          isSelectedCard ? 'text-white' : 'text-slate-500'
+                        }`}
+                      >
+                        {isSelectedCard
+                          ? 'Выберите пару в правом столбце →'
+                          : 'Нажмите, чтобы выбрать пару'}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -275,25 +411,77 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
             </div>
             <div className="space-y-2">
               {question.rightItems.map((item) => {
-                const isChosen = Object.values(selectedMapping).includes(item.number);
-                const isExpected = Object.values(question.correctMapping).includes(item.number);
+                const pairedLeftIdx = question.leftItems.findIndex(
+                  (l) => selectedMapping[l.key] === item.number
+                );
+                const pairedLeftItem =
+                  pairedLeftIdx >= 0 ? question.leftItems[pairedLeftIdx] : undefined;
+                const pairColor =
+                  pairedLeftIdx >= 0
+                    ? PAIR_STYLES[pairedLeftIdx % PAIR_STYLES.length]
+                    : null;
+                const isSelectedRight = activeRightNum === item.number;
+                const isExpected = Object.values(question.correctMapping).includes(
+                  item.number
+                );
 
-                let sentClass = 'bg-[#080B14]/70 border-slate-800/80 text-slate-200';
-                if (submitted && isExpected) {
-                  sentClass = 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100';
-                } else if (!submitted && isChosen) {
-                  sentClass = 'bg-violet-500/10 border-violet-500/40 text-white';
+                let sentClass =
+                  'bg-[#080B14]/70 border-slate-800/80 text-slate-200 hover:border-slate-700';
+
+                if (submitted) {
+                  if (isExpected) {
+                    sentClass =
+                      'bg-emerald-500/10 border-emerald-500/40 text-emerald-100';
+                  } else if (pairedLeftItem) {
+                    sentClass = 'bg-rose-500/10 border-rose-500/40 text-rose-200';
+                  } else {
+                    sentClass = 'bg-[#080B14]/40 border-slate-800/50 text-slate-500';
+                  }
+                } else if (isSelectedRight) {
+                  sentClass =
+                    'bg-violet-500/20 border-violet-400 text-white ring-2 ring-violet-400/40';
+                } else if (pairColor) {
+                  sentClass = `${pairColor.card} text-white`;
                 }
 
                 return (
                   <div
                     key={item.number}
-                    className={`p-3 rounded-xl border text-xs sm:text-sm leading-relaxed flex items-start gap-3 transition-colors ${sentClass}`}
+                    role="button"
+                    tabIndex={submitted ? -1 : 0}
+                    onClick={() => handleRightCardClick(item.number)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleRightCardClick(item.number);
+                      }
+                    }}
+                    className={`p-3 rounded-xl border text-xs sm:text-sm leading-relaxed flex items-start justify-between gap-3 transition-all ${
+                      submitted ? 'cursor-default' : 'cursor-pointer'
+                    } ${sentClass}`}
                   >
-                    <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 text-slate-300 text-xs font-mono-num font-semibold flex items-center justify-center shrink-0 mt-0.5">
-                      {item.number}
-                    </span>
-                    <span>{item.text}</span>
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <span
+                        className={`w-6 h-6 rounded-full border text-xs font-mono-num font-semibold flex items-center justify-center shrink-0 mt-0.5 ${
+                          pairColor
+                            ? pairColor.badge
+                            : isSelectedRight
+                            ? 'bg-violet-500/30 border-violet-400 text-white'
+                            : 'bg-slate-900 border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        {item.number}
+                      </span>
+                      <span>{item.text}</span>
+                    </div>
+
+                    {pairedLeftItem && pairColor && (
+                      <span
+                        className={`px-2 py-0.5 rounded-md border font-mono-num text-xs font-bold shrink-0 mt-0.5 ${pairColor.badge}`}
+                      >
+                        ← {pairedLeftItem.key}
+                      </span>
+                    )}
                   </div>
                 );
               })}
