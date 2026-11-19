@@ -840,8 +840,6 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
               </button>
             )}
           </div>
-        )}
-      </div>
 
       {/* Full-Width Rule & Criteria Summary Card (shown after submission) */}
       {submitted && (
