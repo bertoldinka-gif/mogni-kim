@@ -387,11 +387,6 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
           )}
         </div>
 
-          <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
-            {question.prompt}
-          </h3>
-        </div>
-
         {/* Built-in Dark Audio Player for OGE Изложение */}
         {question.hasAudio && (
           <div className="p-3.5 sm:p-4 rounded-xl bg-[#080B14]/90 border border-slate-800/90 space-y-3">
