@@ -835,6 +835,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                         )}
           </div>
         )}
+        </div>
 
       {/* Full-Width Rule & Criteria Summary Card (shown after submission) */}
       {submitted && (
@@ -872,5 +873,6 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
           </p>
         </div>
       )}
+        </div>
   );
 };
