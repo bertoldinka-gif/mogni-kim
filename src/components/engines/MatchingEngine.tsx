@@ -40,7 +40,35 @@ const PAIR_STYLES = [
     pill: 'bg-fuchsia-500/25 border-fuchsia-400/60 text-fuchsia-100',
   },
 ];
+function renderFormattedItemText(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*|<u>[^<]+<\/u>)/g);
+  if (parts.length === 1) return text;
 
+  return parts.map((part, idx) => {
+    if (!part) return null;
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong
+          key={`b-${idx}`}
+          className="font-bold text-white bg-violet-500/20 border border-violet-400/40 px-1 py-0.5 rounded mx-0.5"
+        >
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('<u>') && part.endsWith('</u>') && part.length > 7) {
+      return (
+        <u
+          key={`u-${idx}`}
+          className="underline decoration-amber-400 decoration-2 underline-offset-4 font-bold text-amber-200"
+        >
+          {part.slice(3, -4)}
+        </u>
+      );
+    }
+    return <React.Fragment key={`t-${idx}`}>{part}</React.Fragment>;
+  });
+}
 interface MatchingEngineProps {
   question: MatchingQuestion;
   isReviewMode?: boolean;
@@ -342,7 +370,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
                         {item.key}
                       </span>
                       <span className="text-xs sm:text-sm text-slate-200 leading-snug">
-                        {item.text}
+                        {renderFormattedItemText(item.text)}
                       </span>
                     </div>
 
