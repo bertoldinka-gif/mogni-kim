@@ -872,6 +872,5 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
           </p>
         </div>
       )}
-    </div>
   );
 };
