@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  BookmarkCheck,
   Check,
   CheckCircle2,
   Copy,
@@ -351,11 +354,11 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
 
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
-  return (
-    <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start max-w-6xl mx-auto">
-      {/* Left Column: Audio Player + Essay Workspace + Attachments + AI Prompt Export */}
-      <div className="lg:col-span-7 p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
-        <div className="space-y-1.5">
+    return (
+    <div className="max-w-5xl mx-auto w-full space-y-4">
+      {/* Full-Width Single-Column Essay & Summary Workspace */}
+      <div className="p-4 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
+        <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-medium text-slate-400">
               {KIND_LABELS[question.essayKind]}
@@ -364,13 +367,25 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
               <button
                 type="button"
                 onClick={() => setShowHint((v) => !v)}
-                className="lg:hidden inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/80 hover:border-violet-500/50 text-xs font-medium text-violet-300 hover:text-violet-200 transition-colors cursor-pointer whitespace-nowrap shrink-0"
               >
                 <Lightbulb className="w-3.5 h-3.5" />
                 <span>{showHint ? 'Скрыть подсказку' : 'Подсказка'}</span>
               </button>
             )}
           </div>
+
+          <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
+            {question.prompt}
+          </h3>
+
+          {showHint && question.hint && !submitted && (
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 leading-relaxed flex items-start gap-2.5">
+              <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span>{question.hint}</span>
+            </div>
+          )}
+        </div>
 
           <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
             {question.prompt}
@@ -460,7 +475,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
               <span className="text-violet-400">{showSourceText ? 'Свернуть' : 'Показать'}</span>
             </button>
             {showSourceText && (
-              <div className="px-3.5 pb-3.5 pt-1 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 max-h-44 overflow-y-auto whitespace-pre-line">
+              <div className="px-3.5 pb-3.5 pt-1 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 max-h-72 overflow-y-auto whitespace-pre-line">
                 {question.sourceText}
               </div>
             )}
@@ -797,32 +812,73 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
         )}
       </div>
 
-      {/* Right Column (Desktop) / Stacked + Fixed Bottom Bar (Mobile) */}
-      <TrainerSidePanel
-        submitted={submitted}
-        isCorrect={true}
-        ruleTitle={question.ruleTitle}
-        ruleExplanation={`${question.ruleExplanation} Критерии: ${question.criteriaText}`}
-        hint={question.hint}
-        showHint={showHint}
-        onToggleHint={() => setShowHint((v) => !v)}
-        isReviewMode={isReviewMode}
-        isLastQuestion={isLastQuestion}
-        canGoPrev={canGoPrev}
-        learnedClicked={learnedClicked}
-        activeMentor={activeMentor}
-        mentorQuote={mentorQuote}
-        onMarkLearned={
-          onMarkLearned
-            ? () => {
-                setLearnedClicked(true);
-                onMarkLearned(question.id);
-              }
-            : undefined
-        }
-        onPrev={onPrev}
-        onNext={onNext}
-      />
+              {/* Bottom Navigation inside Main Card */}
+        {(onPrev || !isLastQuestion) && (
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/70">
+            {onPrev ? (
+              <button
+                type="button"
+                disabled={!canGoPrev}
+                onClick={onPrev}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-violet-500/50 text-xs sm:text-sm font-medium text-slate-300 hover:text-white disabled:opacity-35 disabled:cursor-not-allowed transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Назад</span>
+              </button>
+            ) : (
+              <span />
+            )}
+
+            {!isLastQuestion && (
+              <button
+                type="button"
+                onClick={onNext}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-violet-500/50 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <span>Следующее задание</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Full-Width Rule & Criteria Summary Card (shown after submission) */}
+      {submitted && (
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#0B1917]/90 border border-emerald-500/40 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="font-display text-sm sm:text-base font-semibold text-white">
+              {question.ruleTitle}
+            </h4>
+
+            {isReviewMode && onMarkLearned && (
+              <button
+                type="button"
+                disabled={learnedClicked}
+                onClick={() => {
+                  setLearnedClicked(true);
+                  onMarkLearned(question.id);
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                  learnedClicked
+                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 cursor-default'
+                    : 'bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 text-slate-200 hover:text-emerald-200'
+                }`}
+              >
+                <BookmarkCheck className="w-3.5 h-3.5" />
+                <span>{learnedClicked ? 'Отмечено как изученное' : 'Отметить как изученное'}</span>
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            {question.ruleExplanation}
+          </p>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            <strong className="text-slate-300">Критерии оценивания:</strong> {question.criteriaText}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
