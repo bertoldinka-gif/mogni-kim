@@ -6,6 +6,8 @@ import {
   ege9RowQuestions,
 } from './egeRowSpellingData';
 
+const PASSAGE_MAIN_3 = `СЮДА_ВСТАВИТЬ_ТЕКСТ`;
+
 export const egeModules: TaskModule[] = [
   // 1. Культура речи (Задания 1–8) — 8 отдельных карточек
   {
