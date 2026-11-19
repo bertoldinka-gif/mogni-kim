@@ -814,14 +814,15 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                 else handleSubmit();
               }
             }}
-            placeholder={
-              question.inputPlaceholder ||
-              (isDigitMode
-                ? 'Введите цифры (например: 247)...'
-                : question.submode === 'phrase_transform'
-                ? 'Введите словосочетание (пробелы не важны)...'
-                : 'Введите ответ с клавиатуры...')
+                        placeholder={
+              isDigitMode
+                ? 'Введите номер(-а) предложений без пробелов...'
+                : question.inputPlaceholder ||
+                  (question.submode === 'phrase_transform'
+                    ? 'Введите словосочетание (пробелы не важны)...'
+                    : 'Введите ответ с клавиатуры...')
             }
+
             className={`w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-medium placeholder:text-slate-600 placeholder:text-sm focus:outline-none transition-all ${
               isDigitMode ? 'font-mono-num tracking-widest' : ''
             } ${
