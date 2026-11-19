@@ -809,8 +809,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
               </div>
             )}
           </div>
-        )}
-      </div>
+    )}
 
               {/* Bottom Navigation inside Main Card */}
         {(onPrev || !isLastQuestion) && (
@@ -838,8 +837,10 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                 <span>Следующее задание</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-            )}
+                        )}
           </div>
+        )}
+      </div>
 
       {/* Full-Width Rule & Criteria Summary Card (shown after submission) */}
       {submitted && (
