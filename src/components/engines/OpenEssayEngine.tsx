@@ -40,6 +40,10 @@ import {
   saveEssayDraft,
 } from '../../utils/storage';
 import { MentorAvatar } from '../MentorAvatar';
+import {
+  FinalEssayTopic,
+  generateFinalEssaySet,
+} from '../../data/ege/finalEssayBank';
 import { TrainerSidePanel } from './TrainerSidePanel';
 
 interface OpenEssayEngineProps {
