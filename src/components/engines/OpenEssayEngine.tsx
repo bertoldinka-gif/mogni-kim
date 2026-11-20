@@ -425,7 +425,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                   onClick={() => {
                     const fresh = generateFinalEssaySet();
                     setTopicSet(fresh);
-                    setSelectedTopicId(fresh[0]?.id ?? null);
+                    setSelectedTopicId(fresh.at(0)?.id ?? null);
                     setOralRevealed(false);
                   }}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-violet-400 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
@@ -445,11 +445,11 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                       : `№ 30${(idx % 2) + 1}`;
                   const isSelected = activeTopic?.id === topic.id;
                   return (
-                    <button
+                                        <button
                       key={topic.id}
                       type="button"
                       onClick={() => {
-                       setSelectedTopicId(fresh.at(0)?.id ?? null);
+                        setSelectedTopicId(topic.id);
                         setOralRevealed(false);
                       }}
                       className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
