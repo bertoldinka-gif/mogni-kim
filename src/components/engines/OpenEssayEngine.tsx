@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BookmarkCheck,
+  BookOpen,
   Check,
   CheckCircle2,
   Copy,
@@ -14,6 +15,7 @@ import {
   MessageSquareQuote,
   Pause,
   Play,
+  RefreshCw,
   Save,
   Sparkles,
   Trash2,
@@ -139,7 +141,41 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
+  const isFinalEssay = question.essayKind === 'final_essay';
+  const [topicSet, setTopicSet] = useState<FinalEssayTopic[]>(() =>
+    isFinalEssay ? generateFinalEssaySet() : []
+  );
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [oralRevealed, setOralRevealed] = useState(false);
 
+  useEffect(() => {
+    if (question.essayKind === 'final_essay') {
+      const nextSet = generateFinalEssaySet();
+      setTopicSet(nextSet);
+      setSelectedTopicId(nextSet[0]?.id ?? null);
+      setOralRevealed(false);
+    } else {
+      setTopicSet([]);
+      setSelectedTopicId(null);
+      setOralRevealed(false);
+    }
+  }, [question.id, question.essayKind]);
+
+  const activeTopic = useMemo(
+    () => topicSet.find((t) => t.id === selectedTopicId) ?? topicSet[0] ?? null,
+    [topicSet, selectedTopicId]
+  );
+
+  const effectivePrompt =
+    isFinalEssay && activeTopic
+      ? `«${activeTopic.title}» Напишите итоговое сочинение объёмом не менее 250 слов с опорой на не менее чем одно произведение отечественной или мировой литературы.`
+      : question.prompt;
+
+  const effectiveHint =
+    isFinalEssay && activeTopic
+      ? `Тезис: ${activeTopic.thesisHint} • Подходящие произведения: 1) ${activeTopic.books[0]}; 2) ${activeTopic.books[1]}.`
+      : question.hint;
+  
   const timerRef = useRef<number | null>(null);
 
   const stopAllAudio = () => {
@@ -242,7 +278,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   const handleCopyAiPrompt = async () => {
     const promptText = buildExternalAiPrompt({
       examType: KIND_TO_AI_EXAM[question.essayKind],
-      promptText: question.prompt,
+      promptText: effectivePrompt,
       sourceText: question.sourceText,
       studentText: essayText,
     });
@@ -271,7 +307,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
       id: archiveRecordId ?? undefined,
       questionId: question.id,
       examType: KIND_TO_AI_EXAM[question.essayKind],
-      promptTitle: question.prompt,
+      promptTitle: effectivePrompt,
       sourceText: question.sourceText,
       studentText: trimmed,
       wordCount: countEssayWords(trimmed),
@@ -304,7 +340,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
       const trimmed = essayText.trim();
       const report = await evaluateEssayWithAI({
         examType: KIND_TO_AI_EXAM[question.essayKind],
-        promptText: question.prompt,
+        promptText: effectivePrompt,
         sourceText: question.sourceText,
         studentText: trimmed,
       });
@@ -328,7 +364,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
             id: archiveRecordId ?? undefined,
             questionId: question.id,
             examType: KIND_TO_AI_EXAM[question.essayKind],
-            promptTitle: question.prompt,
+            promptTitle: effectivePrompt,
             sourceText: question.sourceText,
             studentText: trimmed,
             wordCount: countEssayWords(trimmed),
@@ -376,13 +412,107 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
           </div>
 
           <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
-            {question.prompt}
+            {effectivePrompt}
           </h3>
+          {isFinalEssay && topicSet.length > 0 && (
+            <div className="p-3.5 rounded-xl bg-[#080B14]/85 border border-violet-500/30 space-y-3 mt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-violet-300">
+                  Экзаменационный комплект: выберите 1 из 6 тем (по 2 из каждого раздела)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fresh = generateFinalEssaySet();
+                    setTopicSet(fresh);
+                    setSelectedTopicId(fresh[0]?.id ?? null);
+                    setOralRevealed(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-violet-400 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-violet-400" />
+                  <span>Новый комплект (6 тем)</span>
+                </button>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {topicSet.map((topic, idx) => {
+                  const code =
+                    topic.section === 1
+                      ? `№ 10${(idx % 2) + 1}`
+                      : topic.section === 2
+                      ? `№ 20${(idx % 2) + 1}`
+                      : `№ 30${(idx % 2) + 1}`;
+                  const isSelected = activeTopic?.id === topic.id;
+                  return (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTopicId(topic.id);
+                        setOralRevealed(false);
+                      }}
+                      className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-violet-600/20 border-violet-400 text-white shadow-sm'
+                          : 'bg-slate-900/70 border-slate-800 hover:border-slate-600 text-slate-300'
+                      }`}
+                    >
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-0.5">
+                        {code} · Раздел {topic.section}
+                      </div>
+                      <div className="text-xs sm:text-sm font-medium leading-snug">
+                        {topic.title}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeTopic && (
+                <div className="pt-1 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
+                  <span className="text-[11px] text-slate-400">
+                    Можно написать текст ниже или разобрать тему устно без набора текста:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOralRevealed((v) => !v)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-xs font-medium text-emerald-300 transition-colors cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>
+                      {oralRevealed
+                        ? 'Скрыть устный разбор'
+                        : 'Продумал устно · Показать 2 примера'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {oralRevealed && activeTopic && (
+                <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 space-y-2 text-xs sm:text-sm">
+                  <div className="font-semibold text-emerald-300">
+                    Ориентир для устного ответа и 2 литературных аргумента:
+                  </div>
+                  <p className="text-slate-200 leading-relaxed">
+                    <strong className="text-white">Тезис:</strong> {activeTopic.thesisHint}
+                  </p>
+                  <ul className="space-y-1 text-slate-300 list-disc pl-4 leading-relaxed">
+                    <li>
+                      <strong className="text-emerald-200">Пример 1:</strong> {activeTopic.books[0]}
+                    </li>
+                    <li>
+                      <strong className="text-emerald-200">Пример 2:</strong> {activeTopic.books[1]}
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
           {showHint && question.hint && !submitted && (
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 leading-relaxed flex items-start gap-2.5">
               <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>{question.hint}</span>
+              <span>{effectiveHint}</span>
             </div>
           )}
         </div>
