@@ -1,661 +1,1024 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Winter & New Year Advent Calendar (ENG)</title>
-  <script src="https://tailwindcss.com"></script>
-  <link href="https://googleapis.com" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Fredoka', sans-serif;
-      background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 65%, #020617 100%);
-      color: #f8fafc;
-      min-height: 100vh;
-      margin: 0;
-      overflow-x: hidden;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .snow-container {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
-      overflow: hidden;
-    }
-    .snowflake {
-      position: absolute;
-      top: -20px;
-      color: #ffffff;
-      opacity: 0.75;
-      animation: fall linear infinite;
-    }
-    @keyframes fall {
-      to { transform: translateY(105vh) rotate(360deg); }
-    }
-    .door-card {
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-    }
-    .door-card:hover {
-      transform: translateY(-2px);
-    }
-    .door-card:active {
-      transform: scale(0.95);
-    }
-    .ornament-pop {
-      animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-    }
-    @keyframes popIn {
-      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.35; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.15); }
-    }
-    .fairy-light {
-      animation: twinkle 1.8s infinite ease-in-out;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Winter & New Year Around the World – English Advent Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: { fontFamily: { display: ["Fredoka", "ui-rounded", "system-ui", "sans-serif"] } } } };
+</script>
+<style>
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: "Fredoka", ui-rounded, system-ui, sans-serif; background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 100%); background-attachment: fixed; color: #f8fafc; }
+  .snowflake { position: fixed; top: -12px; border-radius: 9999px; background: #fff; pointer-events: none; z-index: 0; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+  @keyframes fall { 0% { transform: translate3d(0,-10vh,0); } 50% { transform: translate3d(24px,50vh,0); } 100% { transform: translate3d(-12px,110vh,0); } }
+  .twinkle { animation: twinkle 1.6s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+  .star-glow { animation: starGlow 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes starGlow { 0%,100% { filter: drop-shadow(0 0 6px #fbbf24); } 50% { filter: drop-shadow(0 0 16px #fde68a); } }
+  .ornament-pop { animation: pop .6s cubic-bezier(.34,1.56,.64,1) both; transform-box: fill-box; transform-origin: center; }
+  @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+  .door-glow { box-shadow: 0 0 0 2px #fbbf24, 0 0 18px rgba(251,191,36,.45); }
+  .door-today { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 2px #fbbf24, 0 0 14px rgba(251,191,36,.4); } 50% { box-shadow: 0 0 0 3px #fde68a, 0 0 28px rgba(251,191,36,.75); } }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .fade-in { animation: fadeIn .25s ease-out both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .toy-bounce { display: inline-block; animation: toyBounce 1.1s ease-in-out infinite; }
+  @keyframes toyBounce { 0%,100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-14px) scale(1.08); } 60% { transform: translateY(-14px) scale(1.08) rotate(-4deg); } }
+  .reward-in { animation: rewardIn .55s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes rewardIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .snowflake, .twinkle, .star-glow, .door-today, .ornament-pop, .shake, .fade-in, .toy-bounce, .reward-in { animation: none !important; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client?external=react",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react",
+    "canvas-confetti": "https://esm.sh/canvas-confetti@1.9.3"
+  }
+}
+</script>
+<script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
 </head>
-<body class="relative pb-12">
-  <div id="snowContainer" class="snow-container"></div>
+<body>
+<div id="root"></div>
 
-  <!-- Top Navigation & Music Bar -->
-  <header class="relative z-10 max-w-6xl mx-auto px-4 pt-5 pb-2 flex flex-wrap items-center justify-between gap-3">
-    <a href="../" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-sm font-semibold text-indigo-200 transition">
-      ← Back to Main Site
-    </a>
-    <div class="flex items-center gap-3">
-      <div class="px-4 py-2 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-sm font-bold">
-        ⭐ Stars: <span id="starCount">0</span> / 30
-      </div>
-      <button id="musicToggle" type="button" onclick="toggleMusic()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 text-white text-sm font-bold shadow-lg transition cursor-pointer">
-        Music: OFF 🔇
-      </button>
-    </div>
-  </header>
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createRoot } from "react-dom/client";
+import confetti from "canvas-confetti";
+import { Lock, Star, Volume2, Film, X, Music, VolumeX, ArrowLeft, RotateCcw, ShieldCheck, Check, Sparkles, Lightbulb, Eraser, Gift } from "lucide-react";
 
-  <!-- Title & Level Selector -->
-  <section class="relative z-10 max-w-5xl mx-auto px-4 text-center mt-2">
-    <div class="inline-block px-4 py-1 rounded-full bg-red-500/20 border border-red-400/40 text-red-200 text-xs uppercase tracking-wider font-bold mb-2">
-      December 1 – December 30 • Around the World
-    </div>
-    <h1 class="text-3xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow">
-      Winter & New Year Advent
-    </h1>
-    <p class="text-indigo-200 text-sm sm:text-base mt-1">Open one door every day, play mini-games, and decorate your New Year tree!</p>
+/* ---------------- Collectible toys: one unique toy per day ---------------- */
+const TOYS = [
+  { emoji: "🧸", name: "Plush Teddy Bear" },
+  { emoji: "🚂", name: "Wooden Toy Train" },
+  { emoji: "🔮", name: "Magic Snow Globe" },
+  { emoji: "💂", name: "Nutcracker Soldier" },
+  { emoji: "🔔", name: "Golden Sleigh Bell" },
+  { emoji: "🥁", name: "Little Toy Drum" },
+  { emoji: "🐧", name: "Cuddly Penguin" },
+  { emoji: "🐻‍❄️", name: "Fluffy Polar Bear" },
+  { emoji: "🍭", name: "Candy Lollipop" },
+  { emoji: "🧦", name: "Cosy Winter Stocking" },
+  { emoji: "🪅", name: "Party Piñata" },
+  { emoji: "🐚", name: "Lucky Sea Shell" },
+  { emoji: "🐲", name: "Paper Dragon" },
+  { emoji: "🍊", name: "Sugared Orange" },
+  { emoji: "🎁", name: "Surprise Gift Box" },
+  { emoji: "⛸️", name: "Silver Ice Skate" },
+  { emoji: "🎇", name: "Sparkling Sparkler" },
+  { emoji: "🌟", name: "Glowing Star" },
+  { emoji: "🛷", name: "Wooden Sled" },
+  { emoji: "🧹", name: "Befana's Broomstick" },
+  { emoji: "🎩", name: "Magic Top Hat" },
+  { emoji: "🪙", name: "Lucky Gold Coin" },
+  { emoji: "🧳", name: "Tiny Travel Suitcase" },
+  { emoji: "🐨", name: "Cuddly Koala" },
+  { emoji: "🎊", name: "Confetti Ball" },
+  { emoji: "🕯️", name: "Winter Candle" },
+  { emoji: "🧊", name: "Ice Crystal" },
+  { emoji: "🎈", name: "Red Party Balloon" },
+  { emoji: "⏰", name: "Golden Alarm Clock" },
+  { emoji: "🎉", name: "New Year Party Popper" },
+];
 
-    <!-- Teacher Mode Banner -->
-    <div id="teacherBanner" class="hidden mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-200 text-xs font-bold">
-      🔓 Teacher Preview Mode Active: All 30 doors unlocked
-    </div>
+/* ---------------- Day themes (shared across levels) ---------------- */
+const DAYS = [
+  { emoji: "❄️", theme: "Snowflakes", phrase: "let it snow", fact: "Almost every snowflake has six sides, and no two snowflakes are exactly the same!" },
+  { emoji: "⛄", theme: "Snowmen", phrase: "snowman", fact: "The tallest snow-woman ever, built in Maine, USA, in 2008, was over 37 metres tall — taller than a 10-storey building!" },
+  { emoji: "🎄", theme: "Russia", phrase: "happy new year", fact: "In Russia, presents arrive on New Year's Eve from Ded Moroz (Grandfather Frost) and his granddaughter Snegurochka, the Snow Maiden." },
+  { emoji: "🔔", theme: "Japan", phrase: "ring the bell", fact: "In Japan, temples ring their big bells 108 times at midnight to say goodbye to the old year. It's called Joya no Kane." },
+  { emoji: "🍇", theme: "Spain", phrase: "twelve grapes", fact: "In Spain, people eat 12 grapes at midnight — one for each chime of the clock — for 12 lucky months!" },
+  { emoji: "🎶", theme: "Scotland", phrase: "auld lang syne", fact: "Scotland's New Year party is called Hogmanay. The first visitor after midnight, the 'first-footer', brings small gifts for luck." },
+  { emoji: "🐧", theme: "Penguins", phrase: "penguin", fact: "Emperor penguins huddle together in groups of thousands and take turns standing in the warm middle." },
+  { emoji: "🐻‍❄️", theme: "Polar Bears", phrase: "polar bear", fact: "A polar bear's fur looks white, but its skin is black! Black skin helps it soak up the sun's warmth." },
+  { emoji: "☕", theme: "Hot Chocolate", phrase: "hot chocolate", fact: "The Maya and Aztecs drank chocolate more than 2,500 years ago — but it was cold, spicy and bitter!" },
+  { emoji: "🧤", theme: "Mittens", phrase: "mittens", fact: "Mittens are warmer than gloves because your fingers stay together and share their heat." },
+  { emoji: "🪅", theme: "Mexico", phrase: "pinata", fact: "In Mexico, children break piñatas full of sweets during the Las Posadas celebrations in December." },
+  { emoji: "🌊", theme: "Brazil", phrase: "make a wish", fact: "In Brazil, many people wear white on New Year's Eve and jump over seven ocean waves, making a wish for each one." },
+  { emoji: "🐉", theme: "China", phrase: "dragon", fact: "At Chinese New Year, children get red envelopes with money inside, and colourful dragon dances fill the streets." },
+  { emoji: "🍊", theme: "Philippines", phrase: "good fortune", fact: "In the Philippines, families put 12 round fruits on the table — round shapes look like coins. Kids also jump at midnight to grow taller!" },
+  { emoji: "🍽️", theme: "Denmark", phrase: "good luck", fact: "In Denmark, people throw old plates at friends' doors for luck, and everyone jumps off a chair at midnight to 'leap' into the New Year!" },
+  { emoji: "⛸️", theme: "Ice Skating", phrase: "ice skating", fact: "The first ice skates were made from animal bones about 4,000 years ago, probably in Finland." },
+  { emoji: "🎆", theme: "Fireworks", phrase: "fireworks", fact: "Fireworks were invented in China over 1,000 years ago. People believed the loud bangs scared away bad luck." },
+  { emoji: "🌌", theme: "Northern Lights", phrase: "northern lights", fact: "The Northern Lights (aurora borealis) happen when tiny particles from the Sun hit the air high above the Earth." },
+  { emoji: "🛷", theme: "Sled Dogs", phrase: "sled", fact: "The Iditarod is a famous sled dog race in Alaska. Teams of huskies run more than 1,600 km through the snow!" },
+  { emoji: "🧹", theme: "Italy", phrase: "witch", fact: "In Italy, a kind witch called La Befana flies on her broomstick on January 6th, bringing sweets to good children — and coal to naughty ones!" },
+  { emoji: "📺", theme: "Germany", phrase: "dinner for one", fact: "Every New Year's Eve, German TV shows a short 1963 British comedy called 'Dinner for One'. Most British people have never seen it!" },
+  { emoji: "🎂", theme: "Greece", phrase: "cake", fact: "In Greece, families cut the Vasilopita cake at midnight. Whoever finds the hidden coin inside is lucky all year!" },
+  { emoji: "🧳", theme: "Colombia", phrase: "suitcase", fact: "In Colombia, some people run around the block with an empty suitcase at midnight, hoping for a year full of travel!" },
+  { emoji: "☀️", theme: "Australia", phrase: "summer", fact: "In Australia, New Year comes in summer! Over a million people watch the fireworks over Sydney Harbour Bridge." },
+  { emoji: "🗽", theme: "New York", phrase: "times square", fact: "In New York, a giant glittering ball drops in Times Square at midnight. This tradition started in 1907!" },
+  { emoji: "🌙", theme: "Winter Solstice", phrase: "shortest day", fact: "The winter solstice, around December 21st, is the shortest day and longest night of the year in the Northern Hemisphere." },
+  { emoji: "🧊", theme: "Sweden", phrase: "ice hotel", fact: "Sweden's Icehotel is built from river ice and snow. It melts every spring, so it's rebuilt every single year!" },
+  { emoji: "📝", theme: "Resolutions", phrase: "new year's resolution", fact: "About 4,000 years ago, the ancient Babylonians made promises at New Year — the very first New Year's resolutions!" },
+  { emoji: "⏰", theme: "Countdown", phrase: "countdown", fact: "Kiribati in the Pacific is one of the first places to welcome the New Year, and American Samoa is one of the last — about 25 hours later!" },
+  { emoji: "🎉", theme: "Happy New Year", phrase: "happy new year", fact: "Because of time zones, New Year's Eve parties travel around the whole world for more than a day!" },
+];
 
-    <!-- 4 CEFR Level Tabs -->
-    <div class="mt-5 flex flex-wrap justify-center gap-2.5">
-      <button type="button" onclick="switchLevel('A1')" id="tab-A1" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
-        🌟 A1 Starters (7–8 yrs)
-      </button>
-      <button type="button" onclick="switchLevel('A1_plus')" id="tab-A1_plus" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
-        🚀 A1+ Movers (9–10 yrs)
-      </button>
-      <button type="button" onclick="switchLevel('B1')" id="tab-B1" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
-        🌍 B1 Intermediate
-      </button>
-      <button type="button" onclick="switchLevel('B2')" id="tab-B2" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
-        🎓 B2 Upper-Inter.
-      </button>
-    </div>
-  </section>
+/* ---------------- Task helpers (first option is always the correct one; options are shuffled on screen) ---------------- */
+/* Every task has an optional `videoUrl` (empty by default). Wrap a task with v(task, url) to attach a movie clip:
+   - Direct clip page (opens in a new tab):  v(q("What colour is snow?", [...]), "https://yarn.co/yarn-clip/your-clip-id")
+   - Local MP4 file (plays inside the modal): v(un("Unscramble…", "SNOWMAN"), "/advent-eng/clips/day1.mp4")
+   The "Watch in Movies" button only appears when videoUrl is non-empty. */
+const q = (prompt, options) => ({ type: "quiz", prompt, options, answer: options[0], videoUrl: "" });
+const oo = (prompt, options) => ({ type: "odd_one_out", prompt, options, answer: options[0], videoUrl: "" });
+const tf = (prompt, answer) => ({ type: "true_false", prompt, answer, videoUrl: "" });
+const un = (prompt, answer) => ({ type: "unscramble", prompt, answer, videoUrl: "" });
+const v = (task, videoUrl = "") => ({ ...task, videoUrl });
 
-  <!-- Main Content: 30-Day Grid + Interactive Tree -->
-  <main class="relative z-10 max-w-6xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-    
-    <!-- 30 Doors Grid -->
-    <div class="lg:col-span-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-2xl">
-      <div id="calendarGrid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3"></div>
-    </div>
+const TASKS = {
+  A1: [
+    // Example: v(q("What colour is snow?", ["white", "red", "green", "blue"]), "https://yarn.co/yarn-clip/..."),
+    q("What colour is snow?", ["white", "red", "green", "blue"]),
+    // Example: v(un("Unscramble the word: a man made of snow ⛄", "SNOWMAN"), "/advent-eng/clips/day2.mp4"),
+    un("Unscramble the word: a man made of snow ⛄", "SNOWMAN"),
+    tf("A New Year tree is green.", true),
+    oo("Which one is NOT cold?", ["sun", "snow", "ice", "frost"]),
+    q("How many grapes do people in Spain eat at midnight?", ["12", "2", "5", "20"]),
+    un("Unscramble the word: people in Scotland sing a New Year ___ 🎶", "SONG"),
+    q("A penguin is a…", ["bird", "fish", "cat", "dog"]),
+    tf("A polar bear is white.", true),
+    un("Unscramble the word: a hot chocolate drink ☕", "COCOA"),
+    oo("Which one do we NOT wear in winter?", ["sandals", "hat", "scarf", "mittens"]),
+    q("A piñata is full of…", ["sweets", "water", "snow", "stones"]),
+    tf("In Brazil, it is very cold on New Year's Eve.", false),
+    q("Which colour is lucky in China?", ["red", "black", "grey", "brown"]),
+    un("Unscramble the word: a round, orange fruit 🍊", "ORANGE"),
+    tf("In Denmark, people jump off chairs at midnight.", true),
+    oo("Which one is NOT for snow and ice?", ["pizza", "skates", "sled", "skis"]),
+    q("Where do we see fireworks?", ["in the sky", "in the sea", "in a box", "in bed"]),
+    un("Unscramble the word: they shine in the sky at night ✨", "STARS"),
+    q("Who pulls a sled?", ["dogs", "fish", "frogs", "snails"]),
+    tf("La Befana is a kind witch in Italy.", true),
+    oo("Which one is NOT food?", ["coat", "cake", "bread", "soup"]),
+    un("Unscramble the word: sweet food for a party 🎂", "CAKE"),
+    q("What do we put clothes in for a trip?", ["a suitcase", "a fridge", "an oven", "a bath"]),
+    tf("In Australia, it is summer in December.", true),
+    q("What do we say at midnight on December 31st?", ["Happy New Year!", "Good night!", "Goodbye!", "Happy birthday!"]),
+    oo("Which one is NOT a season?", ["Monday", "winter", "spring", "summer"]),
+    un("Unscramble the word: a snow house 🏠", "IGLOO"),
+    q("Which number comes after 2026?", ["2027", "2025", "2020", "2030"]),
+    tf("“Ten, nine, eight…” is a countdown.", true),
+    un("Unscramble the word: Happy New ___! 🎉", "YEAR"),
+  ],
+  "A1+": [
+    q("Every snowflake has ___ sides.", ["six", "two", "ten", "three"]),
+    un("Unscramble the word: you throw it in a snow fight", "SNOWBALL"),
+    q("In Russia, Grandfather Frost brings presents with his granddaughter, the…", ["Snow Maiden", "Ice Queen", "Tooth Fairy", "Easter Bunny"]),
+    tf("In Japan, temple bells ring 108 times on New Year's Eve.", true),
+    oo("Which one is NOT a fruit?", ["carrot", "grape", "apple", "banana"]),
+    un("Unscramble the word: the Scottish New Year party", "HOGMANAY"),
+    tf("Penguins can fly high in the sky.", false),
+    q("Under its white fur, a polar bear's skin is…", ["black", "pink", "white", "green"]),
+    un("Unscramble the word: hot ___ is a sweet winter drink", "CHOCOLATE"),
+    q("Which keep your hands the warmest?", ["mittens", "gloves", "socks", "a hat"]),
+    oo("Which one is NOT part of a party?", ["homework", "piñata", "music", "sweets"]),
+    q("In Brazil, many people wear ___ clothes on New Year's Eve.", ["white", "black", "purple", "orange"]),
+    un("Unscramble the word: a long animal in the Chinese New Year dance", "DRAGON"),
+    tf("In the Philippines, children jump at midnight to grow taller.", true),
+    q("In Denmark, people throw old ___ at their friends' doors!", ["plates", "shoes", "books", "socks"]),
+    oo("Which one is NOT a winter sport?", ["swimming in the sea", "skating", "skiing", "sledding"]),
+    q("Fireworks were invented in…", ["China", "France", "Brazil", "Canada"]),
+    un("Unscramble the word: the Northern ___ glow in the sky", "LIGHTS"),
+    tf("Husky dogs can pull sleds over snow.", true),
+    q("In Italy, La Befana brings presents on…", ["January 6th", "July 4th", "May 1st", "October 31st"]),
+    oo("Which one is NOT a month?", ["Winter", "January", "February", "March"]),
+    un("Unscramble the word: a Greek New Year cake has a hidden ___", "COIN"),
+    tf("In Colombia, some people walk around with an empty suitcase for luck.", true),
+    q("In Sydney, people watch fireworks over the…", ["harbour", "desert", "volcano", "forest"]),
+    un("Unscramble the word: in New York, a big shiny ___ drops at midnight", "BALL"),
+    q("The shortest day of the year is in…", ["December", "July", "April", "August"]),
+    oo("Which one is NOT cold?", ["fire", "ice", "snow", "frost"]),
+    q("A New Year's resolution is a…", ["promise to yourself", "kind of cake", "winter coat", "Christmas song"]),
+    tf("Every country celebrates New Year at the same time.", false),
+    un("Unscramble the word: to have a party for a special day", "CELEBRATE"),
+  ],
+  B1: [
+    q("Snow forms when water vapour ___ in very cold clouds.", ["freezes", "melts", "boils", "evaporates"]),
+    un("Put the words in order to make a sentence.", "We built a huge snowman in the garden"),
+    q("Ded Moroz is the Russian version of…", ["Father Christmas", "the Easter Bunny", "Cupid", "a snowman"]),
+    tf("Japanese temples ring their bells exactly 100 times on New Year's Eve.", false),
+    un("Put the words in order to make a sentence.", "People in Spain eat twelve grapes at midnight"),
+    q("In Scotland, the 'first-footer' is the first person who ___ your home after midnight.", ["enters", "cleans", "leaves", "paints"]),
+    oo("Which one is NOT a type of penguin?", ["Grizzly", "Emperor", "Adélie", "Gentoo"]),
+    tf("Polar bears have black skin under their fur.", true),
+    q("Who first drank chocolate, more than 2,500 years ago?", ["the Maya and Aztecs", "the Vikings", "the Romans", "the Ancient Greeks"]),
+    un("Put the words in order to make a sentence.", "Mittens keep your fingers warmer than gloves"),
+    q("Children hit a piñata with a ___ to break it open.", ["stick", "spoon", "pillow", "feather"]),
+    oo("Which word does NOT describe New Year in Brazil?", ["blizzard", "beach", "waves", "summer"]),
+    un("Put the words in order to make a sentence.", "Children receive red envelopes with money inside"),
+    q("In the Philippines, people choose round fruits because they look like…", ["coins", "balls", "the Moon", "eyes"]),
+    tf("Danish people break plates to bring good luck to their friends.", true),
+    q("The first ice skates were made from animal…", ["bones", "skin", "teeth", "hair"]),
+    oo("Which one is NOT a kind of firework?", ["snowflake", "rocket", "sparkler", "firecracker"]),
+    un("Put the words in order to make a sentence.", "The northern lights dance across the night sky"),
+    q("A famous long-distance sled dog race in Alaska is called the…", ["Iditarod", "Tour de France", "Grand Prix", "Boat Race"]),
+    tf("La Befana arrives on a flying broomstick.", true),
+    q("In Germany, the comedy 'Dinner for One' is shown on TV every…", ["New Year's Eve", "Monday", "summer holiday", "birthday"]),
+    un("Put the words in order to make a sentence.", "Whoever finds the coin will be lucky all year"),
+    oo("Which one do you NOT take on a journey?", ["a sofa", "a suitcase", "a passport", "a ticket"]),
+    q("Why is New Year hot in Australia?", ["It is in the Southern Hemisphere", "It is near the North Pole", "It never rains there", "The fireworks heat the air"]),
+    tf("The ball in Times Square has dropped on New Year's Eve since 1907.", true),
+    un("Put the words in order to make a sentence.", "The winter solstice is the shortest day of the year"),
+    q("How often is Sweden's Icehotel rebuilt?", ["every year", "every month", "every ten years", "every century"]),
+    oo("Which word does NOT belong with 'resolution'?", ["sandwich", "promise", "goal", "plan"]),
+    q("Which place is one of the FIRST to celebrate New Year?", ["Kiribati", "Hawaii", "Mexico", "Canada"]),
+    un("Put the words in order to make a sentence.", "I hope all your wishes come true"),
+  ],
+  B2: [
+    q("“The town was buried under a blanket of snow.” This phrase is an example of a…", ["metaphor", "simile", "question tag", "phrasal verb"]),
+    oo("Which word is NOT related to wintry weather?", ["drought", "blizzard", "flurry", "sleet"]),
+    q("The name 'Snegurochka' (Snow Maiden) comes from the Russian word for…", ["snow", "ice", "wind", "star"]),
+    un("Put the words in order to make a sentence.", "The bells are rung to cleanse 108 earthly desires"),
+    tf("Eating twelve grapes is meant to bring luck for each month of the coming year.", true),
+    q("The Scottish song title 'Auld Lang Syne' roughly means…", ["for old times' sake", "happy new year", "let it snow", "goodbye forever"]),
+    un("Put the words in order to make a sentence.", "Emperor penguins huddle together to survive the brutal cold"),
+    q("A polar bear's black skin helps it to…", ["absorb heat from the sun", "hide from predators", "swim faster", "see in the dark"]),
+    oo("Which verb does NOT describe drinking?", ["shiver", "savour", "sip", "gulp"]),
+    tf("Gloves are generally warmer than mittens because each finger is covered separately.", false),
+    q("Traditionally, the seven points of a piñata represent the seven deadly…", ["sins", "seas", "days", "wonders"]),
+    un("Put the words in order to make a sentence.", "Jumping over seven waves is believed to bring good fortune"),
+    q("The Chinese zodiac consists of ___ animals.", ["twelve", "ten", "seven", "twenty"]),
+    oo("Which word is NOT a synonym of 'wealth'?", ["misery", "prosperity", "fortune", "affluence"]),
+    un("Put the words in order to make a sentence.", "The bigger the pile of broken plates the more friends you have"),
+    tf("The oldest known ice skates were made of bone and are around 4,000 years old.", true),
+    q("Gunpowder, the key ingredient in fireworks, was first discovered by…", ["Chinese alchemists", "Greek philosophers", "Roman soldiers", "Viking sailors"]),
+    q("The aurora is caused by charged particles from the ___ colliding with our atmosphere.", ["Sun", "Moon", "ocean", "volcanoes"]),
+    oo("Which item does NOT belong in a dog-sledding race?", ["surfboard", "musher", "husky", "harness"]),
+    un("Put the words in order to make a sentence.", "Befana leaves coal for children who have misbehaved"),
+    tf("'Dinner for One' is far more famous in Germany than in Britain, where it was made.", true),
+    q("The Greek New Year cake with a hidden coin is called…", ["vasilopita", "baklava", "tiramisu", "strudel"]),
+    un("Put the words in order to make a sentence.", "Carrying an empty suitcase supposedly guarantees a year full of travel"),
+    q("Sydney's world-famous fireworks are centred on the Harbour…", ["Bridge", "Tower", "Castle", "Stadium"]),
+    oo("Which one is NOT part of a Times Square New Year's Eve?", ["sunbathing", "countdown", "ball drop", "confetti"]),
+    q("The word 'solstice' comes from Latin, meaning 'the sun…'", ["stands still", "rises", "burns", "sets"]),
+    tf("Sweden's Icehotel is made from ice taken from the Torne River.", true),
+    un("Put the words in order to make a sentence.", "Most New Year's resolutions are abandoned by February"),
+    q("Which is among the LAST inhabited places to welcome the New Year?", ["American Samoa", "Kiribati", "New Zealand", "Japan"]),
+    un("Put the words in order to make a sentence.", "May the coming year bring you health and happiness"),
+  ],
+};
 
-    <!-- Interactive Lush New Year Tree -->
-    <aside class="lg:col-span-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-5 text-center shadow-2xl">
-      <h2 class="text-xl font-bold text-amber-300">Your New Year Tree</h2>
-      <p class="text-xs text-indigo-200 mt-1">Complete tasks to unlock all 30 ornaments!</p>
-      
-      <div class="relative mx-auto mt-3 w-64 h-80 flex items-center justify-center">
-        <svg viewBox="0 0 260 320" class="w-full h-full drop-shadow-2xl">
-          <defs>
-            <linearGradient id="treeGrad1" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#22c55e"/>
-              <stop offset="100%" stop-color="#15803d"/>
-            </linearGradient>
-            <linearGradient id="treeGrad2" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#16a34a"/>
-              <stop offset="100%" stop-color="#14532d"/>
-            </linearGradient>
-            <linearGradient id="treeGrad3" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#15803d"/>
-              <stop offset="100%" stop-color="#052e16"/>
-            </linearGradient>
-            <linearGradient id="goldStar" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fef08a"/>
-              <stop offset="50%" stop-color="#facc15"/>
-              <stop offset="100%" stop-color="#d97706"/>
-            </linearGradient>
-            <filter id="starGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
+const LEVELS = [
+  { id: "A1", label: "🌟 A1 Starters (7–8 yrs)" },
+  { id: "A1+", label: "🚀 A1+ Movers (9–10 yrs)" },
+  { id: "B1", label: "🌍 B1 Intermediate" },
+  { id: "B2", label: "🎓 B2 Upper-Inter." },
+];
 
-          <!-- Snowy Ground Shadow -->
-          <ellipse cx="130" cy="296" rx="85" ry="12" fill="rgba(255,255,255,0.18)"/>
-
-          <!-- Wooden Trunk -->
-          <rect x="112" y="255" width="36" height="40" rx="6" fill="#78350f" stroke="#451a03" stroke-width="2"/>
-
-          <!-- Bottom Lush Tier -->
-          <path d="M130 145 Q80 205 22 260 Q65 272 95 258 Q130 275 165 258 Q195 272 238 260 Q180 205 130 145 Z" fill="url(#treeGrad3)"/>
-          <!-- Middle Lush Tier -->
-          <path d="M130 92 Q85 148 38 198 Q75 208 102 196 Q130 210 158 196 Q185 208 222 198 Q175 148 130 92 Z" fill="url(#treeGrad2)"/>
-          <!-- Top Lush Tier -->
-          <path d="M130 42 Q98 88 58 134 Q88 142 110 132 Q130 144 150 132 Q172 142 202 134 Q162 88 130 42 Z" fill="url(#treeGrad1)"/>
-
-          <!-- Garland Ribbons -->
-          <path d="M84 115 Q130 135 176 115" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
-          <path d="M62 175 Q130 202 198 175" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
-          <path d="M44 236 Q130 268 216 236" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
-
-          <!-- Twinkling Fairy Lights -->
-          <circle cx="105" cy="95" r="3" fill="#fef08a" class="fairy-light"/>
-          <circle cx="155" cy="105" r="3" fill="#fca5a5" class="fairy-light" style="animation-delay:0.4s"/>
-          <circle cx="85" cy="160" r="3.5" fill="#93c5fd" class="fairy-light" style="animation-delay:0.8s"/>
-          <circle cx="140" cy="155" r="3.5" fill="#fef08a" class="fairy-light" style="animation-delay:0.2s"/>
-          <circle cx="178" cy="168" r="3.5" fill="#fca5a5" class="fairy-light" style="animation-delay:1s"/>
-          <circle cx="70" cy="225" r="4" fill="#fde047" class="fairy-light" style="animation-delay:0.5s"/>
-          <circle cx="125" cy="218" r="4" fill="#a7f3d0" class="fairy-light" style="animation-delay:1.2s"/>
-          <circle cx="185" cy="228" r="4" fill="#93c5fd" class="fairy-light" style="animation-delay:0.7s"/>
-
-          <!-- Golden Top Star -->
-          <polygon id="treeTopStar"
-            points="130,8 137,24 155,26 141,37 145,54 130,45 115,54 119,37 105,26 123,24"
-            fill="url(#goldStar)" stroke="#fef08a" stroke-width="1.5" filter="url(#starGlow)"/>
-        </svg>
-
-        <!-- Ornaments Layer -->
-        <div id="treeOrnaments" class="absolute inset-0 pointer-events-none"></div>
-      </div>
-
-      <div class="mt-2 bg-slate-900/60 rounded-2xl p-3 border border-white/10">
-        <div class="flex justify-between text-xs font-bold text-indigo-200 mb-1">
-          <span>Tree Progress</span>
-          <span id="treePercent">0%</span>
-        </div>
-        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
-          <div id="treeProgressBar" class="bg-gradient-to-r from-amber-400 to-red-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-        </div>
-      </div>
-    </aside>
-  </main>
-Winter & New Year English Advent • Dec 1–30
-
-
-Reset Level Progress
-
-
-🔒 Teacher Mode: OFF
-
-
-✕
-December 1
-•
-A1 Starters
-Choose the right word!
-⛄
-Listen 🔊
-
-
-Watch in Movies 🎬
-
-
-🔒 Come back on December 1!
 const TEACHER_PIN = "2026";
-const STORAGE_KEY = "mogni_advent_eng_v1";
-const ORNAMENT_ICONS = ["🔴","🟡","🔵","🟣","🎁","🔔","❄️","⛄","🦌","🍪","🕯️","🧦","🎀","🧸","🌟","🍬","🎄","🛷","🧤","🧣","🎶","✨","💎","👑","🦊","🐧","🦉","🎠","🥁","🎆"];
-const ORNAMENT_POS = [, [112, 92], [148, 92], [95, 118], [130, 115], [165, 118],
-, [145, 140], [82, 158], [130, 165], [178, 158], [65, 185],
-, [155, 188], [195, 185], [90, 210], [130, 212], [170, 210],
-, [95, 238], [130, 238], [165, 238], [205, 235], [42, 255],
-, [112, 258], [148, 258], [182, 256], [218, 255], [130, 80]
-];
-// ==========================================
-// CALENDAR DATA (30 DAYS PER LEVEL)
-// ==========================================
-const calendarData = {
-A1: [
-{ day: 1, type: "quiz", emoji: "⛄", prompt: "What is this?", tts: "Snowman", moviePhrase: "Do you want to build a snowman", options: ["Snowman", "Tree", "Star"], answer: "Snowman", fact: "December 1 is the first day of winter!" },
-{ day: 2, type: "unscramble", emoji: "❄️", prompt: "Put the letters in order:", tts: "Snow", moviePhrase: "Let it snow", word: "SNOW", fact: "Every snowflake has 6 sides!" },
-{ day: 3, type: "true_false", emoji: "🎅", prompt: "Santa has got a green hat.", tts: "Santa has got a green hat.", moviePhrase: "Santa Claus", answer: false, fact: "False! Santa wears a bright red hat." },
-{ day: 4, type: "quiz", emoji: "🎄", prompt: "What color is the Christmas tree?", tts: "The tree is green", moviePhrase: "Christmas tree", options: ["Green", "Pink", "Black"], answer: "Green", fact: "Evergreen trees stay green all winter." },
-{ day: 5, type: "odd_one_out", emoji: "🧤", prompt: "Find the odd one out!", tts: "Mittens, scarf, hat, banana", moviePhrase: "It is freezing", options: ["Mittens 🧤", "Scarf 🧣", "Hat 🧢", "Banana 🍌"], answer: "Banana 🍌", fact: "A banana is fruit, not winter clothes!" },
-{ day: 6, type: "quiz", emoji: "🦌", prompt: "This is Santa's...", tts: "Reindeer", moviePhrase: "Rudolph the red nosed reindeer", options: ["Reindeer", "Dog", "Fish"], answer: "Reindeer", fact: "Reindeer live in the cold Arctic." },
-{ day: 7, type: "unscramble", emoji: "🎁", prompt: "Spell the word:", tts: "Gift", moviePhrase: "Open your presents", word: "GIFT", fact: "People put gifts under the tree." },
-{ day: 8, type: "true_false", emoji: "🐧", prompt: "Penguins can swim in cold water.", tts: "Penguins can swim in cold water.", moviePhrase: "Happy feet", answer: true, fact: "True! Penguins are great swimmers." },
-{ day: 9, type: "quiz", emoji: "⭐", prompt: "We put a shiny ___ on top of the tree.", tts: "Star", moviePhrase: "Wish upon a star", options: ["Star", "Apple", "Shoe"], answer: "Star", fact: "A golden star shines at the top." },
-{ day: 10, type: "unscramble", emoji: "🔔", prompt: "Make the word:", tts: "Bell", moviePhrase: "Jingle bells", word: "BELL", fact: "Jingle bells ring on Santa's sleigh!" },
-{ day: 11, type: "odd_one_out", emoji: "❄️", prompt: "Which word is NOT winter?", tts: "Ice, snow, frost, beach", moviePhrase: "Winter wonderland", options: ["Ice 🧊", "Snow ❄️", "Frost 🌬️", "Beach 🏖️"], answer: "Beach 🏖️", fact: "We go to the beach in summer." },
-{ day: 12, type: "quiz", emoji: "🧣", prompt: "Wear a warm ___ on your neck.", tts: "Scarf", moviePhrase: "Put on your scarf", options: ["Scarf", "Sock", "Clock"], answer: "Scarf", fact: "A wool scarf keeps your neck warm." },
-{ day: 13, type: "true_false", emoji: "🐻‍❄️", prompt: "Polar bears are white.", tts: "Polar bears are white.", moviePhrase: "Polar bear", answer: true, fact: "True! White fur helps them hide in snow." },
-{ day: 14, type: "unscramble", emoji: "🛷", prompt: "Spell the winter toy:", tts: "Sled", moviePhrase: "Sleigh ride", word: "SLED", fact: "Kids love riding a sled down snowy hills." },
-{ day: 15, type: "quiz", emoji: "🍪", prompt: "Kids leave milk and ___ for Santa.", tts: "Cookies", moviePhrase: "Milk and cookies", options: ["Cookies", "Carrots", "Onions"], answer: "Cookies", fact: "Santa loves sweet chocolate chip cookies!" },
-{ day: 16, type: "odd_one_out", emoji: "🔢", prompt: "Find the odd one out!", tts: "One, two, three, blue", moviePhrase: "One two three", options: ["One 1️⃣", "Two 2️⃣", "Three 3️⃣", "Blue 🔵"], answer: "Blue 🔵", fact: "Blue is a color, not a number." },
-{ day: 17, type: "unscramble", emoji: "🧊", prompt: "Frozen water is...", tts: "Ice", moviePhrase: "Ice skating", word: "ICE", fact: "Lakes freeze into ice in winter." },
-{ day: 18, type: "true_false", emoji: "🥕", prompt: "A snowman has got a carrot nose.", tts: "A snowman has got a carrot nose.", moviePhrase: "Build a snowman", answer: true, fact: "True! An orange carrot makes a great nose." },
-{ day: 19, type: "quiz", emoji: "🧦", prompt: "Santa puts small toys in a...", tts: "Stocking", moviePhrase: "Christmas stocking", options: ["Stocking", "Bucket", "Book"], answer: "Stocking", fact: "Kids hang stockings by the fireplace." },
-{ day: 20, type: "unscramble", emoji: "🧸", prompt: "Spell the toy:", tts: "Bear", moviePhrase: "Teddy bear", word: "BEAR", fact: "A teddy bear is a classic New Year gift." },
-{ day: 21, type: "quiz", emoji: "🥶", prompt: "In winter, the weather is...", tts: "Cold", moviePhrase: "It is so cold", options: ["Cold", "Hot", "Sunny"], answer: "Cold", fact: "December 21 is the shortest day of the year!" },
-{ day: 22, type: "odd_one_out", emoji: "🎨", prompt: "Find the odd one out!", tts: "Red, gold, silver, dog", moviePhrase: "Red and gold", options: ["Red 🔴", "Gold 🟡", "Silver ⚪", "Dog 🐶"], answer: "Dog 🐶", fact: "Red, gold, and silver are festive colors." },
-{ day: 23, type: "unscramble", emoji: "🕯️", prompt: "Spell the word:", tts: "Candle", moviePhrase: "Light a candle", word: "CANDLE", fact: "Candles make winter evenings cozy." },
-{ day: 24, type: "true_false", emoji: "🌙", prompt: "Santa flies at night.", tts: "Santa flies at night.", moviePhrase: "Night before Christmas", answer: true, fact: "True! He delivers gifts while kids sleep." },
-{ day: 25, type: "quiz", emoji: "🎶", prompt: "People sing festive ___ in December.", tts: "Songs", moviePhrase: "Sing a song", options: ["Songs", "Chairs", "Trees"], answer: "Songs", fact: "Merry Christmas is celebrated on Dec 25!" },
-{ day: 26, type: "unscramble", emoji: "🎉", prompt: "Spell the word:", tts: "Party", moviePhrase: "New Year party", word: "PARTY", fact: "Families celebrate together with games." },
-{ day: 27, type: "quiz", emoji: "🍊", prompt: "Sweet winter fruit:", tts: "Orange", moviePhrase: "Orange", options: ["Orange", "Potato", "Carrot"], answer: "Orange", fact: "Mandarins and oranges smell like New Year!" },
-{ day: 28, type: "true_false", emoji: "🎆", prompt: "Fireworks shine in the sky.", tts: "Fireworks shine in the sky.", moviePhrase: "Fireworks", answer: true, fact: "True! Colorful fireworks light up the night." },
-{ day: 29, type: "unscramble", emoji: "✨", prompt: "Make a New Year...", tts: "Wish", moviePhrase: "Make a wish", word: "WISH", fact: "Close your eyes and make a good wish!" },
-{ day: 30, type: "quiz", emoji: "🥳", prompt: "What do we say on New Year?", tts: "Happy New Year!", moviePhrase: "Happy New Year", options: ["Happy New Year!", "Happy Birthday!", "Good night!"], answer: "Happy New Year!", fact: "Congratulations! You finished Level A1!" }
-],
-A1_plus: [
-{ day: 1, type: "quiz", emoji: "📅", prompt: "December is the ___ month of the year.", tts: "December is the twelfth month of the year.", moviePhrase: "First of December", options: ["twelfth", "first", "sixth"], answer: "twelfth", fact: "December has 31 days." },
-{ day: 2, type: "true_false", emoji: "🏄‍♂️", prompt: "In Australia, December is in summer!", tts: "In Australia, December is in summer!", moviePhrase: "Summer Christmas", answer: true, fact: "True! In Australia, Santa often goes surfing!" },
-{ day: 3, type: "unscramble", emoji: "🧤", prompt: "Spell the winter word:", tts: "Mittens", moviePhrase: "Where are my mittens", word: "MITTENS", fact: "Mittens keep your fingers together and warm." },
-{ day: 4, type: "quiz", emoji: "⛸️", prompt: "We go ___ on the frozen lake.", tts: "We go ice skating on the frozen lake.", moviePhrase: "Ice skating", options: ["ice skating", "swimming", "fishing"], answer: "ice skating", fact: "Ice skating is a popular winter sport." },
-{ day: 5, type: "odd_one_out", emoji: "🦌", prompt: "Find the odd one out!", tts: "Lapland, North Pole, Arctic, Desert", moviePhrase: "North Pole", options: ["Lapland 🇫🇮", "North Pole 🧭", "Arctic ❄️", "Desert 🏜️"], answer: "Desert 🏜️", fact: "A desert is hot and dry, not snowy!" },
-{ day: 6, type: "quiz", emoji: "🇫🇮", prompt: "Santa's official village is in...", tts: "Finland", moviePhrase: "Finland", options: ["Finland", "Brazil", "Egypt"], answer: "Finland", fact: "Rovaniemi in Finland is Santa's hometown!" },
-{ day: 7, type: "unscramble", emoji: "⛄", prompt: "Spell the word:", tts: "Snowball", moviePhrase: "Snowball fight", word: "SNOWBALL", fact: "Kids love having friendly snowball fights." },
-{ day: 8, type: "true_false", emoji: "🦉", prompt: "Snowy owls are awake at night and day.", tts: "Snowy owls are awake at night and day.", moviePhrase: "Snowy owl", answer: true, fact: "True! Arctic snowy owls hunt during the day too." },
-{ day: 9, type: "quiz", emoji: "🏠", prompt: "People bake sweet ___ houses in winter.", tts: "Gingerbread", moviePhrase: "Gingerbread house", options: ["gingerbread", "tomato", "cheese"], answer: "gingerbread", fact: "Gingerbread cookies smell like cinnamon and honey." },
-{ day: 10, type: "unscramble", emoji: "🎄", prompt: "Spell the word:", tts: "Ornament", moviePhrase: "Decorate the tree", word: "ORNAMENT", fact: "Glass ornaments were first made in Germany." },
-{ day: 11, type: "quiz", emoji: "🇬🇧", prompt: "In the UK, people pull colorful paper...", tts: "Christmas crackers", moviePhrase: "Christmas cracker", options: ["crackers", "books", "shoes"], answer: "crackers", fact: "Inside each cracker there is a paper crown and a joke!" },
-{ day: 12, type: "odd_one_out", emoji: "🍽️", prompt: "Which one is NOT a winter drink?", tts: "Hot chocolate, warm tea, apple cider, iced cola", moviePhrase: "Hot chocolate", options: ["Hot chocolate ☕", "Warm tea 🫖", "Apple cider 🍎", "Iced cola 🥤"], answer: "Iced cola 🥤", fact: "Hot drinks warm us up after playing in snow." },
-{ day: 13, type: "true_false", emoji: "🦔", prompt: "Hedgehogs sleep all winter.", tts: "Hedgehogs sleep all winter.", moviePhrase: "Fast asleep", answer: true, fact: "True! This deep winter sleep is called hibernation." },
-{ day: 14, type: "unscramble", emoji: "🌨️", prompt: "Spell the weather:", tts: "Blizzard", moviePhrase: "Snowstorm", word: "BLIZZARD", fact: "A blizzard is a heavy snowstorm with strong wind." },
-{ day: 15, type: "quiz", emoji: "✉️", prompt: "Children write a ___ to Father Frost.", tts: "Letter", moviePhrase: "Write a letter", options: ["letter", "sandwich", "bicycle"], answer: "letter", fact: "Millions of letters arrive at Santa's post office." },
-{ day: 16, type: "quiz", emoji: "🎿", prompt: "Look! The boy ___ skiing down the hill.", tts: "The boy is skiing down the hill.", moviePhrase: "Skiing", options: ["is", "are", "am"], answer: "is", fact: "Use 'is' with he/she/it in Present Continuous." },
-{ day: 17, type: "unscramble", emoji: "🕯️", prompt: "Spell the cozy word:", tts: "Fireplace", moviePhrase: "By the fireplace", word: "FIREPLACE", fact: "In Britain, kids hang stockings above the fireplace." },
-{ day: 18, type: "true_false", emoji: "🇪🇸", prompt: "In Spain, people eat 12 apples at midnight.", tts: "In Spain, people eat 12 apples at midnight.", moviePhrase: "Twelve o clock", answer: false, fact: "False! In Spain, people eat 12 GRAPES for good luck!" },
-{ day: 19, type: "odd_one_out", emoji: "⛷️", prompt: "Find the odd one out!", tts: "Skiing, snowboarding, sledding, surfing", moviePhrase: "Snowboarding", options: ["Skiing 🎿", "Snowboarding 🏂", "Sledding 🛷", "Surfing 🏄"], answer: "Surfing 🏄", fact: "Skiing, snowboarding, and sledding need snow!" },
-{ day: 20, type: "quiz", emoji: "🎁", prompt: "The presents are ___ the Christmas tree.", tts: "The presents are under the Christmas tree.", moviePhrase: "Under the tree", options: ["under", "in", "between"], answer: "under", fact: "Preposition 'under' tells us where the gifts are." },
-{ day: 21, type: "unscramble", emoji: "❄️", prompt: "Spell the word:", tts: "Snowflake", moviePhrase: "Snowflake", word: "SNOWFLAKE", fact: "Snowflakes are made of tiny ice crystals." },
-{ day: 22, type: "quiz", emoji: "🇯🇵", prompt: "In Japan, temples ring their bells ___ times.", tts: "108 times", moviePhrase: "Ring the bell", options: ["108", "5", "10"], answer: "108", fact: "Japanese bells ring 108 times to welcome a clean New Year." },
-{ day: 23, type: "true_false", emoji: "🦌", prompt: "Reindeer can run very fast.", tts: "Reindeer can run very fast.", moviePhrase: "Run fast", answer: true, fact: "True! Reindeer can run up to 80 km per hour." },
-{ day: 24, type: "unscramble", emoji: "📅", prompt: "Spell the word:", tts: "Calendar", moviePhrase: "Calendar", word: "CALENDAR", fact: "Advent calendars count down the days of December." },
-{ day: 25, type: "quiz", emoji: "🍬", prompt: "A red and white striped sweet is a...", tts: "Candy cane", moviePhrase: "Candy cane", options: ["candy cane", "carrot stick", "pencil"], answer: "candy cane", fact: "Candy canes usually taste like peppermint!" },
-{ day: 26, type: "odd_one_out", emoji: "🗓️", prompt: "Find the odd one out!", tts: "December, January, February, July", moviePhrase: "January", options: ["December", "January", "February", "July"], answer: "July", fact: "July is a summer month!" },
-{ day: 27, type: "unscramble", emoji: "🎆", prompt: "Spell the word:", tts: "Fireworks", moviePhrase: "Fireworks", word: "FIREWORKS", fact: "Fireworks were invented over 1,000 years ago." },
-{ day: 28, type: "true_false", emoji: "🕛", prompt: "New Year starts at 12 o'clock at night.", tts: "New Year starts at twelve o clock at night.", moviePhrase: "Midnight", answer: true, fact: "True! 12:00 AM is called midnight." },
-{ day: 29, type: "quiz", emoji: "🥂", prompt: "We ___ a big family dinner on New Year's Eve.", tts: "We have got a big family dinner.", moviePhrase: "Family dinner", options: ["have got", "has got", "is"], answer: "have got", fact: "Use 'have got' with I, you, we, they." },
-{ day: 30, type: "unscramble", emoji: "🎊", prompt: "Spell the celebration:", tts: "Celebrate", moviePhrase: "Time to celebrate", word: "CELEBRATE", fact: "Amazing job! You completed all 30 days of Level A1+!" }
-],
-// PLACEHOLDER FOR PART 2 (B1 - 30 DAYS)
-B1: [
-{ day: 1, type: "quiz", emoji: "🇪🇸", prompt: "In Spain, people eat twelve ___ at midnight for good luck.", tts: "In Spain, people eat twelve grapes at midnight.", moviePhrase: "Good luck", options: ["grapes", "apples", "olives", "lemons"], answer: "grapes", fact: "Each grape represents good luck for one month of the coming year!" }
-],
-// PLACEHOLDER FOR PART 3 (B2 - 30 DAYS)
-B2: [
-{ day: 1, type: "quiz", emoji: "🌱", prompt: "Idiom: To 'turn over a new ___' means to make a fresh start in the New Year.", tts: "Turn over a new leaf", moviePhrase: "Turn over a new leaf", options: ["leaf", "page", "snow", "chapter"], answer: "leaf", fact: "This idiom comes from turning to a blank page in a book." }
-]
-};
-// ==========================================
-// APP STATE & STORAGE
-// ==========================================
-let currentLevel = "A1";
-let teacherMode = false;
-let activeTask = null;
-let unscrambleSelected = [];
-let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-A1: [],
-A1_plus: [],
-B1: [],
-B2: []
-};
-function saveState() {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-// ==========================================
-// SNOWFALL & WEB AUDIO HOLIDAY SYNTH
-// ==========================================
-function createSnow() {
-const container = document.getElementById("snowContainer");
-const flakes = ["❄", "❅", "❆", "•"];
-for (let i = 0; i < 32; i++) {
-const span = document.createElement("span");
-span.className = "snowflake";
-span.textContent = flakes[i % flakes.length];
-span.style.left = Math.random() * 100 + "vw";
-span.style.fontSize = (Math.random() * 12 + 10) + "px";
-span.style.animationDuration = (Math.random() * 7 + 6) + "s";
-span.style.animationDelay = (Math.random() * 5) + "s";
-container.appendChild(span);
-}
-}
-let audioCtx = null;
-let musicPlaying = false;
-let musicTimer = null;
-const jingleNotes = [
-[659, 0.25], [659, 0.25], [659, 0.5],
-[659, 0.25], [659, 0.25], [659, 0.5],
-[659, 0.25], [784, 0.25], [523, 0.35], [587, 0.15], [659, 0.8],
-[698, 0.25], [698, 0.25], [698, 0.35], [698, 0.15],
-[698, 0.25], [659, 0.25], [659, 0.25], [659, 0.25],
-[659, 0.25], [587, 0.25], [587, 0.25], [659, 0.25], [587, 0.5], [784, 0.5]
-];
-let noteIndex = 0;
-function playNextNote() {
-if (!musicPlaying) return;
-if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-if (audioCtx.state === "suspended") audioCtx.resume();
-const [freq, dur] = jingleNotes[noteIndex];
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.type = "sine";
-osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur * 0.95);
-osc.connect(gain);
-gain.connect(audioCtx.destination);
-osc.start();
-osc.stop(audioCtx.currentTime + dur);
-noteIndex = (noteIndex + 1) % jingleNotes.length;
-musicTimer = setTimeout(playNextNote, dur * 1000 + 60);
-}
-function toggleMusic() {
-const btn = document.getElementById("musicToggle");
-musicPlaying = !musicPlaying;
-if (musicPlaying) {
-btn.textContent = "Music: ON 🎵";
-btn.classList.remove("bg-indigo-600");
-btn.classList.add("bg-emerald-600");
-playNextNote();
-} else {
-btn.textContent = "Music: OFF 🔇";
-btn.classList.remove("bg-emerald-600");
-btn.classList.add("bg-indigo-600");
-clearTimeout(musicTimer);
-}
-}
-// ==========================================
-// DATE LOCK & TEACHER PIN MODE
-// ==========================================
-function isDoorUnlocked(day) {
-if (teacherMode) return true;
-const now = new Date();
-const month = now.getMonth(); // 11 = December
-const date = now.getDate();
-if (month === 11 && date >= day) return true;
-return false;
-}
-function toggleTeacherMode() {
-const btn = document.getElementById("teacherToggleBtn");
-const banner = document.getElementById("teacherBanner");
-if (!teacherMode) {
-const entered = prompt("Enter Teacher PIN to unlock all 30 doors:");
-if (entered !== TEACHER_PIN) {
-if (entered !== null) alert("Incorrect PIN!");
-return;
-}
-teacherMode = true;
-btn.textContent = "🔓 Teacher Mode: ON";
-btn.classList.add("bg-emerald-600/30", "border-emerald-400", "text-emerald-200");
-banner.classList.remove("hidden");
-} else {
-teacherMode = false;
-btn.textContent = "🔒 Teacher Mode: OFF";
-btn.classList.remove("bg-emerald-600/30", "border-emerald-400", "text-emerald-200");
-banner.classList.add("hidden");
-}
-renderCalendar();
-}
-function resetCurrentLevel() {
-if (confirm("Reset all completed doors and tree ornaments for " + currentLevel + "?")) {
-state[currentLevel] = [];
-saveState();
-renderCalendar();
-}
-}
-// ==========================================
-// RENDER GRID & NEW YEAR TREE
-// ==========================================
-function switchLevel(lvl) {
-currentLevel = lvl;
-document.querySelectorAll(".level-tab").forEach(tab => {
-tab.classList.remove("bg-amber-400", "text-slate-950", "shadow-lg", "scale-105");
-tab.classList.add("bg-white/10", "text-indigo-100", "hover:bg-white/20");
-});
-const activeTab = document.getElementById("tab-" + lvl);
-activeTab.classList.remove("bg-white/10", "text-indigo-100", "hover:bg-white/20");
-activeTab.classList.add("bg-amber-400", "text-slate-950", "shadow-lg", "scale-105");
-renderCalendar();
-}
-function renderCalendar() {
-const grid = document.getElementById("calendarGrid");
-grid.innerHTML = "";
-const completed = state[currentLevel] || [];
-const tasks = calendarData[currentLevel] || [];
-for (let day = 1; day <= 30; day++) {
-const done = completed.includes(day);
-const unlocked = isDoorUnlocked(day);
-const task = tasks.find(t => t.day === day);
-const btn = document.createElement("button");
-btn.type = "button";
-btn.className = "door-card relative aspect-square rounded-2xl p-2 flex flex-col items-center justify-center border-2 cursor-pointer ";
-if (done) {
-btn.className += "bg-gradient-to-br from-emerald-500/30 to-teal-700/40 border-emerald-400 text-white shadow-lg";
-btn.innerHTML = <span class="text-xs font-bold text-emerald-300">Dec ${day}</span> <span class="text-2xl sm:text-3xl my-0.5">${task ? task.emoji : "🎁"}</span> <span class="text-[11px] font-bold text-emerald-200">Done ⭐</span>;
-} else if (unlocked) {
-btn.className += "bg-gradient-to-br from-red-600/80 to-rose-800/80 border-amber-300/80 text-white shadow-md hover:brightness-110";
-btn.innerHTML = <span class="text-xl sm:text-2xl font-bold text-amber-200">${day}</span> <span class="text-lg mt-0.5">🎁</span> <span class="text-[10px] uppercase tracking-wider text-amber-100/90 font-bold">Open</span>;
-} else {
-btn.className += "bg-slate-800/60 border-white/10 text-slate-400 opacity-75";
-btn.innerHTML = <span class="text-lg font-bold">${day}</span> <span class="text-base mt-0.5">🔒</span> <span class="text-[10px]">Dec ${day}</span>;
-}
-btn.onclick = () => handleDoorClick(day, unlocked);
-grid.appendChild(btn);
-}
-renderTree(completed);
-}
-function renderTree(completed) {
-const count = completed.length;
-document.getElementById("starCount").textContent = count;
-const pct = Math.round((count / 30) * 100);
-document.getElementById("treePercent").textContent = pct + "%";
-document.getElementById("treeProgressBar").style.width = pct + "%";
-const layer = document.getElementById("treeOrnaments");
-layer.innerHTML = "";
-completed.forEach((day) => {
-const pos = ORNAMENT_POS[(day - 1) % ORNAMENT_POS.length];
-const item = document.createElement("span");
-item.className = "ornament-pop absolute text-lg sm:text-xl";
-item.style.left = (pos[0] / 260 * 100) + "%";
-item.style.top = (pos[1] / 320 * 100) + "%";
-item.textContent = ORNAMENT_ICONS[(day - 1) % ORNAMENT_ICONS.length];
-layer.appendChild(item);
-});
-}
-// ==========================================
-// MODAL & MINI-GAMES ENGINE
-// ==========================================
-function showLockedToast(day) {
-const toast = document.getElementById("toastMsg");
-toast.textContent = 🔒 Come back on December ${day}!;
-toast.classList.remove("hidden");
-setTimeout(() => toast.classList.add("hidden"), 2400);
-}
-function handleDoorClick(day, unlocked) {
-if (!unlocked) {
-showLockedToast(day);
-return;
-}
-const tasks = calendarData[currentLevel] || [];
-const task = tasks.find(t => t.day === day);
-if (!task) {
-alert("Task for this day is coming soon!");
-return;
-}
-openTaskModal(task);
-}
-function openTaskModal(task) {
-activeTask = task;
-document.getElementById("modalDayBadge").textContent = December ${task.day};
-document.getElementById("modalLevelBadge").textContent = currentLevel.replace("_", "+");
-document.getElementById("modalEmoji").textContent = task.emoji || "🎄";
-document.getElementById("modalPrompt").textContent = task.prompt;
-const videoEl = document.getElementById("modalVideo");
-if (task.clipSrc) {
-videoEl.src = task.clipSrc;
-videoEl.classList.remove("hidden");
-videoEl.onerror = () => videoEl.classList.add("hidden");
-} else {
-videoEl.classList.add("hidden");
-videoEl.removeAttribute("src");
-}
-const movieLink = document.getElementById("movieClipLink");
-const phrase = encodeURIComponent(task.moviePhrase || task.tts || "Happy New Year");
-movieLink.href = https://yarn.co{phrase};
-const fb = document.getElementById("feedbackBox");
-fb.classList.add("hidden");
-fb.innerHTML = "";
-const container = document.getElementById("gameContainer");
-container.innerHTML = "";
-if (task.type === "quiz" || task.type === "odd_one_out") {
-document.getElementById("modalTitle").textContent = task.type === "odd_one_out" ? "Find the odd one out!" : "Choose the right answer!";
-const grid = document.createElement("div");
-grid.className = "grid grid-cols-1 sm:grid-cols-2 gap-2.5";
-task.options.forEach(opt => {
-const b = document.createElement("button");
-b.type = "button";
-b.className = "p-3.5 rounded-2xl bg-white/10 hover:bg-indigo-600 border border-white/15 font-bold text-base text-white transition cursor-pointer";
-b.textContent = opt;
-b.onclick = () => checkAnswer(opt === task.answer, b);
-grid.appendChild(b);
-});
-container.appendChild(grid);
-}
-else if (task.type === "true_false") {
-document.getElementById("modalTitle").textContent = "True or False?";
-const row = document.createElement("div");
-row.className = "grid grid-cols-2 gap-3";
-[
-{ label: "True ✅", val: true },
-{ label: "False ❌", val: false }
-].forEach(item => {
-const b = document.createElement("button");
-b.type = "button";
-b.className = "p-4 rounded-2xl bg-white/10 hover:bg-indigo-600 border border-white/15 font-bold text-lg text-white transition cursor-pointer";
-b.textContent = item.label;
-b.onclick = () => checkAnswer(item.val === task.answer, b);
-row.appendChild(b);
-});
-container.appendChild(row);
-}
-else if (task.type === "unscramble") {
-const isSentence = Array.isArray(task.words);
-document.getElementById("modalTitle").textContent = isSentence ? "Put the words in order!" : "Put the letters in order!";
-unscrambleSelected = [];
-const items = isSentence ? [...task.words] : task.word.split("");
-const shuffled = items.map((val, idx) => ({ val, idx })).sort(() => Math.random() - 0.5);
-const answerZone = document.createElement("div");
-answerZone.id = "unscrambleAnswerZone";
-answerZone.className = "min-h-[52px] p-3 rounded-2xl bg-slate-950 border-2 border-dashed border-amber-400/50 flex flex-wrap items-center justify-center gap-2 mb-3";
-const poolZone = document.createElement("div");
-poolZone.className = "flex flex-wrap items-center justify-center gap-2";
-function refreshUnscrambleUI() {
-answerZone.innerHTML = "";
-unscrambleSelected.forEach((itemObj, pos) => {
-const chip = document.createElement("button");
-chip.type = "button";
-chip.className = "px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-base shadow cursor-pointer";
-chip.textContent = itemObj.val;
-chip.onclick = () => {
-unscrambleSelected.splice(pos, 1);
-refreshUnscrambleUI();
-};
-answerZone.appendChild(chip);
-});
-poolZone.innerHTML = "";
-shuffled.forEach(itemObj => {
-const used = unscrambleSelected.some(s => s.idx === itemObj.idx);
-const chip = document.createElement("button");
-chip.type = "button";
-chip.disabled = used;
-chip.className = used
-? "px-3.5 py-2 rounded-xl bg-white/5 text-white/20 font-bold text-base border border-white/5"
-: "px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base shadow cursor-pointer";
-chip.textContent = itemObj.val;
-chip.onclick = () => {
-unscrambleSelected.push(itemObj);
-refreshUnscrambleUI();
-if (unscrambleSelected.length === items.length) {
-const userStr = isSentence
-? unscrambleSelected.map(x => x.val).join(" ")
-: unscrambleSelected.map(x => x.val).join("");
-const targetStr = isSentence ? task.words.join(" ") : task.word;
-if (userStr === targetStr) {
-checkAnswer(true);
-} else {
-const fb = document.getElementById("feedbackBox");
-fb.className = "mt-4 p-3 rounded-2xl text-sm font-bold bg-red-500/20 border border-red-400 text-red-200";
-fb.textContent = "Almost! Tap the yellow tiles above to fix the order.";
-fb.classList.remove("hidden");
-}
-}
-};
-poolZone.appendChild(chip);
-});
-}
-container.appendChild(answerZone);
-container.appendChild(poolZone);
-refreshUnscrambleUI();
-}
-document.getElementById("taskModal").classList.remove("hidden");
-document.getElementById("taskModal").classList.add("flex");
-}
-function checkAnswer(isCorrect, btnEl) {
-const fb = document.getElementById("feedbackBox");
-fb.classList.remove("hidden");
-if (isCorrect) {
-if (btnEl) btnEl.classList.add("!bg-emerald-600", "!border-emerald-300");
-fb.className = "mt-4 p-4 rounded-2xl text-sm font-semibold bg-emerald-500/20 border border-emerald-400 text-emerald-100";
-fb.innerHTML = <div class="text-base font-bold text-emerald-300 mb-1">🎉 Awesome! You earned a star & ornament!</div> <div class="text-indigo-100"><strong>Did you know?</strong> ${activeTask.fact || "Great job!"}</div>;
-if (!state[currentLevel].includes(activeTask.day)) {
-state[currentLevel].push(activeTask.day);
-saveState();
-renderCalendar();
-}
-} else {
-if (btnEl) btnEl.classList.add("!bg-red-600", "!border-red-300");
-fb.className = "mt-4 p-3 rounded-2xl text-sm font-bold bg-red-500/20 border border-red-400 text-red-200";
-fb.textContent = "❌ Not quite! Try another option.";
-}
-}
-function closeModal() {
-document.getElementById("taskModal").classList.add("hidden");
-document.getElementById("taskModal").classList.remove("flex");
-if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-}
-function speakCurrentText() {
-if (!activeTask || !("speechSynthesis" in window)) return;
-window.speechSynthesis.cancel();
-const utter = new SpeechSynthesisUtterance(activeTask.tts || activeTask.prompt);
-utter.lang = "en-US";
-utter.rate = currentLevel === "A1" ? 0.85 : 0.95;
-window.speechSynthesis.speak(utter);
-}
-// Init
-createSnow();
-switchLevel("A1");
+const STORAGE_KEY = (level) => `winter-advent-progress-${level}`;
+const PRAISE = ["Amazing! 🎉", "Brilliant! ✨", "Super star! ⭐", "Fantastic! 🎆", "Well done! 🎊"];
 
+/* ---------------- Utilities ---------------- */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function shuffleDifferent(arr) {
+  if (arr.length < 2) return arr;
+  let s = shuffle(arr);
+  for (let i = 0; i < 10 && s.join("|") === arr.join("|"); i++) s = shuffle(arr);
+  return s;
+}
+function loadProgress(level) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY(level));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((n) => Number.isInteger(n) && n >= 1 && n <= 30) : [];
+  } catch { return []; }
+}
+function saveProgress(level, days) {
+  try { localStorage.setItem(STORAGE_KEY(level), JSON.stringify(days)); } catch {}
+}
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/___/g, "blank"));
+  u.lang = "en-US";
+  u.rate = 0.9;
+  const voice = window.speechSynthesis.getVoices().find((v) => v.lang === "en-US");
+  if (voice) u.voice = voice;
+  window.speechSynthesis.speak(u);
+}
+function getCalendarInfo() {
+  const now = new Date();
+  const m = now.getMonth();
+  const d = now.getDate();
+  if (m === 11) return { openUpTo: Math.min(d, 30), today: d <= 30 ? d : null, daysUntil: 0 };
+  if (m === 0) return { openUpTo: 30, today: null, daysUntil: 0 };
+  const dec1 = new Date(now.getFullYear(), 11, 1);
+  const daysUntil = Math.ceil((dec1 - new Date(now.getFullYear(), m, d)) / 86400000);
+  return { openUpTo: 0, today: null, daysUntil };
+}
+
+/* ---------------- Jingle Bells synth (Web Audio API) ---------------- */
+const FREQ = { C: 523.25, D: 587.33, E: 659.25, F: 698.46, G: 783.99, A: 880.0, B: 987.77 };
+const MELODY = [
+  ["E",1],["E",1],["E",2], ["E",1],["E",1],["E",2], ["E",1],["G",1],["C",1.5],["D",0.5],["E",4],
+  ["F",1],["F",1],["F",1.5],["F",0.5], ["F",1],["E",1],["E",1],["E",0.5],["E",0.5],
+  ["E",1],["D",1],["D",1],["E",1], ["D",2],["G",2],
+  ["E",1],["E",1],["E",2], ["E",1],["E",1],["E",2], ["E",1],["G",1],["C",1.5],["D",0.5],["E",4],
+  ["F",1],["F",1],["F",1.5],["F",0.5], ["F",1],["E",1],["E",1],["E",0.5],["E",0.5],
+  ["G",1],["G",1],["F",1],["D",1], ["C",4], [null,4],
+];
+const BEAT = 0.3;
+
+function useJingleBells() {
+  const ctxRef = useRef(null);
+  const timerRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
+  const scheduleLoop = useCallback((ctx, master, start) => {
+    let t = start;
+    for (const [note, beats] of MELODY) {
+      const dur = beats * BEAT;
+      if (note) {
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = "sine";
+        osc2.type = "triangle";
+        osc.frequency.value = FREQ[note];
+        osc2.frequency.value = FREQ[note] * 2;
+        const g2 = ctx.createGain();
+        g2.gain.value = 0.15;
+        osc.connect(g);
+        osc2.connect(g2).connect(g);
+        g.connect(master);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(dur, 0.35) * 0.95);
+        osc.start(t); osc2.start(t);
+        osc.stop(t + Math.max(dur, 0.35)); osc2.stop(t + Math.max(dur, 0.35));
+      }
+      t += dur;
+    }
+    const msUntilNext = (t - ctx.currentTime - 0.4) * 1000;
+    timerRef.current = setTimeout(() => scheduleLoop(ctx, master, t), Math.max(msUntilNext, 0));
+  }, []);
+
+  const stop = useCallback(() => {
+    clearTimeout(timerRef.current);
+    if (ctxRef.current) { ctxRef.current.close(); ctxRef.current = null; }
+    setPlaying(false);
+  }, []);
+
+  const start = useCallback(() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    const master = ctx.createGain();
+    master.gain.value = 0.12;
+    master.connect(ctx.destination);
+    ctxRef.current = ctx;
+    scheduleLoop(ctx, master, ctx.currentTime + 0.1);
+    setPlaying(true);
+  }, [scheduleLoop]);
+
+  useEffect(() => () => { clearTimeout(timerRef.current); ctxRef.current?.close(); }, []);
+
+  return { playing, toggle: () => (playing ? stop() : start()) };
+}
+
+/* ---------------- Snow ---------------- */
+function Snowfall() {
+  const flakes = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    size: 2 + Math.random() * 4,
+    duration: 8 + Math.random() * 12,
+    delay: -Math.random() * 20,
+    opacity: 0.3 + Math.random() * 0.6,
+  })), []);
+  return (
+    <div aria-hidden="true">
+      {flakes.map((f) => (
+        <span key={f.id} className="snowflake" style={{ left: `${f.left}%`, width: f.size, height: f.size, opacity: f.opacity, animationDuration: `${f.duration}s`, animationDelay: `${f.delay}s` }} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- Header ---------------- */
+function Header({ stars, music }) {
+  return (
+    <header className="relative z-10 border-b border-white/10 bg-slate-950/40 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <a href="../" className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-indigo-100 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Main Site
+        </a>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-sm font-semibold text-amber-300 ring-1 ring-amber-400/40" aria-live="polite">
+            ⭐ Stars: {stars} / 30
+          </span>
+          <button type="button" onClick={music.toggle} aria-pressed={music.playing}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${music.playing ? "bg-red-500/20 text-red-200 ring-red-400/50" : "bg-white/5 text-slate-300 ring-white/15 hover:bg-white/10"}`}>
+            {music.playing ? <Music className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
+            {music.playing ? "Music: ON 🎵" : "Music: OFF 🔇"}
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------- Level tabs ---------------- */
+function LevelTabs({ level, onChange, progressByLevel }) {
+  return (
+    <div role="tablist" aria-label="English level" className="flex flex-wrap gap-2">
+      {LEVELS.map((l) => {
+        const active = l.id === level;
+        return (
+          <button key={l.id} role="tab" aria-selected={active} type="button" onClick={() => onChange(l.id)}
+            className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${active ? "bg-amber-400 text-slate-900 shadow-lg shadow-amber-500/30" : "bg-white/5 text-indigo-100 ring-1 ring-white/10 hover:bg-white/10"}`}>
+            {l.label}
+            <span className={`rounded-full px-2 py-0.5 text-xs ${active ? "bg-slate-900/15" : "bg-white/10"}`}>{progressByLevel[l.id].length}/30</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Advent grid ---------------- */
+function Door({ day, state, isToday, onClick }) {
+  const info = DAYS[day - 1];
+  const base = "group relative flex aspect-square flex-col items-center justify-center rounded-2xl text-center transition duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 [transform-style:preserve-3d]";
+  const styles = {
+    locked: "bg-slate-800/60 text-slate-500 ring-1 ring-white/5 cursor-not-allowed",
+    open: `bg-gradient-to-br from-red-600 to-red-800 text-white door-glow hover:[transform:translateY(-6px)_rotateX(12deg)] hover:shadow-2xl active:[transform:rotateY(-18deg)] ${isToday ? "door-today" : ""}`,
+    done: "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white ring-2 ring-emerald-300/70 hover:[transform:translateY(-4px)_rotateX(10deg)] shadow-lg shadow-emerald-900/40",
+  };
+  const label = `Door ${day}, ${info.theme}${state === "locked" ? ", locked" : state === "done" ? ", completed" : ", open"}`;
+  return (
+    <button type="button" onClick={onClick} aria-label={label} aria-disabled={state === "locked"} className={`${base} ${styles[state]}`}>
+      <span className="font-display text-2xl font-bold leading-none sm:text-3xl">{day}</span>
+      {state === "locked" && <Lock className="mt-1.5 h-4 w-4" aria-hidden="true" />}
+      {state === "open" && <span className="mt-1 text-xl transition group-hover:scale-125" aria-hidden="true">{info.emoji}</span>}
+      {state === "done" && <Star className="mt-1.5 h-5 w-5 fill-amber-300 text-amber-300" aria-hidden="true" />}
+      {state !== "locked" && <span className="pointer-events-none absolute inset-x-2 top-1.5 h-1 rounded-full bg-white/20" aria-hidden="true" />}
+    </button>
+  );
+}
+
+function AdventGrid({ completed, isUnlocked, todayDay, onOpen }) {
+  return (
+    <div className="grid grid-cols-3 gap-3 [perspective:800px] sm:grid-cols-5 lg:grid-cols-6">
+      {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
+        const state = completed.includes(day) ? "done" : isUnlocked(day) ? "open" : "locked";
+        return <Door key={day} day={day} state={state} isToday={todayDay === day} onClick={() => onOpen(day)} />;
+      })}
+    </div>
+  );
+}
+
+/* ---------------- New Year tree ---------------- */
+const TIERS = [
+  { top: 40, base: 150, w: 70 },
+  { top: 95, base: 240, w: 100 },
+  { top: 165, base: 335, w: 132 },
+];
+function halfWidth(y) {
+  return Math.max(0, ...TIERS.map((t) => (y >= t.top && y <= t.base ? ((y - t.top) / (t.base - t.top)) * t.w : 0)));
+}
+const ORN_COLORS = ["#ef4444", "#fbbf24", "#38bdf8", "#a78bfa", "#f472b6", "#34d399"];
+const SLOTS = (() => {
+  const rows = [[2, 100], [3, 135], [4, 175], [5, 210], [5, 250], [5, 285], [6, 322]];
+  const s = [];
+  rows.forEach(([n, y]) => {
+    const hw = halfWidth(y) * 0.78;
+    for (let k = 0; k < n; k++) s.push({ x: 150 - hw + (2 * hw * (k + 0.5)) / n, y: y + (k % 2 ? 4 : -2) });
+  });
+  return s;
+})();
+const GARLANDS = [128, 200, 272, 318].map((y0, gi) => {
+  const pts = [];
+  const hw = halfWidth(y0) * 0.9;
+  const count = 7 + gi * 2;
+  for (let i = 0; i < count; i++) {
+    const p = i / (count - 1);
+    pts.push({ x: 150 - hw + 2 * hw * p, y: y0 + Math.sin(p * Math.PI) * 10 - 4 });
+  }
+  return pts;
+});
+const LIGHT_COLORS = ["#fde68a", "#fca5a5", "#93c5fd", "#86efac"];
+
+function NewYearTree({ completed, lastAdded }) {
+  const [hovered, setHovered] = useState(null);
+  const tip = hovered ? (() => {
+    const s = SLOTS[hovered - 1];
+    const label = TOYS[hovered - 1].name;
+    const w = label.length * 5.8 + 18;
+    const x = Math.min(Math.max(s.x - w / 2, 4), 296 - w);
+    return { x, y: s.y - 36, w, label };
+  })() : null;
+  return (
+    <svg viewBox="0 0 300 380" className="mx-auto h-auto w-full max-w-xs overflow-visible" role="group" aria-label={`New Year tree with ${completed.length} of 30 toys`}>
+      <defs>
+        <linearGradient id="treeG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#15803d" />
+          <stop offset="100%" stopColor="#14532d" />
+        </linearGradient>
+        <radialGradient id="shine" cx="35%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#fff" stopOpacity=".8" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity=".55" />
+          <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="150" cy="368" rx="120" ry="9" fill="#fff" opacity=".12" />
+      <rect x="134" y="330" width="32" height="38" rx="4" fill="#78350f" />
+      {[...TIERS].reverse().map((t, i) => (
+        <path key={i} fill="url(#treeG)" stroke="#166534" strokeWidth="2"
+          d={`M150 ${t.top} L${150 + t.w} ${t.base} Q${150 + t.w * 0.5} ${t.base + 12} 150 ${t.base - 2} Q${150 - t.w * 0.5} ${t.base + 12} ${150 - t.w} ${t.base} Z`} />
+      ))}
+      {GARLANDS.map((pts, gi) => (
+        <g key={gi}>
+          <polyline points={pts.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#fbbf24" strokeOpacity=".35" strokeWidth="1.5" />
+          {pts.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="2.6" fill={LIGHT_COLORS[(i + gi) % 4]} className="twinkle" style={{ animationDelay: `${((i * 0.37 + gi * 0.21) % 1.6).toFixed(2)}s` }} />
+          ))}
+        </g>
+      ))}
+      {SLOTS.map((s, i) => {
+        const day = i + 1;
+        const has = completed.includes(day);
+        if (!has) return <circle key={i} cx={s.x} cy={s.y} r="7" fill="none" stroke="#bbf7d0" strokeOpacity=".25" strokeDasharray="2 2" />;
+        const color = ORN_COLORS[i % ORN_COLORS.length];
+        const toy = TOYS[i];
+        return (
+          <g key={`o${day}`} className={`cursor-pointer outline-none ${lastAdded === day ? "ornament-pop" : ""}`}
+            tabIndex={0} role="img" aria-label={`Day ${day}: ${toy.name}`}
+            onMouseEnter={() => setHovered(day)} onMouseLeave={() => setHovered(null)}
+            onFocus={() => setHovered(day)} onBlur={() => setHovered(null)}>
+            <line x1={s.x} y1={s.y - 14} x2={s.x} y2={s.y - 10} stroke="#fde68a" strokeWidth="1.2" />
+            <circle cx={s.x} cy={s.y} r="10" fill={color} fillOpacity=".35" stroke={hovered === day ? "#fde68a" : color} strokeWidth={hovered === day ? 2 : 1} />
+            <text x={s.x} y={s.y + 0.5} textAnchor="middle" dominantBaseline="central" fontSize="14" aria-hidden="true">{toy.emoji}</text>
+          </g>
+        );
+      })}
+      <circle cx="150" cy="34" r="30" fill="url(#halo)" />
+      <polygon className="star-glow" fill="#fbbf24" stroke="#fde68a" strokeWidth="1.5"
+        points="150,12 156,28 173,28 159,38 164,55 150,45 136,55 141,38 127,28 144,28" />
+      {tip && (
+        <g pointerEvents="none" aria-hidden="true">
+          <rect x={tip.x} y={tip.y} width={tip.w} height="20" rx="10" fill="#0f172a" stroke="#fbbf24" strokeWidth="1" />
+          <text x={tip.x + tip.w / 2} y={tip.y + 10.5} textAnchor="middle" dominantBaseline="central" fontSize="10.5" fontWeight="600" fill="#fde68a">{tip.label}</text>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+function ToyCollection({ completed, lastAdded }) {
+  return (
+    <div className="mt-5">
+      <h3 className="flex items-center justify-between text-sm font-bold text-amber-300">
+        <span className="flex items-center gap-1.5"><Gift className="h-4 w-4" aria-hidden="true" /> My Toy Collection</span>
+        <span className="text-xs font-semibold text-indigo-200">{completed.length}/30</span>
+      </h3>
+      {completed.length === 0 ? (
+        <p className="mt-2 rounded-xl bg-white/5 px-3 py-2 text-xs text-indigo-200 ring-1 ring-white/10">Solve a door to win your first toy!</p>
+      ) : (
+        <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Unlocked toys">
+          {completed.map((day) => {
+            const toy = TOYS[day - 1];
+            return (
+              <li key={day} title={`Day ${day}: ${toy.name}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-xl ring-1 ring-amber-300/30 transition hover:scale-110 hover:bg-white/20 ${lastAdded === day ? "reward-in" : ""}`}>
+                <span aria-hidden="true">{toy.emoji}</span>
+                <span className="sr-only">Day {day}: {toy.name}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Mini-games ---------------- */
+function ChoiceGame({ task, onResult, solved }) {
+  const options = useMemo(() => shuffle(task.options), [task]);
+  const [wrong, setWrong] = useState([]);
+  const [picked, setPicked] = useState(null);
+  const choose = (opt) => {
+    if (solved) return;
+    if (opt === task.answer) { setPicked(opt); onResult(true); }
+    else { setWrong((w) => [...w, opt]); onResult(false); }
+  };
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {options.map((opt) => {
+        const isWrong = wrong.includes(opt);
+        const isRight = picked === opt;
+        return (
+          <button key={opt} type="button" disabled={isWrong || solved} onClick={() => choose(opt)}
+            className={`rounded-2xl px-4 py-3 text-left text-base font-semibold ring-2 transition focus:outline-none focus-visible:ring-amber-300 ${isRight ? "bg-emerald-500 text-white ring-emerald-300" : isWrong ? "bg-red-500/20 text-red-200 ring-red-400/40 line-through" : "bg-white/10 text-white ring-white/10 hover:-translate-y-0.5 hover:bg-white/20"}`}>
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrueFalseGame({ task, onResult, solved }) {
+  const [wrong, setWrong] = useState(null);
+  const [right, setRight] = useState(null);
+  const choose = (val) => {
+    if (solved) return;
+    if (val === task.answer) { setRight(val); onResult(true); }
+    else { setWrong(val); onResult(false); }
+  };
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {[true, false].map((val) => (
+        <button key={String(val)} type="button" disabled={solved || wrong === val} onClick={() => choose(val)}
+          className={`rounded-2xl px-4 py-4 text-lg font-bold ring-2 transition focus:outline-none focus-visible:ring-amber-300 ${right === val ? "bg-emerald-500 text-white ring-emerald-300" : wrong === val ? "bg-red-500/20 text-red-200 ring-red-400/40" : val ? "bg-emerald-500/15 text-emerald-200 ring-emerald-400/30 hover:bg-emerald-500/25" : "bg-red-500/15 text-red-200 ring-red-400/30 hover:bg-red-500/25"}`}>
+          {val ? "✔ True" : "✘ False"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function UnscrambleGame({ task, onResult, solved }) {
+  const byWord = task.answer.includes(" ");
+  const pieces = useMemo(() => (byWord ? task.answer.split(" ") : task.answer.split("")), [task, byWord]);
+  const tiles = useMemo(() => shuffleDifferent(pieces.map((p, i) => ({ id: i, text: p }))), [pieces]);
+  const [placed, setPlaced] = useState([]);
+  const [shake, setShake] = useState(false);
+  const available = tiles.filter((t) => !placed.includes(t.id));
+  const builtText = placed.map((id) => tiles.find((t) => t.id === id).text);
+
+  const check = () => {
+    const ok = builtText.join(byWord ? " " : "") === task.answer;
+    if (!ok) { setShake(true); setTimeout(() => setShake(false), 400); }
+    onResult(ok);
+  };
+
+  const tileCls = byWord
+    ? "rounded-xl px-3 py-2 text-base font-semibold"
+    : "flex h-11 w-11 items-center justify-center rounded-xl text-xl font-bold";
+
+  return (
+    <div className="space-y-4">
+      <div className={`flex min-h-[3.75rem] flex-wrap items-center gap-2 rounded-2xl border-2 border-dashed p-2 ${solved ? "border-emerald-400 bg-emerald-500/10" : "border-amber-300/50 bg-slate-950/40"} ${shake ? "shake" : ""}`} aria-label="Your answer" aria-live="polite">
+        {placed.length === 0 && <span className="px-2 text-sm text-slate-400">Tap the tiles below to build your answer…</span>}
+        {placed.map((id) => {
+          const t = tiles.find((x) => x.id === id);
+          return (
+            <button key={id} type="button" disabled={solved} onClick={() => setPlaced((p) => p.filter((x) => x !== id))}
+              aria-label={`Remove ${t.text}`}
+              className={`${tileCls} ${solved ? "bg-emerald-500 text-white" : "bg-amber-400 text-slate-900 hover:bg-amber-300"} transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white`}>
+              {t.text}
+            </button>
+          );
+        })}
+      </div>
+      {!solved && (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {available.map((t) => (
+              <button key={t.id} type="button" onClick={() => setPlaced((p) => [...p, t.id])}
+                className={`${tileCls} bg-white/10 text-white ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300`}>
+                {t.text}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={check} disabled={available.length > 0}
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-5 py-2 font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+              <Check className="h-4 w-4" aria-hidden="true" /> Check
+            </button>
+            <button type="button" onClick={() => setPlaced([])} disabled={placed.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 font-semibold text-slate-200 transition hover:bg-white/20 disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+              <Eraser className="h-4 w-4" aria-hidden="true" /> Clear
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const TYPE_LABEL = { quiz: "Quiz", unscramble: "Unscramble", true_false: "True or False?", odd_one_out: "Odd One Out" };
+
+function celebrate() {
+  const colors = ["#fbbf24", "#ef4444", "#22c55e", "#38bdf8", "#f472b6", "#ffffff"];
+  const opts = { zIndex: 100, colors, disableForReducedMotion: true };
+  confetti({ ...opts, particleCount: 120, spread: 80, startVelocity: 45, origin: { y: 0.6 } });
+  setTimeout(() => {
+    confetti({ ...opts, particleCount: 60, angle: 60, spread: 60, origin: { x: 0, y: 0.7 } });
+    confetti({ ...opts, particleCount: 60, angle: 120, spread: 60, origin: { x: 1, y: 0.7 } });
+  }, 220);
+}
+
+/* ---------------- Task modal ---------------- */
+function TaskModal({ day, level, alreadyDone: doneOnOpen, onClose, onComplete }) {
+  const [alreadyDone] = useState(doneOnOpen);
+  const info = DAYS[day - 1];
+  const task = TASKS[level][day - 1];
+  const [status, setStatus] = useState(alreadyDone ? "replay" : "idle");
+  const [solved, setSolved] = useState(false);
+  const praise = useMemo(() => PRAISE[Math.floor(Math.random() * PRAISE.length)], []);
+  const closeRef = useRef(null);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); window.speechSynthesis?.cancel(); };
+  }, [onClose]);
+
+  const toy = TOYS[day - 1];
+  const videoUrl = (task.videoUrl || "").trim();
+  const isMp4 = /\.mp4(\?|#|$)/i.test(videoUrl);
+
+  const handleResult = (ok) => {
+    if (ok) { setSolved(true); setStatus("correct"); onComplete(day); celebrate(); }
+    else setStatus("wrong");
+  };
+
+  const listenText = task.type === "unscramble" ? task.prompt
+    : task.type === "true_false" ? `True or false? ${task.prompt}`
+    : `${task.prompt} ${task.options.join(", ")}`;
+
+  const Game = task.type === "unscramble" ? UnscrambleGame : task.type === "true_false" ? TrueFalseGame : ChoiceGame;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="task-title" className="fade-in relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-gradient-to-b from-indigo-950 to-slate-900 p-6 shadow-2xl ring-1 ring-amber-300/30 sm:rounded-3xl">
+        <button ref={closeRef} type="button" onClick={onClose} aria-label="Close"
+          className="absolute right-4 top-4 rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+
+        <div className="flex items-center gap-4">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white/5 text-5xl ring-1 ring-white/10" aria-hidden="true">{info.emoji}</div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">December {day} · {info.theme}</p>
+            <h2 id="task-title" className="font-display text-2xl font-bold text-white">{TYPE_LABEL[task.type]}</h2>
+            {alreadyDone && <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-300"><Check className="h-3.5 w-3.5" aria-hidden="true" /> Already completed — play again!</p>}
+          </div>
+        </div>
+
+        <p className="mt-5 text-lg font-medium leading-relaxed text-indigo-50">{task.prompt}</p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" onClick={() => speak(listenText)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/20 px-4 py-1.5 text-sm font-semibold text-sky-200 ring-1 ring-sky-400/40 transition hover:bg-sky-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+            <Volume2 className="h-4 w-4" aria-hidden="true" /> Listen
+          </button>
+          {videoUrl && !isMp4 && (
+            <a href={videoUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 px-4 py-1.5 text-sm font-semibold text-red-200 ring-1 ring-red-400/40 transition hover:bg-red-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+              <Film className="h-4 w-4" aria-hidden="true" /> Watch in Movies
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          )}
+        </div>
+
+        {videoUrl && isMp4 && (
+          <figure className="mt-4 overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
+            <video src={videoUrl} controls playsInline preload="metadata" className="aspect-video w-full bg-black" aria-label={`Movie clip for December ${day}`} />
+            <figcaption className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-2 text-xs font-semibold text-red-200">
+              <Film className="h-3.5 w-3.5" aria-hidden="true" /> Watch in Movies
+            </figcaption>
+          </figure>
+        )}
+
+        <div className="mt-5">
+          <Game task={task} onResult={handleResult} solved={solved} />
+        </div>
+
+        <div aria-live="polite" className="mt-4">
+          {status === "wrong" && <p className="rounded-2xl bg-red-500/15 px-4 py-2 text-sm font-semibold text-red-200">Not quite — try again! 💪</p>}
+          {status === "correct" && (
+            <div className="fade-in space-y-3 rounded-2xl bg-emerald-500/15 p-4 ring-1 ring-emerald-400/40">
+              <p className="flex items-center gap-2 font-display text-xl font-bold text-emerald-200"><Sparkles className="h-5 w-5" aria-hidden="true" /> {praise}</p>
+              <div className="reward-in flex items-center gap-4 rounded-2xl bg-gradient-to-br from-amber-300 via-amber-400 to-orange-400 p-4 text-slate-900 shadow-lg shadow-amber-500/30">
+                <span className="toy-bounce text-6xl leading-none drop-shadow" aria-hidden="true">{toy.emoji}</span>
+                <div>
+                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-red-700">
+                    <Gift className="h-4 w-4" aria-hidden="true" /> {alreadyDone ? "Toy in your collection" : "New Toy Unlocked!"}
+                  </p>
+                  <p className="mt-1 font-display text-xl font-bold leading-tight">You won: {toy.name}!</p>
+                </div>
+              </div>
+              <div className="rounded-xl bg-slate-950/40 p-3">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-amber-300"><Lightbulb className="h-4 w-4" aria-hidden="true" /> Did you know?</p>
+                <p className="mt-1 text-sm leading-relaxed text-indigo-50">{info.fact}</p>
+              </div>
+              <p className="text-sm font-semibold text-emerald-100">{alreadyDone ? `Your ${toy.name} is already shining on the tree!` : `Your ${toy.name} has been hung on your New Year tree!`}</p>
+              <button type="button" onClick={onClose}
+                className="w-full rounded-full bg-amber-400 px-5 py-2.5 font-bold text-slate-900 transition hover:bg-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                Back to the Calendar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- PIN modal ---------------- */
+function PinModal({ onClose, onSuccess }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const submit = () => {
+    if (pin.trim() === TEACHER_PIN) onSuccess();
+    else { setError(true); setPin(""); inputRef.current?.focus(); }
+  };
+  const onInputKeyDown = (e) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    submit();
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="pin-title" className="fade-in w-full max-w-sm rounded-3xl bg-slate-900 p-6 ring-1 ring-white/10">
+        <h2 id="pin-title" className="flex items-center gap-2 font-display text-xl font-bold"><Lock className="h-5 w-5 text-amber-300" aria-hidden="true" /> Teacher Mode</h2>
+        <label htmlFor="pin" className="mt-3 block text-sm text-slate-300">Enter the teacher PIN to unlock all doors.</label>
+        <input id="pin" ref={inputRef} type="password" inputMode="numeric" autoComplete="off" maxLength={8} value={pin}
+          onChange={(e) => { setPin(e.target.value); setError(false); }} onKeyDown={onInputKeyDown}
+          className="mt-2 w-full rounded-xl bg-slate-950 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white ring-1 ring-white/15 focus:outline-none focus:ring-2 focus:ring-amber-300" aria-invalid={error} aria-describedby={error ? "pin-error" : undefined} />
+        {error && <p id="pin-error" className="mt-2 text-sm font-semibold text-red-300">Wrong PIN. Please try again.</p>}
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-full bg-white/10 px-4 py-2 font-semibold hover:bg-white/20">Cancel</button>
+          <button type="button" onClick={submit} className="flex-1 rounded-full bg-amber-400 px-4 py-2 font-bold text-slate-900 hover:bg-amber-300">Unlock</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- App ---------------- */
+function App() {
+  const [level, setLevel] = useState("A1");
+  const [progress, setProgress] = useState(() => Object.fromEntries(LEVELS.map((l) => [l.id, loadProgress(l.id)])));
+  const [teacher, setTeacher] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [openDay, setOpenDay] = useState(null);
+  const [lastAdded, setLastAdded] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const music = useJingleBells();
+  const cal = useMemo(getCalendarInfo, []);
+  const toastTimer = useRef(null);
+
+  const completed = progress[level];
+  const isUnlocked = (day) => teacher || day <= cal.openUpTo;
+
+  const showToast = (msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+
+  const openDoor = (day) => {
+    if (!isUnlocked(day) && !completed.includes(day)) {
+      showToast(`🔒 Door ${day} opens on December ${day}. Come back then!`);
+      return;
+    }
+    setOpenDay(day);
+  };
+
+  const completeDay = (day) => {
+    setProgress((prev) => {
+      if (prev[level].includes(day)) return prev;
+      const next = [...prev[level], day].sort((a, b) => a - b);
+      saveProgress(level, next);
+      return { ...prev, [level]: next };
+    });
+    setLastAdded(day);
+  };
+
+  const resetLevel = () => {
+    if (!confirmReset) { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3500); return; }
+    saveProgress(level, []);
+    setProgress((prev) => ({ ...prev, [level]: [] }));
+    setConfirmReset(false);
+    showToast(`Progress for ${level} has been reset.`);
+  };
+
+  const closeModal = useCallback(() => setOpenDay(null), []);
+  const closePin = useCallback(() => setPinOpen(false), []);
+  const levelLabel = LEVELS.find((l) => l.id === level).label;
+
+  return (
+    <div className="relative min-h-screen">
+      <Snowfall />
+      <Header stars={completed.length} music={music} />
+
+      {teacher && (
+        <div role="status" className="relative z-10 flex items-center justify-center gap-2 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Teacher Preview Mode Active — all 30 doors are unlocked
+        </div>
+      )}
+
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8">
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-300">30-Day English Advent Calendar</p>
+          <h1 className="mt-2 text-balance font-display text-4xl font-bold leading-tight text-white sm:text-5xl">
+            Winter & New Year <span className="text-red-400">Around the World</span>
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-pretty text-indigo-200">
+            Open a door every day from December 1 to December 30, solve the mini-game, and decorate your New Year tree with a shiny ornament!
+          </p>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <LevelTabs level={level} onChange={(l) => { setLevel(l); setLastAdded(null); }} progressByLevel={progress} />
+        </div>
+
+        {!teacher && cal.daysUntil > 0 && (
+          <p className="mx-auto mt-5 max-w-xl rounded-2xl bg-white/5 px-4 py-2 text-center text-sm text-indigo-100 ring-1 ring-white/10">
+            ❄️ The calendar opens on <strong className="text-amber-300">December 1</strong> — {cal.daysUntil} {cal.daysUntil === 1 ? "day" : "days"} to go!
+          </p>
+        )}
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
+          <section aria-labelledby="calendar-heading" className="rounded-3xl bg-slate-950/30 p-4 ring-1 ring-white/10 sm:p-6">
+            <h2 id="calendar-heading" className="sr-only">Advent calendar doors for {levelLabel}</h2>
+            <AdventGrid completed={completed} isUnlocked={isUnlocked} todayDay={cal.today} onOpen={openDoor} />
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-indigo-200">
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600 ring-1 ring-amber-300" aria-hidden="true" /> Open</span>
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" aria-hidden="true" /> Completed</span>
+              <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-700" aria-hidden="true" /> Locked</span>
+            </div>
+          </section>
+
+          <aside aria-labelledby="tree-heading" className="rounded-3xl bg-slate-950/30 p-5 ring-1 ring-white/10 lg:sticky lg:top-6 lg:self-start">
+            <h2 id="tree-heading" className="text-center font-display text-xl font-bold text-white">Your New Year Tree 🎄</h2>
+            <p className="mt-1 text-center text-sm text-indigo-200">{completed.length === 30 ? "Your tree is complete! Happy New Year! 🎉" : `${30 - completed.length} toys left to collect`}</p>
+            <div className="mt-4"><NewYearTree completed={completed} lastAdded={lastAdded} /></div>
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={30} aria-valuenow={completed.length} aria-label="Toys collected">
+              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500 transition-all duration-700" style={{ width: `${(completed.length / 30) * 100}%` }} />
+            </div>
+            <ToyCollection completed={completed} lastAdded={lastAdded} />
+          </aside>
+        </div>
+      </main>
+
+      <footer className="relative z-10 border-t border-white/10 bg-slate-950/40">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+          <p className="text-xs text-indigo-300">Progress is saved separately for each level on this device.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => (teacher ? setTeacher(false) : setPinOpen(true))} aria-pressed={teacher}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${teacher ? "bg-emerald-600 text-white ring-emerald-400" : "bg-white/5 text-slate-200 ring-white/15 hover:bg-white/10"}`}>
+              {teacher ? "🔓 Teacher Mode: ON" : "🔒 Teacher Mode: OFF"}
+            </button>
+            <button type="button" onClick={resetLevel}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${confirmReset ? "bg-red-600 text-white ring-red-400" : "bg-white/5 text-slate-200 ring-white/15 hover:bg-white/10"}`}>
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> {confirmReset ? `Click again to reset ${level}` : "Reset Level Progress"}
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      {toast && (
+        <div role="status" className="fade-in fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-xl ring-1 ring-white/15">
+          {toast}
+        </div>
+      )}
+
+      {openDay && (
+        <TaskModal key={`${level}-${openDay}`} day={openDay} level={level} alreadyDone={completed.includes(openDay)} onClose={closeModal} onComplete={completeDay} />
+      )}
+      {pinOpen && <PinModal onClose={closePin} onSuccess={() => { setTeacher(true); setPinOpen(false); showToast("✅ Teacher Mode unlocked!"); }} />}
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
