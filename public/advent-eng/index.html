@@ -7,11 +7,13 @@
   <script src="https://tailwindcss.com"></script>
   <link href="https://googleapis.com" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: 'Fredoka', sans-serif;
       background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 65%, #020617 100%);
       color: #f8fafc;
       min-height: 100vh;
+      margin: 0;
       overflow-x: hidden;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -25,7 +27,7 @@
     }
     .snowflake {
       position: absolute;
-      top: -10px;
+      top: -20px;
       color: #ffffff;
       opacity: 0.75;
       animation: fall linear infinite;
@@ -36,15 +38,26 @@
     .door-card {
       transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
     }
+    .door-card:hover {
+      transform: translateY(-2px);
+    }
     .door-card:active {
       transform: scale(0.95);
     }
     .ornament-pop {
-      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
     @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.35; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .fairy-light {
+      animation: twinkle 1.8s infinite ease-in-out;
     }
   </style>
 </head>
@@ -52,15 +65,15 @@
   <div id="snowContainer" class="snow-container"></div>
 
   <!-- Top Navigation & Music Bar -->
-  <header class="relative z-10 max-w-6xl mx-auto px-4 pt-4 pb-2 flex flex-wrap items-center justify-between gap-3">
-    <a href="../" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-semibold text-indigo-200 transition">
+  <header class="relative z-10 max-w-6xl mx-auto px-4 pt-5 pb-2 flex flex-wrap items-center justify-between gap-3">
+    <a href="../" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-sm font-semibold text-indigo-200 transition">
       ← Back to Main Site
     </a>
     <div class="flex items-center gap-3">
-      <div class="px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-sm font-bold">
+      <div class="px-4 py-2 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-sm font-bold">
         ⭐ Stars: <span id="starCount">0</span> / 30
       </div>
-      <button id="musicToggle" onclick="toggleMusic()" class="px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 text-white text-sm font-bold shadow-lg transition cursor-pointer">
+      <button id="musicToggle" type="button" onclick="toggleMusic()" class="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 text-white text-sm font-bold shadow-lg transition cursor-pointer">
         Music: OFF 🔇
       </button>
     </div>
@@ -82,17 +95,17 @@
     </div>
 
     <!-- 4 CEFR Level Tabs -->
-    <div class="mt-5 flex flex-wrap justify-center gap-2">
-      <button onclick="switchLevel('A1')" id="tab-A1" class="level-tab px-4 py-2 rounded-2xl font-bold text-sm transition cursor-pointer">
+    <div class="mt-5 flex flex-wrap justify-center gap-2.5">
+      <button type="button" onclick="switchLevel('A1')" id="tab-A1" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
         🌟 A1 Starters (7–8 yrs)
       </button>
-      <button onclick="switchLevel('A1_plus')" id="tab-A1_plus" class="level-tab px-4 py-2 rounded-2xl font-bold text-sm transition cursor-pointer">
+      <button type="button" onclick="switchLevel('A1_plus')" id="tab-A1_plus" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
         🚀 A1+ Movers (9–10 yrs)
       </button>
-      <button onclick="switchLevel('B1')" id="tab-B1" class="level-tab px-4 py-2 rounded-2xl font-bold text-sm transition cursor-pointer">
+      <button type="button" onclick="switchLevel('B1')" id="tab-B1" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
         🌍 B1 Intermediate
       </button>
-      <button onclick="switchLevel('B2')" id="tab-B2" class="level-tab px-4 py-2 rounded-2xl font-bold text-sm transition cursor-pointer">
+      <button type="button" onclick="switchLevel('B2')" id="tab-B2" class="level-tab px-4 py-2.5 rounded-2xl font-bold text-sm transition cursor-pointer">
         🎓 B2 Upper-Inter.
       </button>
     </div>
@@ -103,28 +116,77 @@
     
     <!-- 30 Doors Grid -->
     <div class="lg:col-span-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-6 shadow-2xl">
-      <div id="calendarGrid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3">
-        <!-- Doors generated by JS -->
-      </div>
+      <div id="calendarGrid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3"></div>
     </div>
 
-    <!-- Interactive New Year Tree -->
+    <!-- Interactive Lush New Year Tree -->
     <aside class="lg:col-span-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-5 text-center shadow-2xl">
       <h2 class="text-xl font-bold text-amber-300">Your New Year Tree</h2>
       <p class="text-xs text-indigo-200 mt-1">Complete tasks to unlock all 30 ornaments!</p>
       
-      <div class="relative mx-auto mt-4 w-64 h-72 flex items-center justify-center">
-        <!-- SVG Tree -->
-        <svg viewBox="0 0 240 280" class="w-full h-full drop-shadow-xl">
-          <!-- Trunk -->
-          <rect x="102" y="230" width="36" height="38" rx="6" fill="#78350f"/>
-          <!-- Tree Tiers -->
-          <polygon points="120,25 55,105 185,105" fill="#15803d"/>
-          <polygon points="120,70 40,165 200,165" fill="#166534"/>
-          <polygon points="120,120 25,235 215,235" fill="#14532d"/>
-          <!-- Top Star -->
-          <text x="120" y="28" text-anchor="middle" font-size="28" id="treeTopStar" opacity="0.35">⭐</text>
+      <div class="relative mx-auto mt-3 w-64 h-80 flex items-center justify-center">
+        <svg viewBox="0 0 260 320" class="w-full h-full drop-shadow-2xl">
+          <defs>
+            <linearGradient id="treeGrad1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#15803d"/>
+            </linearGradient>
+            <linearGradient id="treeGrad2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#16a34a"/>
+              <stop offset="100%" stop-color="#14532d"/>
+            </linearGradient>
+            <linearGradient id="treeGrad3" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#15803d"/>
+              <stop offset="100%" stop-color="#052e16"/>
+            </linearGradient>
+            <linearGradient id="goldStar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fef08a"/>
+              <stop offset="50%" stop-color="#facc15"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+            <filter id="starGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Snowy Ground Shadow -->
+          <ellipse cx="130" cy="296" rx="85" ry="12" fill="rgba(255,255,255,0.18)"/>
+
+          <!-- Wooden Trunk -->
+          <rect x="112" y="255" width="36" height="40" rx="6" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+
+          <!-- Bottom Lush Tier -->
+          <path d="M130 145 Q80 205 22 260 Q65 272 95 258 Q130 275 165 258 Q195 272 238 260 Q180 205 130 145 Z" fill="url(#treeGrad3)"/>
+          <!-- Middle Lush Tier -->
+          <path d="M130 92 Q85 148 38 198 Q75 208 102 196 Q130 210 158 196 Q185 208 222 198 Q175 148 130 92 Z" fill="url(#treeGrad2)"/>
+          <!-- Top Lush Tier -->
+          <path d="M130 42 Q98 88 58 134 Q88 142 110 132 Q130 144 150 132 Q172 142 202 134 Q162 88 130 42 Z" fill="url(#treeGrad1)"/>
+
+          <!-- Garland Ribbons -->
+          <path d="M84 115 Q130 135 176 115" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
+          <path d="M62 175 Q130 202 198 175" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
+          <path d="M44 236 Q130 268 216 236" fill="none" stroke="#fde047" stroke-width="2.5" stroke-dasharray="4 4" opacity="0.8"/>
+
+          <!-- Twinkling Fairy Lights -->
+          <circle cx="105" cy="95" r="3" fill="#fef08a" class="fairy-light"/>
+          <circle cx="155" cy="105" r="3" fill="#fca5a5" class="fairy-light" style="animation-delay:0.4s"/>
+          <circle cx="85" cy="160" r="3.5" fill="#93c5fd" class="fairy-light" style="animation-delay:0.8s"/>
+          <circle cx="140" cy="155" r="3.5" fill="#fef08a" class="fairy-light" style="animation-delay:0.2s"/>
+          <circle cx="178" cy="168" r="3.5" fill="#fca5a5" class="fairy-light" style="animation-delay:1s"/>
+          <circle cx="70" cy="225" r="4" fill="#fde047" class="fairy-light" style="animation-delay:0.5s"/>
+          <circle cx="125" cy="218" r="4" fill="#a7f3d0" class="fairy-light" style="animation-delay:1.2s"/>
+          <circle cx="185" cy="228" r="4" fill="#93c5fd" class="fairy-light" style="animation-delay:0.7s"/>
+
+          <!-- Golden Top Star -->
+          <polygon id="treeTopStar"
+            points="130,8 137,24 155,26 141,37 145,54 130,45 115,54 119,37 105,26 123,24"
+            fill="url(#goldStar)" stroke="#fef08a" stroke-width="1.5" filter="url(#starGlow)"/>
         </svg>
+
         <!-- Ornaments Layer -->
         <div id="treeOrnaments" class="absolute inset-0 pointer-events-none"></div>
       </div>
@@ -140,76 +202,36 @@
       </div>
     </aside>
   </main>
+Winter & New Year English Advent • Dec 1–30
 
-  <!-- Footer with PIN-protected Teacher Mode -->
-  <footer class="relative z-10 max-w-6xl mx-auto px-4 mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-indigo-300/70">
-    <div>Winter & New Year English Advent • Dec 1–30</div>
-    <div class="flex items-center gap-3">
-      <button onclick="resetCurrentLevel()" class="hover:text-red-300 underline cursor-pointer">
-        Reset Level Progress
-      </button>
-      <button id="teacherToggleBtn" onclick="toggleTeacherMode()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/15 text-indigo-200 font-semibold transition cursor-pointer">
-        🔒 Teacher Mode: OFF
-      </button>
-    </div>
-  </footer>
 
-  <!-- Task Modal -->
-  <div id="taskModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-    <div class="bg-slate-900 border-2 border-amber-400/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
-      <button onclick="closeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center cursor-pointer">
-        ✕
-      </button>
+Reset Level Progress
 
-      <div class="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-        <span id="modalDayBadge">December 1</span>
-        <span>•</span>
-        <span id="modalLevelBadge">A1 Starters</span>
-      </div>
 
-      <h3 id="modalTitle" class="text-xl sm:text-2xl font-bold text-white mt-1">Choose the right word!</h3>
+🔒 Teacher Mode: OFF
 
-      <!-- Visual Emoji / Local Video Area -->
-      <div class="mt-4 bg-indigo-950/70 border border-indigo-400/20 rounded-2xl p-4 text-center">
-        <video id="modalVideo" class="hidden w-full rounded-xl mb-3 max-h-48 object-cover mx-auto" controls playsinline></video>
-        <div id="modalEmoji" class="text-6xl sm:text-7xl my-2">⛄</div>
-        <p id="modalPrompt" class="text-lg sm:text-xl font-bold text-amber-100 mt-2"></p>
 
-        <!-- Audio & Movie Quote Buttons -->
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
-          <button onclick="speakCurrentText()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow transition cursor-pointer">
-            Listen 🔊
-          </button>
-          <a id="movieClipLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow transition">
-            Watch in Movies 🎬
-          </a>
-        </div>
-      </div>
+✕
+December 1
+•
+A1 Starters
+Choose the right word!
+⛄
+Listen 🔊
 
-      <!-- Interactive Game Area -->
-      <div id="gameContainer" class="mt-5"></div>
 
-      <!-- Feedback & Fun Fact Area -->
-      <div id="feedbackBox" class="hidden mt-4 p-4 rounded-2xl text-sm font-semibold"></div>
-    </div>
-  </div>
+Watch in Movies 🎬
 
-  <!-- Locked Door Toast -->
-  <div id="toastMsg" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden px-5 py-3 rounded-2xl bg-red-600 text-white font-bold text-sm shadow-2xl border border-red-300">
-    🔒 Come back on December 1!
-  </div>
 
-<script>
-  const TEACHER_PIN = "2026";
-  const STORAGE_KEY = "mogni_advent_eng_v1";
-
-  const ORNAMENT_ICONS = ["🔴","🟡","🔵","🟣","🎁","🔔","❄️","⛄","🦌","🍪","🕯️","🧦","🎀","🧸","🌟","🍬","🎄","🛷","🧤","🧣","🎶","✨","💎","👑","🦊","🐧","🦉","🎠","🥁","🎆"];
-  const ORNAMENT_POS = [
-    [120,58],[102,82],[138,82],[85,102],[120,100],[155,102],
-[95,126],[120,124],[145,126],[72,148],[104,148],[136,148],[168,148],
-[88,172],[120,170],[152,172],[60,196],[92,196],[120,196],[148,196],[180,196],
-[48,220],[76,220],[105,220],[135,220],[164,220],[192,220],
-[82,88],[158,128],[120,152]
+🔒 Come back on December 1!
+const TEACHER_PIN = "2026";
+const STORAGE_KEY = "mogni_advent_eng_v1";
+const ORNAMENT_ICONS = ["🔴","🟡","🔵","🟣","🎁","🔔","❄️","⛄","🦌","🍪","🕯️","🧦","🎀","🧸","🌟","🍬","🎄","🛷","🧤","🧣","🎶","✨","💎","👑","🦊","🐧","🦉","🎠","🥁","🎆"];
+const ORNAMENT_POS = [, [112, 92], [148, 92], [95, 118], [130, 115], [165, 118],
+, [145, 140], [82, 158], [130, 165], [178, 158], [65, 185],
+, [155, 188], [195, 185], [90, 210], [130, 212], [170, 210],
+, [95, 238], [130, 238], [165, 238], [205, 235], [42, 255],
+, [112, 258], [148, 258], [182, 256], [218, 255], [130, 80]
 ];
 // ==========================================
 // CALENDAR DATA (30 DAYS PER LEVEL)
@@ -356,11 +378,13 @@ const btn = document.getElementById("musicToggle");
 musicPlaying = !musicPlaying;
 if (musicPlaying) {
 btn.textContent = "Music: ON 🎵";
-btn.classList.replace("bg-indigo-600", "bg-emerald-600");
+btn.classList.remove("bg-indigo-600");
+btn.classList.add("bg-emerald-600");
 playNextNote();
 } else {
 btn.textContent = "Music: OFF 🔇";
-btn.classList.replace("bg-emerald-600", "bg-indigo-600");
+btn.classList.remove("bg-emerald-600");
+btn.classList.add("bg-indigo-600");
 clearTimeout(musicTimer);
 }
 }
@@ -397,7 +421,7 @@ banner.classList.add("hidden");
 renderCalendar();
 }
 function resetCurrentLevel() {
-if (confirm(Reset all completed doors and tree ornaments for ${currentLevel}?)) {
+if (confirm("Reset all completed doors and tree ornaments for " + currentLevel + "?")) {
 state[currentLevel] = [];
 saveState();
 renderCalendar();
@@ -427,6 +451,7 @@ const done = completed.includes(day);
 const unlocked = isDoorUnlocked(day);
 const task = tasks.find(t => t.day === day);
 const btn = document.createElement("button");
+btn.type = "button";
 btn.className = "door-card relative aspect-square rounded-2xl p-2 flex flex-col items-center justify-center border-2 cursor-pointer ";
 if (done) {
 btn.className += "bg-gradient-to-br from-emerald-500/30 to-teal-700/40 border-emerald-400 text-white shadow-lg";
@@ -449,15 +474,14 @@ document.getElementById("starCount").textContent = count;
 const pct = Math.round((count / 30) * 100);
 document.getElementById("treePercent").textContent = pct + "%";
 document.getElementById("treeProgressBar").style.width = pct + "%";
-document.getElementById("treeTopStar").setAttribute("opacity", count === 30 ? "1" : "0.35");
 const layer = document.getElementById("treeOrnaments");
 layer.innerHTML = "";
-completed.forEach((day, idx) => {
-const [x, y] = ORNAMENT_POS[(day - 1) % ORNAMENT_POS.length];
+completed.forEach((day) => {
+const pos = ORNAMENT_POS[(day - 1) % ORNAMENT_POS.length];
 const item = document.createElement("span");
-item.className = "ornament-pop absolute text-lg sm:text-xl -translate-x-1/2 -translate-y-1/2";
-item.style.left = (x / 240 * 100) + "%";
- = (y / 280 * 100) + "%";
+item.className = "ornament-pop absolute text-lg sm:text-xl";
+item.style.left = (pos[0] / 260 * 100) + "%";
+item.style.top = (pos[1] / 320 * 100) + "%";
 item.textContent = ORNAMENT_ICONS[(day - 1) % ORNAMENT_ICONS.length];
 layer.appendChild(item);
 });
@@ -477,7 +501,7 @@ showLockedToast(day);
 return;
 }
 const tasks = calendarData[currentLevel] || [];
-const task = tasks.find(t =>  === day);
+const task = tasks.find(t => t.day === day);
 if (!task) {
 alert("Task for this day is coming soon!");
 return;
@@ -486,11 +510,10 @@ openTaskModal(task);
 }
 function openTaskModal(task) {
 activeTask = task;
-document.getElementById("modalDayBadge").textContent = December ${};
+document.getElementById("modalDayBadge").textContent = December ${task.day};
 document.getElementById("modalLevelBadge").textContent = currentLevel.replace("_", "+");
 document.getElementById("modalEmoji").textContent = task.emoji || "🎄";
 document.getElementById("modalPrompt").textContent = task.prompt;
-// Local Video Fallback Handling
 const videoEl = document.getElementById("modalVideo");
 if (task.clipSrc) {
 videoEl.src = task.clipSrc;
@@ -500,7 +523,6 @@ videoEl.onerror = () => videoEl.classList.add("hidden");
 videoEl.classList.add("hidden");
 videoEl.removeAttribute("src");
 }
-//  Movie Quote Link (No YouTube)
 const movieLink = document.getElementById("movieClipLink");
 const phrase = encodeURIComponent(task.moviePhrase || task.tts || "Happy New Year");
 movieLink.href = https://yarn.co{phrase};
@@ -515,6 +537,7 @@ const grid = document.createElement("div");
 grid.className = "grid grid-cols-1 sm:grid-cols-2 gap-2.5";
 task.options.forEach(opt => {
 const b = document.createElement("button");
+b.type = "button";
 b.className = "p-3.5 rounded-2xl bg-white/10 hover:bg-indigo-600 border border-white/15 font-bold text-base text-white transition cursor-pointer";
 b.textContent = opt;
 b.onclick = () => checkAnswer(opt === task.answer, b);
@@ -531,6 +554,7 @@ row.className = "grid grid-cols-2 gap-3";
 { label: "False ❌", val: false }
 ].forEach(item => {
 const b = document.createElement("button");
+b.type = "button";
 b.className = "p-4 rounded-2xl bg-white/10 hover:bg-indigo-600 border border-white/15 font-bold text-lg text-white transition cursor-pointer";
 b.textContent = item.label;
 b.onclick = () => checkAnswer(item.val === task.answer, b);
@@ -543,9 +567,9 @@ const isSentence = Array.isArray(task.words);
 document.getElementById("modalTitle").textContent = isSentence ? "Put the words in order!" : "Put the letters in order!";
 unscrambleSelected = [];
 const items = isSentence ? [...task.words] : task.word.split("");
-const shuffled = ((val, idx) => ({ val, idx })).sort(() => Math.random() - 0.5);
+const shuffled = items.map((val, idx) => ({ val, idx })).sort(() => Math.random() - 0.5);
 const answerZone = document.createElement("div");
- = "unscrambleAnswerZone";
+answerZone.id = "unscrambleAnswerZone";
 answerZone.className = "min-h-[52px] p-3 rounded-2xl bg-slate-950 border-2 border-dashed border-amber-400/50 flex flex-wrap items-center justify-center gap-2 mb-3";
 const poolZone = document.createElement("div");
 poolZone.className = "flex flex-wrap items-center justify-center gap-2";
@@ -553,6 +577,7 @@ function refreshUnscrambleUI() {
 answerZone.innerHTML = "";
 unscrambleSelected.forEach((itemObj, pos) => {
 const chip = document.createElement("button");
+chip.type = "button";
 chip.className = "px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-base shadow cursor-pointer";
 chip.textContent = itemObj.val;
 chip.onclick = () => {
@@ -565,6 +590,7 @@ poolZone.innerHTML = "";
 shuffled.forEach(itemObj => {
 const used = unscrambleSelected.some(s => s.idx === itemObj.idx);
 const chip = document.createElement("button");
+chip.type = "button";
 chip.disabled = used;
 chip.className = used
 ? "px-3.5 py-2 rounded-xl bg-white/5 text-white/20 font-bold text-base border border-white/5"
@@ -575,8 +601,8 @@ unscrambleSelected.push(itemObj);
 refreshUnscrambleUI();
 if (unscrambleSelected.length === items.length) {
 const userStr = isSentence
-? (x => x.val).join(" ")
-: (x => x.val).join("");
+? unscrambleSelected.map(x => x.val).join(" ")
+: unscrambleSelected.map(x => x.val).join("");
 const targetStr = isSentence ? task.words.join(" ") : task.word;
 if (userStr === targetStr) {
 checkAnswer(true);
@@ -605,8 +631,8 @@ if (isCorrect) {
 if (btnEl) btnEl.classList.add("!bg-emerald-600", "!border-emerald-300");
 fb.className = "mt-4 p-4 rounded-2xl text-sm font-semibold bg-emerald-500/20 border border-emerald-400 text-emerald-100";
 fb.innerHTML = <div class="text-base font-bold text-emerald-300 mb-1">🎉 Awesome! You earned a star & ornament!</div> <div class="text-indigo-100"><strong>Did you know?</strong> ${activeTask.fact || "Great job!"}</div>;
-if (!state[currentLevel].includes()) {
-state[currentLevel].push();
+if (!state[currentLevel].includes(activeTask.day)) {
+state[currentLevel].push(activeTask.day);
 saveState();
 renderCalendar();
 }
@@ -619,7 +645,7 @@ fb.textContent = "❌ Not quite! Try another option.";
 function closeModal() {
 document.getElementById("taskModal").classList.add("hidden");
 document.getElementById("taskModal").classList.remove("flex");
-window.speechSynthesis.cancel();
+if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 function speakCurrentText() {
 if (!activeTask || !("speechSynthesis" in window)) return;
@@ -632,3 +658,4 @@ window.speechSynthesis.speak(utter);
 // Init
 createSnow();
 switchLevel("A1");
+
