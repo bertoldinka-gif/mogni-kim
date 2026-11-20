@@ -152,7 +152,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     if (question.essayKind === 'final_essay') {
       const nextSet = generateFinalEssaySet();
       setTopicSet(nextSet);
-      setSelectedTopicId(nextSet[0]?.id ?? null);
+      setSelectedTopicId(nextSet.at(0)?.id ?? null);
       setOralRevealed(false);
     } else {
       setTopicSet([]);
@@ -161,10 +161,10 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     }
   }, [question.id, question.essayKind]);
 
-  const activeTopic = useMemo(
-    () => topicSet.find((t) => t.id === selectedTopicId) ?? topicSet[0] ?? null,
-    [topicSet, selectedTopicId]
-  );
+    const activeTopic = useMemo(
+  () => topicSet.find((t) => t.id === selectedTopicId) ?? topicSet.at(0) ?? null,
+  [topicSet, selectedTopicId]
+);
 
   const effectivePrompt =
     isFinalEssay && activeTopic
@@ -172,9 +172,9 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
       : question.prompt;
 
   const effectiveHint =
-    isFinalEssay && activeTopic
-      ? `Тезис: ${activeTopic.thesisHint} • Подходящие произведения: 1) ${activeTopic.books[0]}; 2) ${activeTopic.books[1]}.`
-      : question.hint;
+  isFinalEssay && activeTopic
+    ? `Тезис: ${activeTopic.thesisHint} • Подходящие произведения: 1) ${activeTopic.books.at(0)}; 2) ${activeTopic.books.at(1)}.`
+    : question.hint;
   
   const timerRef = useRef<number | null>(null);
 
@@ -449,7 +449,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                       key={topic.id}
                       type="button"
                       onClick={() => {
-                        setSelectedTopicId(topic.id);
+                       setSelectedTopicId(fresh.at(0)?.id ?? null);
                         setOralRevealed(false);
                       }}
                       className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
@@ -499,11 +499,11 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                   </p>
                   <ul className="space-y-1 text-slate-300 list-disc pl-4 leading-relaxed">
                     <li>
-                      <strong className="text-emerald-200">Пример 1:</strong> {activeTopic.books[0]}
-                    </li>
-                    <li>
-                      <strong className="text-emerald-200">Пример 2:</strong> {activeTopic.books[1]}
-                    </li>
+  <strong className="text-emerald-200">Пример 1:</strong> {activeTopic.books.at(0)}
+</li>
+<li>
+  <strong className="text-emerald-200">Пример 2:</strong> {activeTopic.books.at(1)}
+</li>
                   </ul>
                 </div>
               )}
