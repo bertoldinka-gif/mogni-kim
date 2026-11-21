@@ -5,6 +5,12 @@ import {
   ege12RowQuestions,
   ege9RowQuestions,
 } from './egeRowSpellingData';
+import {
+  ege1MicroQuestions,
+  ege2MicroQuestions,
+  ege3MicroQuestions,
+} from './egeMicroTextsData';
+
 
 const PASSAGE_MAIN_3 = `(1)Мы говорим иногда о людях: «Ограниченный человек». (2)Но что может значить это определение? (3)Каждый человек ограничен в своих знаниях или в своём представлении о мире. (4)Ограничено и человечество в целом.
 
@@ -51,7 +57,8 @@ export const egeModules: TaskModule[] = [
     egeTab: 'speech_culture',
     engineType: 'word_input',
     sessionSize: 10,
-    questions: [
+   questions: [
+      ...ege1MicroQuestions,
             {
         id: 'ege-micro-1-t1',
         type: 'word_input',
@@ -150,6 +157,7 @@ export const egeModules: TaskModule[] = [
     engineType: 'multiple_choice',
     sessionSize: 10,
     questions: [
+      ...ege2MicroQuestions,
             {
         id: 'ege-micro-1-t2',
         type: 'multiple_choice',
@@ -274,6 +282,7 @@ export const egeModules: TaskModule[] = [
     engineType: 'multiple_choice',
     sessionSize: 10,
     questions: [
+      ...ege3MicroQuestions,
            {
         id: 'ege-micro-1-t3',
         type: 'multiple_choice',
