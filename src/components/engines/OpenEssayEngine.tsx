@@ -387,6 +387,11 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   const effectivePrompt =
     isFinalEssay && activeTopic ? activeTopic.title : question.prompt;
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+    const wordCount = essayText
+    .trim()
+    .split(/\s+/)
+    .filter((w) => /[а-яёa-z0-9]/i.test(w)).length;
+  const meetsMinWords = wordCount >= question.minWords;
 
     return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
