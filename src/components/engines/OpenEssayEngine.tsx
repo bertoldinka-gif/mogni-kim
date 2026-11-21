@@ -167,12 +167,39 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     }
   });
 
+    const playTimerFinishSound = () => {
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + idx * 0.22;
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(0.18, start + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.65);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.7);
+      });
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     if (!isGoldenReading || !timerRunning) return;
     const id = window.setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           setTimerRunning(false);
+          playTimerFinishSound();
           return 0;
         }
         return prev - 1;
