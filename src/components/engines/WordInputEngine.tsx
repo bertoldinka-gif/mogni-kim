@@ -830,88 +830,87 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     );
   };
 
-  const renderAnswerInput = () => (
-    <div className="space-y-2">
-      {question.answerLabel && (
-        <label
-          htmlFor={`word-input-${question.id}`}
-          className="block text-sm font-semibold text-slate-200"
-        >
-          {question.answerLabel}
-        </label>
-      )}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-        <div className="relative flex-1">
-          <Keyboard className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            id={`word-input-${question.id}`}
-            ref={inputRef}
-            type="text"
-            inputMode={isDigitMode ? 'numeric' : 'text'}
-            disabled={submitted}
-            value={answer}
-            onChange={(e) => {
-              if (!submitted) setAnswer(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (submitted) onNext();
-                else handleSubmit();
-              }
-            }}
-                        placeholder={
-              isDigitMode
-                ? 'Введите номер(-а) предложений без пробелов...'
-                : question.inputPlaceholder ||
-                  (question.submode === 'phrase_transform'
-                    ? 'Введите словосочетание (пробелы не важны)...'
-                    : 'Введите ответ с клавиатуры...')
-            }
-
-            className={`w-full pl-10 pr-4 py-3 rounded-xl border text-base sm:text-lg font-medium placeholder:text-slate-600 placeholder:text-sm focus:outline-none transition-all ${
-              isDigitMode ? 'font-mono-num tracking-widest' : ''
-            } ${
-              submitted
-                ? isCorrect
-                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-200'
-                  : 'bg-rose-500/15 border-rose-500 text-rose-200'
-                : 'bg-[#080B14]/90 border-slate-700 text-white focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30'
-            }`}
-          />
-        </div>
-
-        {!submitted && (
+    const renderAnswerInput = () => {
+    if (hasInlinePassageBlank) {
+      return !submitted ? (
+        <div className="flex justify-end pt-1">
           <button
             type="button"
-            disabled={!answer.trim()}
             onClick={handleSubmit}
-            className="hidden lg:inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium shadow-lg shadow-indigo-500/25 text-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
+            disabled={!answer.trim()}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:pointer-events-none text-white font-semibold text-sm shadow-lg shadow-violet-600/25 transition-all cursor-pointer"
           >
             <Send className="w-4 h-4" />
             <span>Проверить</span>
           </button>
-        )}
-      </div>
-
-      {!submitted && question.submode === 'phrase_transform' && (
-        <p className="text-xs text-slate-400">
-          Можно писать с пробелами или слитно, как в бланке ОГЭ (например,{' '}
-          <span className="font-mono-num text-slate-300">дом из дерева</span> или{' '}
-          <span className="font-mono-num text-slate-300">домиздерева</span>).
-        </p>
-      )}
-
-      {submitted && !isCorrect && correctHighlight && (
-        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm pt-1">
-          <span className="text-slate-400">Верный ответ:</span>
-          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 font-semibold text-emerald-300">
-            {correctHighlight}
-          </span>
         </div>
-      )}
-    </div>
-  );
+      ) : null;
+    }
+
+    return (
+      <div className="space-y-2">
+        {question.answerLabel && (
+          <label
+            htmlFor={`word-input-${question.id}`}
+            className="block text-sm font-semibold text-slate-200"
+          >
+            {question.answerLabel}
+          </label>
+        )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div className="relative flex-1">
+            <Keyboard className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id={`word-input-${question.id}`}
+              ref={inputRef}
+              type="text"
+              inputMode={isDigitMode ? 'numeric' : 'text'}
+              disabled={submitted}
+              value={answer}
+              onChange={(e) => {
+                if (!submitted) setAnswer(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (submitted) onNext();
+                  else handleSubmit();
+                }
+              }}
+              placeholder={
+                isDigitMode
+                  ? 'Введите номер(-а) предложений без пробелов...'
+                  : question.inputPlaceholder ||
+                    (question.submode === 'phrase_transform'
+                      ? 'Введите словосочетание (пробелы не важны)...'
+                      : 'Введите ответ с клавиатуры...')
+              }
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-base transition-all outline-none ${
+                isDigitMode ? 'font-mono-num tracking-wider' : ''
+              } ${
+                submitted
+                  ? isCorrect
+                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100'
+                    : 'bg-rose-500/10 border-rose-500/40 text-rose-100'
+                  : 'bg-[#080B14] border-slate-700/80 text-white placeholder-slate-500 focus:border-violet-500/70 focus:ring-2 focus:ring-violet-500/20'
+              }`}
+            />
+          </div>
+          {!submitted && (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!answer.trim()}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:pointer-events-none text-white font-semibold text-sm shadow-lg shadow-violet-600/25 transition-all cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              <span>Проверить</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   if (isFullWidthTextMode) {
     return (
