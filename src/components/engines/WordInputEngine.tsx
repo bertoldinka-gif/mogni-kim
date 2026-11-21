@@ -308,10 +308,56 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     );
   };
 
+    const hasInlinePassageBlank =
+    question.kimTaskNumber === 1 &&
+    Boolean(question.passage) &&
+    /(?:<\.\.\.>|<…>|\(\.\.\.\)|\[_\])/.test(question.passage || '');
+
   const renderPassageWithBlanks = (passage: string) => {
-    const parts = passage.split(/(<\.\.\.>|\(\.\.\.\)|\[_\]|\*\*[^*]+\*\*)/g);
+    const parts = passage.split(/(<\.\.\.>|<…>|\(\.\.\.\)|\[_\]|\*\*[^*]+\*\*)/g);
+    let inlineInputPlaced = false;
+
     return parts.map((part, idx) => {
-      if (part === '<...>' || part === '(...)' || part === '[_]') {
+      if (part === '<...>' || part === '<…>' || part === '(...)' || part === '[_]') {
+        if (question.kimTaskNumber === 1 && !inlineInputPlaced) {
+          inlineInputPlaced = true;
+          const inlineBorderClass = submitted
+            ? isCorrect
+              ? 'border-emerald-400 bg-emerald-500/20 text-emerald-100'
+              : 'border-rose-400 bg-rose-500/20 text-rose-100'
+            : 'border-violet-400 bg-violet-500/15 text-white focus:border-violet-300 focus:bg-violet-500/25';
+
+          return (
+            <span key={idx} className="inline-flex items-center align-baseline mx-1 my-0.5">
+              <input
+                ref={inputRef}
+                type="text"
+                disabled={submitted}
+                value={answer}
+                onChange={(e) => {
+                  if (!submitted) setAnswer(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (submitted) onNext();
+                    else handleSubmit();
+                  }
+                }}
+                placeholder="..."
+                aria-label="Впишите пропущенное слово"
+                style={{ width: `${Math.max((answer || '').length + 4, 11)}ch` }}
+                className={`px-2.5 py-0.5 rounded-lg border-b-2 border text-sm sm:text-base font-semibold text-center outline-none transition-all ${inlineBorderClass}`}
+              />
+              {submitted && !isCorrect && (
+                <span className="ml-1.5 px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/50 text-xs sm:text-sm font-bold text-emerald-200">
+                  {correctHighlight}
+                </span>
+              )}
+            </span>
+          );
+        }
+
         return (
           <span
             key={idx}
