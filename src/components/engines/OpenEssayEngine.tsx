@@ -636,6 +636,97 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
               </span>
             </div>
           </div>
+          {!submitted && (
+            <div className="p-2.5 rounded-xl bg-[#080B14]/75 border border-slate-800/80 space-y-1.5">
+              <div className="text-[11px] font-semibold text-slate-400">
+                Речевые клише (нажмите, чтобы вставить в текст):
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(question.essayKind === 'final_essay'
+                  ? Array.of(
+                      {
+                        label: 'Вступление + тезис',
+                        text: 'Каждый человек рано или поздно задумывается над этим важным вопросом. На мой взгляд, ',
+                      },
+                      {
+                        label: 'Переход к 1-му примеру',
+                        text: '\n\nОбратимся к произведению русской литературы. В книге ',
+                      },
+                      {
+                        label: 'Микровывод',
+                        text: ' Этот пример убедительно доказывает, что ',
+                      },
+                      {
+                        label: 'Переход ко 2-му примеру',
+                        text: '\n\nПодтвердить эту мысль можно и на примере другого произведения. Так, в ',
+                      },
+                      {
+                        label: 'Заключение',
+                        text: '\n\nПодводя итог сказанному, хочется ещё раз подчеркнуть: ',
+                      }
+                    )
+                  : question.essayKind === 'ege_essay'
+                  ? Array.of(
+                      {
+                        label: 'Проблема текста',
+                        text: 'В предложенном для анализа тексте автор поднимает важную проблему ',
+                      },
+                      {
+                        label: '1-й пример-иллюстрация',
+                        text: '\n\nРазмышляя над этой проблемой, писатель обращает внимание читателей на ',
+                      },
+                      {
+                        label: 'Связка (дополнение / противопоставление)',
+                        text: '\n\nОба приведённых примера, дополняя друг друга, позволяют глубже понять мысль автора: ',
+                      },
+                      {
+                        label: 'Позиция автора',
+                        text: '\n\nПозиция автора выражена предельно ясно: он убеждён, что ',
+                      },
+                      {
+                        label: 'Своя позиция + обоснование',
+                        text: '\n\nНельзя не согласиться с мнением автора. Действительно, ',
+                      },
+                      {
+                        label: 'Заключение',
+                        text: '\n\nТаким образом, прочитанный текст заставляет задуматься о том, как важно ',
+                      }
+                    )
+                  : Array.of(
+                      {
+                        label: 'Вступление',
+                        text: 'Что такое настоящая нравственная ценность? Я считаю, что это ',
+                      },
+                      {
+                        label: 'Пример из текста',
+                        text: '\n\nВ предложенном тексте автор рассказывает о том, как ',
+                      },
+                      {
+                        label: 'Пример из жизни / книг',
+                        text: '\n\nВ жизни и литературе также немало примеров, подтверждающих эту мысль. Вспомним ',
+                      },
+                      {
+                        label: 'Вывод',
+                        text: '\n\nТаким образом, можно сделать вывод: ',
+                      }
+                    )
+                ).map((cliche, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() =>
+                      setEssayText((prev) =>
+                        prev ? `${prev}${prev.endsWith(' ') || prev.endsWith('\n') ? '' : ' '}${cliche.text}` : cliche.text.trimStart()
+                      )
+                    }
+                    className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-violet-500/20 border border-slate-700/80 hover:border-violet-400/60 text-[11px] font-medium text-slate-300 hover:text-violet-200 transition-colors cursor-pointer"
+                  >
+                    + {cliche.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <textarea
             id={`essay-${question.id}`}
