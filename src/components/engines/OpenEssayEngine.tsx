@@ -44,11 +44,6 @@ import {
   FinalEssayTopic,
   generateFinalEssaySet,
 } from '../../data/ege/finalEssayBank';
-import { TrainerSidePanel } from './TrainerSidePanel';
-import {
-  FinalEssayTopic,
-  generateFinalEssaySet,
-} from '../../data/ege/finalEssayBank';
 import { GOLDEN_READING_BOOKS } from '../../data/ege/goldenReadingBank';
 
 interface OpenEssayEngineProps {
