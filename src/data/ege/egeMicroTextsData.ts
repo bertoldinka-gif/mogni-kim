@@ -209,8 +209,6 @@ const MICRO_4 = createMicroTextBundle({
 
 const MICRO_BUNDLES: MicroTextBundle[] = [MICRO_3, MICRO_4];
 
-const MICRO_BUNDLES: MicroTextBundle[] = [];
-
 export const ege1MicroQuestions: WordInputQuestion[] = MICRO_BUNDLES.map((b) => b.t1);
 export const ege2MicroQuestions: MultipleChoiceQuestion[] = MICRO_BUNDLES.map((b) => b.t2);
 export const ege3MicroQuestions: MultipleChoiceQuestion[] = MICRO_BUNDLES.map((b) => b.t3);
