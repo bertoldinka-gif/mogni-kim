@@ -384,6 +384,8 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   }
 
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+  const effectivePrompt =
+    isFinalEssay && activeTopic ? activeTopic.title : question.prompt;
 
     return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
