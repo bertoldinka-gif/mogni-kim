@@ -114,7 +114,8 @@ export type OpenEssayKind =
   | 'oge_summary'
   | 'oge_essay'
   | 'ege_essay'
-  | 'final_essay';
+  | 'final_essay'
+  | 'golden_reading';
 
 export interface OpenEssayQuestion extends BaseQuestion {
   type: 'open_essay';
