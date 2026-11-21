@@ -45,6 +45,11 @@ import {
   generateFinalEssaySet,
 } from '../../data/ege/finalEssayBank';
 import { TrainerSidePanel } from './TrainerSidePanel';
+import {
+  FinalEssayTopic,
+  generateFinalEssaySet,
+} from '../../data/ege/finalEssayBank';
+import { GOLDEN_READING_BOOKS } from '../../data/ege/goldenReadingBank';
 
 interface OpenEssayEngineProps {
   question: OpenEssayQuestion;
@@ -145,252 +150,216 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-  const isFinalEssay = question.essayKind === 'final_essay';
-  const [topicSet, setTopicSet] = useState<FinalEssayTopic[]>(() =>
-    isFinalEssay ? generateFinalEssaySet() : []
-  );
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const [oralRevealed, setOralRevealed] = useState(false);
-
-  useEffect(() => {
-    if (question.essayKind === 'final_essay') {
-      const nextSet = generateFinalEssaySet();
-      setTopicSet(nextSet);
-      setSelectedTopicId(nextSet.at(0)?.id ?? null);
-      setOralRevealed(false);
-    } else {
-      setTopicSet([]);
-      setSelectedTopicId(null);
-      setOralRevealed(false);
-    }
-  }, [question.id, question.essayKind]);
-
-    const activeTopic = useMemo(
-  () => topicSet.find((t) => t.id === selectedTopicId) ?? topicSet.at(0) ?? null,
-  [topicSet, selectedTopicId]
-);
-
-  const effectivePrompt =
-    isFinalEssay && activeTopic
-      ? `«${activeTopic.title}» Напишите итоговое сочинение объёмом не менее 250 слов с опорой на не менее чем одно произведение отечественной или мировой литературы.`
-      : question.prompt;
-
-  const effectiveHint =
-  isFinalEssay && activeTopic
-    ? `Тезис: ${activeTopic.thesisHint} • Подходящие произведения: 1) ${activeTopic.books.at(0)}; 2) ${activeTopic.books.at(1)}.`
-    : question.hint;
   
-  const timerRef = useRef<number | null>(null);
-
-  const stopAllAudio = () => {
-    if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setIsPlaying(false);
-  };
-
-  useEffect(() => {
-    stopAllAudio();
-    const restored =
-      savedState?.userState?.essayText ??
-      getEssayDraft(resolvedUserId, question.id);
-    setEssayText(restored);
-    setDraftSaved(Boolean(restored.trim()));
-    setArchiveRecordId(initialArchiveId);
-    setSavedToast(false);
-    setShowSourceText(!question.hasAudio);
-    setCopied(false);
-    setCurrentTime(0);
-    setDuration(95);
-    setSubmitted(Boolean(savedState));
-    setIsGrading(false);
-    setGradingReport(
-      (savedState?.userState?.gradingReport as AiGradingReport | null) ?? null
-    );
-    setGradingError(null);
-    setShowHint(false);
-    setLearnedClicked(false);
-    setMentorQuote(savedState?.mentorQuote ?? null);
-    return () => {
-      stopAllAudio();
-    };
-  }, [question.id, question.hasAudio, savedState, resolvedUserId, initialArchiveId]);
-
-  const wordCount = useMemo(() => countEssayWords(essayText), [essayText]);
-
-  const meetsMinWords = wordCount >= question.minWords;
-
-  // Debounced auto-save draft to localStorage while editing
-  useEffect(() => {
-    if (submitted) return;
-    const handle = window.setTimeout(() => {
-      if (essayText.trim().length > 0) {
-        saveEssayDraft(resolvedUserId, question.id, essayText);
-        setDraftSaved(true);
-      } else {
-        clearEssayDraft(resolvedUserId, question.id);
-        setDraftSaved(false);
-      }
-    }, 250);
-    return () => window.clearTimeout(handle);
-  }, [essayText, submitted, resolvedUserId, question.id]);
-
-  const togglePlay = () => {
-    if (isPlaying) {
-      stopAllAudio();
-      return;
-    }
-
-    setIsPlaying(true);
-    if (
-      typeof window !== 'undefined' &&
-      'speechSynthesis' in window &&
-      question.sourceText
-    ) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(question.sourceText);
-      utterance.lang = 'ru-RU';
-      utterance.rate = playbackRate;
-      utterance.onend = () => {
-        stopAllAudio();
-        setCurrentTime(duration);
-      };
-      window.speechSynthesis.speak(utterance);
-    }
-
-    timerRef.current = window.setInterval(() => {
-      setCurrentTime((prev) => {
-        const next = prev + 0.5 * playbackRate;
-        if (next >= duration) {
-          stopAllAudio();
-          return duration;
-        }
-        return next;
-      });
-    }, 500);
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextTime = Number(e.target.value);
-    setCurrentTime(nextTime);
-  };
-
-  const handleCopyAiPrompt = async () => {
-    const promptText = buildExternalAiPrompt({
-      examType: KIND_TO_AI_EXAM[question.essayKind],
-      promptText: effectivePrompt,
-      sourceText: question.sourceText,
-      studentText: essayText,
-    });
-
+    const isGoldenReading = question.essayKind === 'golden_reading';
+  const [selectedBookId, setSelectedBookId] = useState<string>(
+    () => GOLDEN_READING_BOOKS.at(0)?.id ?? 'gr-1'
+  );
+  const [secondsLeft, setSecondsLeft] = useState<number>(15 * 60);
+  const [timerRunning, setTimerRunning] = useState<boolean>(false);
+  const [completedDays, setCompletedDays] = useState<number>(() => {
     try {
-      await navigator.clipboard.writeText(promptText);
+      return Number(localStorage.getItem('golden_reading_days') || '0');
     } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = promptText;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
+      return 0;
     }
-
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const handleSaveSnapshot = (reportOverride?: AiGradingReport | null) => {
-    const trimmed = essayText.trim();
-    if (!trimmed || !onSaveEssay) return;
-    const saved = onSaveEssay({
-      id: archiveRecordId ?? undefined,
-      questionId: question.id,
-      examType: KIND_TO_AI_EXAM[question.essayKind],
-      promptTitle: effectivePrompt,
-      sourceText: question.sourceText,
-      studentText: trimmed,
-      wordCount: countEssayWords(trimmed),
-      gradingReport:
-        reportOverride !== undefined
-          ? reportOverride ?? undefined
-          : gradingReport ?? undefined,
-    });
-    if (saved && saved.id) {
-      setArchiveRecordId(saved.id);
-    }
-    setSavedToast(true);
-    window.setTimeout(() => setSavedToast(false), 2500);
-  };
-
-  const handleClearDraft = () => {
-    if (submitted) return;
-    setEssayText('');
-    clearEssayDraft(resolvedUserId, question.id);
-    setDraftSaved(false);
-    setArchiveRecordId(null);
-  };
-
-  const handleCompleteWork = async () => {
-    if (submitted || isGrading) return;
-    setIsGrading(true);
-    setGradingError(null);
-
+  });
+  const [bookStatuses, setBookStatuses] = useState<Record<string, 'reading' | 'done'>>(() => {
     try {
-      const trimmed = essayText.trim();
-      const report = await evaluateEssayWithAI({
-        examType: KIND_TO_AI_EXAM[question.essayKind],
-        promptText: effectivePrompt,
-        sourceText: question.sourceText,
-        studentText: trimmed,
-      });
-      setGradingReport(report);
-      let quote: string | null = null;
-      if (activeMentor) {
-        quote = pickRandomQuote(
-          comboStreak + 1 >= 2
-            ? activeMentor.comboQuotes
-            : activeMentor.comboQuotes.length > 0
-            ? activeMentor.comboQuotes
-            : activeMentor.mistakeQuotes
-        );
-        setMentorQuote(quote);
-      }
-      if (trimmed) {
-        saveEssayDraft(resolvedUserId, question.id, trimmed);
-        setDraftSaved(true);
-        if (onSaveEssay) {
-          const saved = onSaveEssay({
-            id: archiveRecordId ?? undefined,
-            questionId: question.id,
-            examType: KIND_TO_AI_EXAM[question.essayKind],
-            promptTitle: effectivePrompt,
-            sourceText: question.sourceText,
-            studentText: trimmed,
-            wordCount: countEssayWords(trimmed),
-            gradingReport: report,
-          });
-          if (saved && saved.id) {
-            setArchiveRecordId(saved.id);
-          }
-        }
-      }
-      setSubmitted(true);
-      onAnswered(true, { essayText: trimmed, gradingReport: report }, quote);
-    } catch (err) {
-      setGradingError(
-        err instanceof Error
-          ? err.message
-          : 'Не удалось выполнить проверку. Попробуйте ещё раз.'
-      );
-    } finally {
-      setIsGrading(false);
+      return JSON.parse(localStorage.getItem('golden_reading_statuses') || '{}');
+    } catch {
+      return {};
     }
-  };
+  });
+
+  useEffect(() => {
+    if (!isGoldenReading || !timerRunning) return;
+    const id = window.setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setTimerRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [isGoldenReading, timerRunning]);
+
+  if (isGoldenReading) {
+    const activeBook =
+      GOLDEN_READING_BOOKS.find((b) => b.id === selectedBookId) ?? GOLDEN_READING_BOOKS.at(0)!;
+    const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+    const secs = String(secondsLeft % 60).padStart(2, '0');
+    const doneCount = Object.values(bookStatuses).filter((s) => s === 'done').length;
+    const currentStatus = bookStatuses[activeBook.id] ?? 'reading';
+
+    const handleLogSession = () => {
+      const nextDays = completedDays + 1;
+      setCompletedDays(nextDays);
+      try {
+        localStorage.setItem('golden_reading_days', String(nextDays));
+      } catch {
+        // ignore
+      }
+      setTimerRunning(false);
+      setSecondsLeft(15 * 60);
+      onAnswered(true, { text: `Марафон чтения: ${activeBook.author} «${activeBook.title}»` }, null);
+    };
+
+    const toggleBookDone = (bookId: string) => {
+      const nextStatus = bookStatuses[bookId] === 'done' ? 'reading' : 'done';
+      const updated = { ...bookStatuses, [bookId]: nextStatus };
+      setBookStatuses(updated);
+      try {
+        localStorage.setItem('golden_reading_statuses', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+    };
+
+    return (
+      <div className="space-y-4">
+        {/* Верхняя панель таймера марафона 15 минут */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-950/40 via-[#0F1424] to-violet-950/30 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
+              <span>Марафон · 15 минут чтения в день</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Прочитано: {doneCount} / {GOLDEN_READING_BOOKS.length}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-500/30">
+                Сеансов: {completedDays}
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-white">
+              Золотой минимум ФИПИ для Итогового сочинения
+            </h3>
+            <p className="text-xs text-slate-300">
+              Выберите короткий рассказ, запустите таймер на 15 минут и разберите готовый аргумент к экзамену.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="px-3.5 py-2 rounded-xl bg-[#080B14] border border-amber-400/40 font-mono-num text-xl font-bold text-amber-300 tracking-wider">
+              {mins}:{secs}
+            </div>
+            <button
+              type="button"
+              onClick={() => setTimerRunning((r) => !r)}
+              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+            >
+              {timerRunning ? 'Пауза' : 'Старт 15:00'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSecondsLeft((s) => s + 5 * 60)}
+              className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-colors cursor-pointer"
+            >
+              +5 мин
+            </button>
+            <button
+              type="button"
+              onClick={handleLogSession}
+              className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-xs sm:text-sm font-semibold text-emerald-200 transition-colors cursor-pointer"
+            >
+              Засчитать 15 мин сегодня
+            </button>
+          </div>
+        </div>
+
+        {/* Сетка 18 произведений */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {GOLDEN_READING_BOOKS.map((book) => {
+            const isSelected = book.id === activeBook.id;
+            const isDone = bookStatuses[book.id] === 'done';
+            return (
+              <button
+                key={book.id}
+                type="button"
+                onClick={() => setSelectedBookId(book.id)}
+                className={`text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-amber-500/15 border-amber-400 text-white'
+                    : isDone
+                    ? 'bg-emerald-950/25 border-emerald-500/30 text-slate-300 hover:border-emerald-400/60'
+                    : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:border-slate-600'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-1 text-[10px] font-semibold uppercase tracking-wider mb-0.5">
+                  <span className="text-amber-300">
+                    Разделы {book.sections.join(', ')} · {book.readTimeLabel}
+                  </span>
+                  {isDone && <span className="text-emerald-300">✓ Прочитано</span>}
+                </div>
+                <div className="text-xs sm:text-sm font-semibold leading-snug">
+                  {book.author} «{book.title}»
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Карточка выбранного произведения */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-slate-800 space-y-3.5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-amber-300">{activeBook.genre}</div>
+              <h4 className="text-lg sm:text-xl font-bold text-white mt-0.5">
+                {activeBook.author} — «{activeBook.title}»
+              </h4>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={activeBook.readUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs sm:text-sm font-semibold transition-colors"
+              >
+                Читать полный текст (в новой вкладке) ↗
+              </a>
+              <button
+                type="button"
+                onClick={() => toggleBookDone(activeBook.id)}
+                className={`px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
+                  currentStatus === 'done'
+                    ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200'
+                    : 'bg-slate-800 border-slate-700 text-slate-200 hover:border-emerald-400/50'
+                }`}
+              >
+                {currentStatus === 'done' ? '✓ Дочитано до конца' : 'Отметить как прочитанное'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {activeBook.themes.map((theme, idx) => (
+              <span
+                key={idx}
+                className="px-2.5 py-1 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs text-slate-200"
+              >
+                {theme}
+              </span>
+            ))}
+          </div>
+
+          <div className="space-y-2 text-sm text-slate-200 leading-relaxed">
+            <p>
+              <strong className="text-white">Краткий сюжет и ключевые детали:</strong>{' '}
+              {activeBook.summary}
+            </p>
+            <blockquote className="p-3 rounded-xl bg-slate-900/90 border-l-4 border-amber-400 text-xs sm:text-sm italic text-amber-100">
+              {activeBook.keyQuote}
+            </blockquote>
+            <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs sm:text-sm text-emerald-100">
+              <strong className="text-emerald-300">Готовый каркас аргумента для сочинения:</strong>{' '}
+              {activeBook.argumentTemplate}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
