@@ -316,7 +316,12 @@ setDialogueAnswers({});
 setMonologueTranscript('');
 setFinished(false);
 }}
-className={px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${ v.id === variant.id ? 'bg-violet-600/30 border-violet-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500' }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                    v.id === variant.id
+                      ? 'bg-violet-600/30 border-violet-400 text-white'
+                      : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+                  }`}
+
 >
 {v.title}
 
