@@ -742,7 +742,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       {/* Кнопка завершения собеседования */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1917]/90 border border-emerald-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs text-slate-300 leading-relaxed">
-          Для получения «Зачёта» на собеседовании нужно набрать от 10 баллов из 20 (включая монолог ≥ 10 фраз).
+          Для получения «Зачёта» на собеседовании нужно набрать от 10 баллов из 17 (включая монолог ≥ 10 фраз).
         </p>
         {!finished ? (
           <button
