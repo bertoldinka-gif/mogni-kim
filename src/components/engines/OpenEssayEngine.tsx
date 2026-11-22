@@ -75,6 +75,7 @@ const KIND_LABELS: Record<OpenEssayKind, string> = {
   oge_essay: 'ОГЭ · Сочинение-рассуждение (Задание 13)',
   ege_essay: 'ЕГЭ · Сочинение (Задание 27)',
   final_essay: 'Итоговое сочинение (Допуск)',
+  oral_interview: 'ОГЭ · Итоговое собеседование (Допуск)',
 };
 
 const KIND_TO_AI_EXAM: Record<OpenEssayKind, AiExamType> = {
@@ -82,6 +83,7 @@ const KIND_TO_AI_EXAM: Record<OpenEssayKind, AiExamType> = {
   oge_essay: 'OGE_ESSAY',
   ege_essay: 'EGE_ESSAY',
   final_essay: 'FINAL_ESSAY',
+  oral_interview: 'OGE_ESSAY',
 };
 
 function formatTime(seconds: number): string {
@@ -301,6 +303,16 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     }, 800);
     return () => window.clearTimeout(id);
   }, [essayText, resolvedUserId, question.id, submitted]);
+
+    if (question.essayKind === 'oral_interview') {
+    return (
+      <OralInterviewEngine
+        onComplete={(passed, summaryText) => {
+          onAnswered(passed, { essayText: summaryText, gradingReport: null }, null);
+        }}
+      />
+    );
+  }
 
   // ==== GOLDEN READING BRANCH ====
   if (isGoldenReading) {
