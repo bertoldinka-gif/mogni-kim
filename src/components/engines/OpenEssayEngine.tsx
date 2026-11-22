@@ -145,8 +145,34 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-  
-    const isGoldenReading = question.essayKind === 'golden_reading';
+
+  // ==== FINAL ESSAY STATES ====
+  const isFinalEssay = question.essayKind === 'final_essay';
+  const [topicSet, setTopicSet] = useState<FinalEssayTopic[]>(() =>
+    isFinalEssay ? generateFinalEssaySet() : []
+  );
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
+    () => topicSet.at(0)?.id ?? null
+  );
+  const [oralRevealed, setOralRevealed] = useState(false);
+
+  const activeTopic = useMemo<FinalEssayTopic | null>(() => {
+    if (!isFinalEssay || topicSet.length === 0) return null;
+    return topicSet.find((t) => t.id === selectedTopicId) ?? topicSet[0];
+  }, [isFinalEssay, topicSet, selectedTopicId]);
+
+  const effectivePrompt = useMemo(() => {
+    if (isFinalEssay && activeTopic) return activeTopic.title;
+    return question.prompt;
+  }, [isFinalEssay, activeTopic, question.prompt]);
+
+  const effectiveHint = useMemo(() => {
+    if (isFinalEssay && activeTopic) return activeTopic.thesisHint;
+    return question.hint ?? '';
+  }, [isFinalEssay, activeTopic, question.hint]);
+
+  // ==== GOLDEN READING STATES ====
+  const isGoldenReading = question.essayKind === 'golden_reading';
   const [selectedBookId, setSelectedBookId] = useState<string>(
     () => GOLDEN_READING_BOOKS.at(0)?.id ?? 'gr-1'
   );
@@ -181,6 +207,101 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     return () => window.clearInterval(id);
   }, [isGoldenReading, timerRunning]);
 
+  // ==== DERIVED VALUES ====
+  const wordCount = useMemo(
+    () => countEssayWords(essayText),
+    [essayText]
+  );
+  const meetsMinWords = wordCount >= (question.minWords ?? 0);
+  const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+
+  // ==== HANDLERS ====
+  const togglePlay = () => setIsPlaying((v) => !v);
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentTime(Number(e.target.value));
+  };
+
+  const handleClearDraft = () => {
+    setEssayText('');
+    setDraftSaved(false);
+    clearEssayDraft(resolvedUserId, question.id);
+  };
+
+  const handleCopyAiPrompt = async () => {
+    try {
+      const prompt = buildExternalAiPrompt(
+        KIND_TO_AI_EXAM[question.essayKind],
+        question.sourceText ?? '',
+        essayText,
+        question.minWords ?? 0
+      );
+      await navigator.clipboard.writeText(prompt);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
+
+  const handleSaveSnapshot = () => {
+    if (!onSaveEssay || !essayText.trim()) return;
+    const record = onSaveEssay({
+      id: archiveRecordId ?? undefined,
+      questionId: question.id,
+      essayKind: question.essayKind,
+      prompt: effectivePrompt,
+      essayText,
+      wordCount,
+      gradingReport: gradingReport ?? undefined,
+    });
+    if (record && 'id' in record) {
+      setArchiveRecordId(record.id);
+    }
+    setSavedToast(true);
+    window.setTimeout(() => setSavedToast(false), 2000);
+  };
+
+  const handleCompleteWork = async () => {
+    if (isGrading) return;
+    setIsGrading(true);
+    setGradingError(null);
+    try {
+      saveEssayDraft(resolvedUserId, question.id, essayText);
+      setDraftSaved(true);
+      const report = await evaluateEssayWithAI(
+        KIND_TO_AI_EXAM[question.essayKind],
+        effectivePrompt,
+        essayText,
+        question.minWords ?? 0
+      );
+      setGradingReport(report);
+      setSubmitted(true);
+      const quote = activeMentor ? pickRandomQuote(activeMentor) : null;
+      setMentorQuote(quote);
+      onAnswered(true, { essayText, gradingReport: report }, quote);
+    } catch (err) {
+      setGradingError(
+        err instanceof Error ? err.message : 'Не удалось проверить работу.'
+      );
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
+  // Draft autosave
+  useEffect(() => {
+    if (submitted) return;
+    const id = window.setTimeout(() => {
+      if (essayText.trim()) {
+        saveEssayDraft(resolvedUserId, question.id, essayText);
+        setDraftSaved(true);
+      }
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [essayText, resolvedUserId, question.id, submitted]);
+
+  // ==== GOLDEN READING BRANCH ====
   if (isGoldenReading) {
     const activeBook =
       GOLDEN_READING_BOOKS.find((b) => b.id === selectedBookId) ?? GOLDEN_READING_BOOKS.at(0)!;
@@ -356,9 +477,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     );
   }
 
-  const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
-
-    return (
+  return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
       {/* Full-Width Single-Column Essay & Summary Workspace */}
       <div className="p-4 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
@@ -413,7 +532,7 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                       : `№ 30${(idx % 2) + 1}`;
                   const isSelected = activeTopic?.id === topic.id;
                   return (
-                                        <button
+                    <button
                       key={topic.id}
                       type="button"
                       onClick={() => {
@@ -467,11 +586,11 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                   </p>
                   <ul className="space-y-1 text-slate-300 list-disc pl-4 leading-relaxed">
                     <li>
-  <strong className="text-emerald-200">Пример 1:</strong> {activeTopic.books.at(0)}
-</li>
-<li>
-  <strong className="text-emerald-200">Пример 2:</strong> {activeTopic.books.at(1)}
-</li>
+                      <strong className="text-emerald-200">Пример 1:</strong> {activeTopic.books.at(0)}
+                    </li>
+                    <li>
+                      <strong className="text-emerald-200">Пример 2:</strong> {activeTopic.books.at(1)}
+                    </li>
                   </ul>
                 </div>
               )}
@@ -642,335 +761,4 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
                 ) : (
                   <>
                     <Copy className="w-4 h-4 text-violet-400 shrink-0" />
-                    <span>Скопировать промпт для проверки в GigaChat / Алисе</span>
-                  </>
-                )}
-              </button>
-
-              {onSaveEssay && (
-                <button
-                  type="button"
-                  disabled={!essayText.trim()}
-                  onClick={() => handleSaveSnapshot()}
-                  className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border text-xs sm:text-sm font-medium transition-all cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed whitespace-nowrap ${
-                    savedToast
-                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                      : 'bg-[#080B14]/90 border-slate-700 hover:border-cyan-500/60 text-slate-200 hover:text-white'
-                  }`}
-                >
-                  {savedToast ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Сохранено!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span>Сохранить работу</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-
-            {!submitted ? (
-              <button
-                type="button"
-                disabled={isGrading}
-                onClick={handleCompleteWork}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 disabled:opacity-75 disabled:cursor-wait text-white font-medium shadow-lg shadow-indigo-500/25 text-sm transition-all cursor-pointer whitespace-nowrap"
-              >
-                {isGrading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Проверяем работу по критериям ФИПИ...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Проверить по критериям</span>
-                  </>
-                )}
-              </button>
-            ) : (
-              <span className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-300">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Работа проверена</span>
-              </span>
-            )}
-          </div>
-
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Бесплатная проверка: скопируйте готовый запрос с критериями и вставьте в чат Алисы или GigaChat.
-          </p>
-
-          {gradingError && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{gradingError}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Grading Report Card (displayed below editor after AI / demo evaluation) */}
-        {gradingReport && (
-          <div className="p-4 sm:p-5 rounded-xl bg-[#080B14]/90 border border-violet-500/35 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-              <div className="space-y-0.5">
-                <div className="text-[11px] uppercase tracking-wider font-semibold text-violet-300">
-                  Отчёт по критериям ФИПИ
-                </div>
-                <div className="text-sm sm:text-base font-display font-semibold text-white">
-                  {gradingReport.verdictLabel}
-                </div>
-              </div>
-
-              {gradingReport.isPassFail ? (
-                <div
-                  className={`px-4 py-2 rounded-xl border text-center ${
-                    gradingReport.overallPassed
-                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                      : 'bg-rose-500/20 border-rose-500/50 text-rose-300'
-                  }`}
-                >
-                  <div className="text-[10px] uppercase tracking-wider opacity-85">
-                    Результат допуска
-                  </div>
-                  <div className="font-display text-base sm:text-lg font-bold tracking-wide">
-                    {gradingReport.overallPassed ? 'ИТОГ: ЗАЧЁТ' : 'ИТОГ: НЕЗАЧЁТ'}
-                  </div>
-                </div>
-              ) : (
-                <div className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/40 text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                    Итоговый балл
-                  </div>
-                  <div className="font-mono-num text-xl font-bold text-white">
-                    {gradingReport.totalScore}{' '}
-                    <span className="text-sm font-normal text-slate-400">
-                      / {gradingReport.maxTotalScore}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {gradingReport.rubricNote && (
-              <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-xs text-indigo-200 leading-relaxed">
-                {gradingReport.rubricNote}
-              </div>
-            )}
-
-            {/* Mandatory Requirements for Final Essay */}
-            {gradingReport.requirements && gradingReport.requirements.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {gradingReport.requirements.map((req) => (
-                  <div
-                    key={req.code}
-                    className={`p-3 rounded-xl border space-y-1 ${
-                      req.passed
-                        ? 'bg-emerald-500/10 border-emerald-500/35'
-                        : 'bg-rose-500/10 border-rose-500/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-white">
-                        {req.title}
-                      </span>
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap ${
-                          req.passed
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-rose-500/20 text-rose-300'
-                        }`}
-                      >
-                        {req.statusLabel}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      {req.comment}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Criteria Breakdown Pills */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {gradingReport.criteria.map((crit) => {
-                const isPassFail = Boolean(gradingReport.isPassFail);
-                const passed = isPassFail
-                  ? Boolean(crit.passed)
-                  : crit.score === crit.maxScore;
-                const zeroScore = isPassFail ? !passed : crit.score === 0;
-
-                return (
-                  <div
-                    key={crit.code}
-                    className={`p-3 rounded-xl border space-y-1 ${
-                      passed
-                        ? 'bg-emerald-500/10 border-emerald-500/35'
-                        : zeroScore
-                        ? 'bg-rose-500/10 border-rose-500/35'
-                        : 'bg-slate-900/75 border-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-white">
-                        <span className="font-mono-num text-violet-300 mr-1.5">
-                          {crit.code}
-                        </span>
-                        {crit.title}
-                      </span>
-                      {isPassFail ? (
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap ${
-                            passed
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-rose-500/20 text-rose-300'
-                          }`}
-                        >
-                          {crit.statusLabel ?? (passed ? 'Зачёт' : 'Незачёт')}
-                        </span>
-                      ) : (
-                        <span
-                          className={`font-mono-num text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap ${
-                            passed
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : zeroScore
-                              ? 'bg-rose-500/20 text-rose-300'
-                              : 'bg-amber-500/15 text-amber-300'
-                          }`}
-                        >
-                          {crit.score}/{crit.maxScore}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      {crit.comment}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Strengths & Improvements */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 space-y-1.5">
-                <div className="font-semibold text-emerald-300">
-                  Сильные стороны
-                </div>
-                <ul className="space-y-1 text-slate-300 list-disc pl-4 leading-relaxed">
-                  {gradingReport.strengths.map((item, i) => (
-                    <li key={`str-${i}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-1.5">
-                <div className="font-semibold text-amber-300">
-                  Советы по грамматике и речи
-                </div>
-                <ul className="space-y-1 text-slate-300 list-disc pl-4 leading-relaxed">
-                  {gradingReport.improvements.slice(0, 2).map((item, i) => (
-                    <li key={`imp-${i}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Active AI Mentor Commentary inside Grading Report */}
-            {activeMentor && mentorQuote && (
-              <div
-                className={`p-3.5 rounded-xl bg-slate-900/80 border ${activeMentor.accentBorder} flex items-start gap-3.5`}
-              >
-                <MentorAvatar
-                  mentor={activeMentor}
-                  size="md"
-                  ringTone="violet"
-                  className="mt-0.5"
-                />
-                <div className="min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
-                    <span>{activeMentor.name}</span>
-                    <MessageSquareQuote className={`w-3 h-3 ${activeMentor.accentText}`} />
-                  </div>
-                  <p className="text-xs text-slate-200 leading-relaxed italic">
-                    «{mentorQuote}»
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-    )}
-
-              {/* Bottom Navigation inside Main Card */}
-        {(onPrev || !isLastQuestion) && (
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/70">
-            {onPrev ? (
-              <button
-                type="button"
-                disabled={!canGoPrev}
-                onClick={onPrev}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-violet-500/50 text-xs sm:text-sm font-medium text-slate-300 hover:text-white disabled:opacity-35 disabled:cursor-not-allowed transition-colors whitespace-nowrap cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Назад</span>
-              </button>
-            ) : (
-              <span />
-            )}
-
-            {!isLastQuestion && (
-              <button
-                type="button"
-                onClick={onNext}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#080B14]/80 border border-slate-800 hover:border-violet-500/50 text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
-              >
-                <span>Следующее задание</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-                        )}
-          </div>
-        )}
-        </div>
-
-      {/* Full-Width Rule & Criteria Summary Card (shown after submission) */}
-      {submitted && (
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#0B1917]/90 border border-emerald-500/40 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="font-display text-sm sm:text-base font-semibold text-white">
-              {question.ruleTitle}
-            </h4>
-
-            {isReviewMode && onMarkLearned && (
-              <button
-                type="button"
-                disabled={learnedClicked}
-                onClick={() => {
-                  setLearnedClicked(true);
-                  onMarkLearned(question.id);
-                }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                  learnedClicked
-                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 cursor-default'
-                    : 'bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 text-slate-200 hover:text-emerald-200'
-                }`}
-              >
-                <BookmarkCheck className="w-3.5 h-3.5" />
-                <span>{learnedClicked ? 'Отмечено как изученное' : 'Отметить как изученное'}</span>
-              </button>
-            )}
-          </div>
-
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            {question.ruleExplanation}
-          </p>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            <strong className="text-slate-300">Критерии оценивания:</strong> {question.criteriaText}
-          </p>
-        </div>
-      )}
-        </div>
-  );
-};
+                    <span>Скопировать промпт
