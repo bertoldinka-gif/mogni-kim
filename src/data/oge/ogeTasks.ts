@@ -699,4 +699,27 @@ export const ogeModules: TaskModule[] = [
       },
     ],
   },
+    {
+    id: 'oge-oral-interview',
+    title: 'Итоговое собеседование (Допуск к ОГЭ)',
+    subtitle: 'Чтение вслух с проверкой речи, беседа по 5 вопросам и монолог со звуковым таймером',
+    taskNumber: 'Допуск',
+    engineType: 'open_essay',
+    sessionSize: 1,
+    questions: [
+      {
+        id: 'oge-oral-1',
+        type: 'open_essay',
+        essayKind: 'oral_interview',
+        difficulty: 'base',
+        topicTag: 'ОГЭ · Итоговое собеседование',
+        minWords: 0,
+        prompt: 'Итоговое собеседование по русскому языку (9 класс)',
+        criteriaText: 'Часть 1: чтение текста вслух и беседа по 5 вопросам. Часть 2: монолог (от 10 предложений).',
+        ruleTitle: 'Критерии итогового собеседования',
+        ruleExplanation: 'Максимум 20 баллов, порог «Зачёт» — от 10 баллов.',
+        hint: 'Разрешите доступ к микрофону для онлайн-проверки чтения и подсчёта предложений.',
+      },
+    ],
+  },
 ];
