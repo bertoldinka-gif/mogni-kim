@@ -1,29 +1,36 @@
-import { pipeline } from '@huggingface/transformers';
-
 let transcriberPromise: Promise<any> | null = null;
+
+async function loadTransformersPipeline() {
+  const cdnUrl = 'https://jsdelivr.net';
+  const mod = await import(/* @vite-ignore */ cdnUrl);
+  return mod.pipeline;
+}
 
 export async function getWhisperTranscriber(
   onProgress?: (percent: number, statusText: string) => void
 ) {
   if (!transcriberPromise) {
-    transcriberPromise = pipeline(
-      'automatic-speech-recognition',
-      'onnx-community/whisper-tiny',
-      {
-        dtype: 'q8',
-        device: 'wasm',
-        progress_callback: (info: any) => {
-          if (info?.status === 'progress' && typeof info?.progress === 'number') {
-            onProgress?.(
-              Math.round(info.progress),
-              `Загрузка речевой модели в браузер: ${Math.round(info.progress)}%`
-            );
-          } else if (info?.status === 'ready') {
-            onProgress?.(100, 'Речевая модель готова');
-          }
-        },
-      }
-    ).catch((err) => {
+    transcriberPromise = (async () => {
+      const pipeline = await loadTransformersPipeline();
+      return pipeline(
+        'automatic-speech-recognition',
+        'onnx-community/whisper-tiny',
+        {
+          dtype: 'q8',
+          device: 'wasm',
+          progress_callback: (info: any) => {
+            if (info?.status === 'progress' && typeof info?.progress === 'number') {
+              onProgress?.(
+                Math.round(info.progress),
+                `Загрузка речевой модели в браузер: ${Math.round(info.progress)}%`
+              );
+            } else if (info?.status === 'ready') {
+              onProgress?.(100, 'Речевая модель готова');
+            }
+          },
+        }
+      );
+    })().catch((err) => {
       transcriberPromise = null;
       throw err;
     });
