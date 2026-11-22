@@ -1,9 +1,33 @@
 let transcriberPromise: Promise<any> | null = null;
 
 async function loadTransformersPipeline() {
-  const cdnUrl = 'https://jsdelivr.net';
-  const mod = await import(/* @vite-ignore */ cdnUrl);
-  return mod.pipeline;
+  const mirrors = [
+    'https://esm.sh/@huggingface/transformers@3.4.0',
+    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0',
+    'https://unpkg.com/@huggingface/transformers@3.4.0',
+  ];
+
+  let lastError: unknown = null;
+
+  for (const url of mirrors) {
+    try {
+      const mod = await import(/* @vite-ignore */ url);
+      if (mod?.pipeline) {
+        return mod.pipeline;
+      }
+      // Модуль загрузился, но pipeline не найден — пробуем следующее зеркало
+      lastError = new Error(`Модуль по адресу ${url} не содержит pipeline.`);
+    } catch (err) {
+      lastError = err;
+      // Пробуем следующее зеркало
+    }
+  }
+
+  const detail =
+    lastError instanceof Error ? ` Последняя ошибка: ${lastError.message}` : '';
+  throw new Error(
+    `Не удалось загрузить библиотеку @huggingface/transformers ни с одного зеркала (esm.sh, jsdelivr, unpkg). Проверьте подключение к интернету или доступность CDN.${detail}`
+  );
 }
 
 export async function getWhisperTranscriber(
