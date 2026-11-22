@@ -301,26 +301,32 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           <h2 className="text-lg sm:text-xl font-bold text-white">
             {variant.title}
           </h2>
-          {ORAL_INTERVIEW_VARIANTS.length > 1 && (
+                   {ORAL_INTERVIEW_VARIANTS.length > 1 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {ORAL_INTERVIEW_VARIANTS.map((v) => (
                 <button
                   key={v.id}
                   type="button"
                   onClick={() => {
-stopRecording();
-setVariantId(v.id);
-setReadingTranscript('');
-setReadingSecondsSpent(0);
-setDialogueAnswers({});
-setMonologueTranscript('');
-setFinished(false);
-}}
+                    stopRecording();
+                    setVariantId(v.id);
+                    setReadingTranscript('');
+                    setReadingSecondsSpent(0);
+                    setDialogueAnswers({});
+                    setMonologueTranscript('');
+                    setFinished(false);
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     v.id === variant.id
                       ? 'bg-violet-600/30 border-violet-400 text-white'
                       : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
                   }`}
+                >
+                  {v.title}
+                </button>
+              ))}
+            </div>
+          )}
 
 >
 {v.title}
