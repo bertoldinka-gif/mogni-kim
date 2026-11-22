@@ -45,6 +45,7 @@ import {
   generateFinalEssaySet,
 } from '../../data/ege/finalEssayBank';
 import { GOLDEN_READING_BOOKS } from '../../data/ege/goldenReadingBank';
+import { OralInterviewEngine } from './OralInterviewEngine';
 
 interface OpenEssayEngineProps {
   question: OpenEssayQuestion;
