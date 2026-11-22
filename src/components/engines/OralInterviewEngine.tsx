@@ -180,7 +180,8 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Освобождаем поток — SpeechRecognition сам управляет микрофоном
+      // КРИТИЧНО: освобождаем поток сразу после проверки прав,
+      // иначе микрофон остаётся занятым и SpeechRecognition получает тишину.
       stream.getTracks().forEach((track) => track.stop());
     } catch {
       setSpeechError(
@@ -208,9 +209,9 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         let finalChunk = '';
         let interimChunk = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const res = event.results.item(i);
-          const transcript = res.item(0)?.transcript ?? '';
-          if (res.isFinal) {
+          const result = event.results[i];
+          const transcript = result?.[0]?.transcript ?? '';
+          if (result?.isFinal) {
             finalChunk += transcript + ' ';
           } else {
             interimChunk += transcript;
@@ -237,12 +238,25 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       };
 
       rec.onerror = (e: any) => {
+        if (e?.error === 'network') {
+          shouldKeepRecordingRef.current = false;
+          setSpeechError(
+            'Ошибка сети при распознавании речи. Проверьте подключение к интернету — сервис распознавания недоступен.'
+          );
+          setRecordingTarget(null);
+          setInterimText('');
+          return;
+        }
         if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+          shouldKeepRecordingRef.current = false;
           setSpeechError(
             'Доступ к микрофону запрещён. Разрешите его в настройках браузера и попробуйте снова.'
           );
-          shouldKeepRecordingRef.current = false;
-        } else if (e?.error !== 'aborted' && e?.error !== 'no-speech') {
+          setRecordingTarget(null);
+          setInterimText('');
+          return;
+        }
+        if (e?.error !== 'aborted' && e?.error !== 'no-speech') {
           setSpeechError(
             'Не удалось получить сигнал с микрофона. Проверьте разрешение микрофона или введите ответ вручную.'
           );
