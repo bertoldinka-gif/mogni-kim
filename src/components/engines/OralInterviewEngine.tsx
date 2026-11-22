@@ -316,7 +316,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                     setMonologueTranscript('');
                     setFinished(false);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     v.id === variant.id
                       ? 'bg-violet-600/30 border-violet-400 text-white'
                       : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
@@ -327,21 +327,21 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
               ))}
             </div>
           )}
+        </div>
 
->
-{v.title}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="px-3.5 py-2 rounded-xl bg-[#080B14] border border-indigo-400/40 font-mono-num text-xl font-bold text-indigo-200 tracking-wider flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-indigo-400" />
+            <span>
+              {mins}:{secs}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTimerRunning((r) => !r)}
+            className="px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
+          >
 
-))}
-
-)}
-{mins}:{secs}
-
-
-<button
-type="button"
-onClick={() => setTimerRunning((r) => !r)}
-className="px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
->
 
 {timerRunning ? 'Пауза' : 'Старт'}
 
