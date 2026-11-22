@@ -15,7 +15,6 @@ async function loadTransformersPipeline() {
       if (mod?.pipeline) {
         return mod.pipeline;
       }
-      // Модуль загрузился, но pipeline не найден — пробуем следующее зеркало
       lastError = new Error(`Модуль по адресу ${url} не содержит pipeline.`);
     } catch (err) {
       lastError = err;
@@ -38,7 +37,7 @@ export async function getWhisperTranscriber(
       const pipeline = await loadTransformersPipeline();
       return pipeline(
         'automatic-speech-recognition',
-        'onnx-community/whisper-tiny',
+        'onnx-community/whisper-base',
         {
           dtype: 'q8',
           device: 'wasm',
@@ -89,6 +88,40 @@ export async function decodeAudioBlobTo16kHz(blob: Blob): Promise<Float32Array> 
   }
 }
 
+const PHANTOM_PHRASES = new Set([
+  'смех',
+  'субтитры',
+  'продолжение следует',
+  'аплодисменты',
+  'музыка',
+]);
+
+function isPhantomPhrase(text: string): boolean {
+  const normalized = text
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^а-яa-z0-9\s]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!normalized) return true;
+  if (PHANTOM_PHRASES.has(normalized)) return true;
+  // Если весь текст состоит только из фантомных слов, повторяющихся подряд
+  const words = normalized.split(' ').filter(Boolean);
+  return words.length > 0 && words.every((w) => PHANTOM_PHRASES.has(w));
+}
+
+function getMaxAmplitude(audioData: Float32Array): number {
+  let max = 0;
+  for (let i = 0; i < audioData.length; i++) {
+    const v = Math.abs(audioData[i]);
+    if (v > max) {
+      max = v;
+      if (max >= 0.008) break;
+    }
+  }
+  return max;
+}
+
 export async function transcribeRussianAudio(
   audioBlob: Blob,
   onProgress?: (percent: number, statusText: string) => void
@@ -98,16 +131,27 @@ export async function transcribeRussianAudio(
     decodeAudioBlobTo16kHz(audioBlob),
   ]);
 
+  // Отсекаем тишину / очень тихий сигнал без запуска нейросети
+  if (getMaxAmplitude(audioData) < 0.008) {
+    return '';
+  }
+
   const result = await transcriber(audioData, {
     language: 'russian',
     task: 'transcribe',
     chunk_length_s: 30,
     stride_length_s: 5,
+    no_repeat_ngram_size: 3,
+    condition_on_prev_tokens: false,
   });
 
   const text = Array.isArray(result)
     ? result.map((r: any) => r?.text ?? '').join(' ')
     : result?.text ?? '';
 
-  return text.trim();
+  const trimmed = text.trim();
+  if (isPhantomPhrase(trimmed)) {
+    return '';
+  }
+  return trimmed;
 }
