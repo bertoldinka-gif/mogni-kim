@@ -65,9 +65,12 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
   const [readingTranscript, setReadingTranscript] = useState('');
   const [readingSecondsSpent, setReadingSecondsSpent] = useState(0);
 
-  // Задание 2: ответы на 5 вопросов беседы
+  // Задание 2: ответы на вопросы беседы
   const [dialogueAnswers, setDialogueAnswers] = useState<Record<number, string>>({});
   const [revealedSamples, setRevealedSamples] = useState<Record<number, boolean>>({});
+  const [readingCompleted, setReadingCompleted] = useState(false);
+  const [currentDialogueStep, setCurrentDialogueStep] = useState(1);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   // Задание 3: монолог (1 из 3 тем)
   const [selectedTopicNum, setSelectedTopicNum] = useState<1 | 2 | 3>(1);
@@ -82,6 +85,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
   const [interimText, setInterimText] = useState('');
   const [speechError, setSpeechError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const shouldKeepRecordingRef = useRef<boolean>(false);
 
   const playBell = () => {
     if (!soundEnabled) return;
@@ -112,6 +116,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
   useEffect(() => {
     return () => {
+      shouldKeepRecordingRef.current = false;
       try {
         recognitionRef.current?.stop();
       } catch {
@@ -152,6 +157,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
   };
 
   const stopRecording = () => {
+    shouldKeepRecordingRef.current = false;
     try {
       recognitionRef.current?.stop();
     } catch {
@@ -161,20 +167,27 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     setInterimText('');
   };
 
-  const toggleRecording = (target: NonNullable<SpeechTarget>) => {
-    const isSame =
-      recordingTarget?.kind === target.kind &&
-      (target.kind !== 'dialogue' ||
-        (recordingTarget.kind === 'dialogue' &&
-          recordingTarget.questionNumber === target.questionNumber));
+  const startRecording = async (target: NonNullable<SpeechTarget>) => {
+    setSpeechError(null);
 
-    if (isSame) {
-      stopRecording();
+    // Проверка доступа к микрофону и HTTPS
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setSpeechError(
+        'Микрофон недоступен. Убедитесь, что сайт открыт по HTTPS и браузер поддерживает доступ к микрофону.'
+      );
       return;
     }
 
-    stopRecording();
-    setSpeechError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Освобождаем поток — SpeechRecognition сам управляет микрофоном
+      stream.getTracks().forEach((track) => track.stop());
+    } catch {
+      setSpeechError(
+        'Доступ к микрофону запрещён. Разрешите использование микрофона в настройках браузера (иконка замка в адресной строке) и попробуйте снова.'
+      );
+      return;
+    }
 
     const SpeechRec =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -224,33 +237,75 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       };
 
       rec.onerror = (e: any) => {
-        if (e?.error !== 'aborted') {
+        if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
           setSpeechError(
-            'Не удалось получить сигнал с микрофона. Проверьте разрешение микрофона в браузере или введите ответ вручную.'
+            'Доступ к микрофону запрещён. Разрешите его в настройках браузера и попробуйте снова.'
+          );
+          shouldKeepRecordingRef.current = false;
+        } else if (e?.error !== 'aborted' && e?.error !== 'no-speech') {
+          setSpeechError(
+            'Не удалось получить сигнал с микрофона. Проверьте разрешение микрофона или введите ответ вручную.'
           );
         }
-        setRecordingTarget(null);
-        setInterimText('');
+        if (e?.error !== 'no-speech') {
+          setRecordingTarget(null);
+          setInterimText('');
+        }
       };
 
       rec.onend = () => {
-        setRecordingTarget(null);
-        setInterimText('');
+        // Автоматический перезапуск, если пользователь не нажимал «Стоп»
+        if (shouldKeepRecordingRef.current) {
+          try {
+            rec.start();
+          } catch {
+            setRecordingTarget(null);
+            setInterimText('');
+          }
+        } else {
+          setRecordingTarget(null);
+          setInterimText('');
+        }
       };
 
       recognitionRef.current = rec;
+      shouldKeepRecordingRef.current = true;
       setRecordingTarget(target);
       rec.start();
     } catch {
       setSpeechError('Ошибка запуска микрофона. Вы можете ввести ответ с клавиатуры.');
       setRecordingTarget(null);
+      shouldKeepRecordingRef.current = false;
     }
+  };
+
+  const toggleRecording = async (target: NonNullable<SpeechTarget>) => {
+    const isSame =
+      recordingTarget?.kind === target.kind &&
+      (target.kind !== 'dialogue' ||
+        (recordingTarget.kind === 'dialogue' &&
+          recordingTarget.questionNumber === target.questionNumber));
+
+    if (isSame) {
+      stopRecording();
+      // Автоматический переход к вопросам при остановке чтения вслух
+      if (target.kind === 'reading' && !readingCompleted) {
+        setReadingCompleted(true);
+      }
+      return;
+    }
+
+    stopRecording();
+    // Небольшая пауза, чтобы предыдущий recognition корректно завершился
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await startRecording(target);
   };
 
   // Аналитика Задания 1 (сверка прочитанного вслух с эталонным текстом)
   const readingStats = useMemo(() => {
     const refWords = tokenizeWords(variant.readingText);
-    const spokenWords = tokenizeWords(readingTranscript);
+    const spokenSource = `${readingTranscript} ${interimText}`.trim();
+    const spokenWords = tokenizeWords(spokenSource);
     const spokenSet = new Set(spokenWords);
     const matchedCount = refWords.filter((w) => spokenSet.has(w)).length;
     const accuracy =
@@ -258,7 +313,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         ? Math.min(100, Math.round((matchedCount / refWords.length) * 100))
         : 0;
     const wpm =
-      readingSecondsSpent >= 5 && spokenWords.length > 0
+      readingSecondsSpent >= 3 && spokenWords.length > 0
         ? Math.round((spokenWords.length / readingSecondsSpent) * 60)
         : 0;
     return {
@@ -268,7 +323,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       wpm,
       spokenSet,
     };
-  }, [variant.readingText, readingTranscript, readingSecondsSpent]);
+  }, [variant.readingText, readingTranscript, interimText, readingSecondsSpent]);
 
   const activeMonologueTopic =
     variant.monologueTopics.find((t) => t.number === selectedTopicNum) ??
@@ -278,6 +333,11 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
   const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
   const secs = String(secondsLeft % 60).padStart(2, '0');
+
+  const isSpeechActive =
+    recordingTarget !== null ||
+    readingStats.spokenCount > 0 ||
+    Boolean(interimText.trim());
 
   const handleFinishExam = () => {
     stopRecording();
@@ -315,6 +375,9 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                     setDialogueAnswers({});
                     setMonologueTranscript('');
                     setFinished(false);
+                    setReadingCompleted(false);
+                    setCurrentDialogueStep(1);
+                    setShowAllQuestions(false);
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     v.id === variant.id
@@ -399,6 +462,14 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           <span className="text-xs text-slate-400">Чтение текста вслух</span>
         </div>
 
+        {/* Плашка «Материал к заданию 2» над текстом для чтения */}
+        <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs sm:text-sm text-indigo-100 leading-relaxed">
+          <strong className="text-indigo-300">
+            Материал к заданию 2 (подготовьтесь заранее):
+          </strong>{' '}
+          {variant.quotePrompt}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -471,8 +542,8 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           ))}
         </div>
 
-        {/* Онлайн-расшифровка чтения и метрики точности / темпа */}
-        {(readingTranscript || recordingTarget?.kind === 'reading') && (
+        {/* Онлайн-расшифровка чтения и метрики точности / темпа — сразу при старте */}
+        {isSpeechActive && (
           <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5 text-xs">
             <div className="flex flex-wrap items-center gap-3 font-semibold text-slate-300">
               <span>Распознанная речь (онлайн):</span>
@@ -487,15 +558,30 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             </div>
             <div className="text-slate-400 leading-relaxed">
               {readingTranscript}
-              {recordingTarget?.kind === 'reading' && interimText && (
+              {interimText && (
                 <span className="text-slate-500 italic"> {interimText}</span>
               )}
             </div>
           </div>
         )}
+
+        {/* Кнопка перехода к вопросам после чтения */}
+        {!readingCompleted && (
+          <button
+            type="button"
+            onClick={() => {
+              stopRecording();
+              setReadingCompleted(true);
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Я закончил(а) чтение вслух → Перейти к вопросам
+          </button>
+        )}
       </div>
 
-      {/* ЧАСТЬ 1 · ЗАДАНИЕ 2: Беседа по тексту (5 вопросов) */}
+      {/* ЧАСТЬ 1 · ЗАДАНИЕ 2: Беседа по тексту (пошагово) */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-slate-800 space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center gap-2">
@@ -506,92 +592,182 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             Беседа по тексту (Карточка собеседника · 5 вопросов)
           </span>
         </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Отвечайте на вопросы развёрнутыми полными предложениями (голосом или с клавиатуры), затем сверьте себя с эталоном.
-        </p>
 
-        <div className="space-y-3">
-          {variant.questions.map((q) => {
-            const isRecThis =
-              recordingTarget?.kind === 'dialogue' &&
-              recordingTarget.questionNumber === q.number;
-            const userAns = dialogueAnswers[q.number] ?? '';
-            const sampleShown = Boolean(revealedSamples[q.number]);
-            return (
-              <div
-                key={q.number}
-                className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2"
-              >
-                <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                  <strong className="text-white">Вопрос {q.number}.</strong>{' '}
-                  {q.question}
+        {!readingCompleted ? (
+          <div className="p-6 rounded-xl bg-slate-950/60 border border-dashed border-slate-700 text-center space-y-3">
+            <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
+            <p className="text-xs sm:text-sm text-slate-400">
+              Вопросы собеседника откроются после завершения чтения текста вслух
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                stopRecording();
+                setReadingCompleted(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+            >
+              <Play className="w-4 h-4" />
+              Я закончил(а) чтение вслух → Перейти к вопросам
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Отвечайте на вопросы развёрнутыми полными предложениями (голосом или с клавиатуры), затем сверьте себя с эталоном.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 font-semibold">
+                Вопрос {currentDialogueStep} из {variant.questions.length}
+              </span>
+              {currentDialogueStep >= variant.questions.length && (
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 font-semibold">
+                  Все 5 вопросов пройдены ✓
+                </span>
+              )}
+            </div>
+
+            {!showAllQuestions ? (
+              <div className="space-y-3">
+                {variant.questions
+                  .filter((q) => q.number === currentDialogueStep)
+                  .map((q) => {
+                    const isRecThis =
+                      recordingTarget?.kind === 'dialogue' &&
+                      recordingTarget.questionNumber === q.number;
+                    const userAns = dialogueAnswers[q.number] ?? '';
+                    const sampleShown = Boolean(revealedSamples[q.number]);
+                    return (
+                      <div
+                        key={q.number}
+                        className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2"
+                      >
+                        <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                          <strong className="text-white">Вопрос {q.number}.</strong>{' '}
+                          {q.question}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleRecording({ kind: 'dialogue', questionNumber: q.number })
+                            }
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer ${
+                              isRecThis
+                                ? 'bg-rose-500 text-white animate-pulse'
+                                : 'bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 hover:bg-cyan-600/50'
+                            }`}
+                          >
+                            {isRecThis ? (
+                              <>
+                                <MicOff className="w-3.5 h-3.5" />
+                                Стоп
+                              </>
+                            ) : (
+                              <>
+                                <Mic className="w-3.5 h-3.5" />
+                                Ответить голосом
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRevealedSamples((prev) => ({
+                                ...prev,
+                                [q.number]: !prev[q.number],
+                              }))
+                            }
+                            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 cursor-pointer"
+                          >
+                            {sampleShown ? 'Скрыть эталон' : 'Эталон ответа'}
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={2}
+                          value={
+                            isRecThis && interimText
+                              ? `${userAns} ${interimText}`.trim()
+                              : userAns
+                          }
+                          onChange={(e) =>
+                            setDialogueAnswers((prev) => ({
+                              ...prev,
+                              [q.number]: e.target.value,
+                            }))
+                          }
+                          placeholder="Надиктуйте или запишите развёрнутый ответ..."
+                          className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-cyan-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
+                        />
+                        {sampleShown && (
+                          <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200 leading-relaxed">
+                            <strong className="text-emerald-300">Пример правильного ответа:</strong>{' '}
+                            {q.sampleAnswer}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  {currentDialogueStep < variant.questions.length ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopRecording();
+                        setCurrentDialogueStep((s) => Math.min(variant.questions.length, s + 1));
+                      }}
+                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      Следующий вопрос →
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllQuestions(true)}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Показать все 5 вопросов для обзора
+                    </button>
+                  )}
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toggleRecording({ kind: 'dialogue', questionNumber: q.number })
-                    }
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer ${
-                      isRecThis
-                        ? 'bg-rose-500 text-white animate-pulse'
-                        : 'bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 hover:bg-cyan-600/50'
-                    }`}
-                  >
-                    {isRecThis ? (
-                      <>
-                        <MicOff className="w-3.5 h-3.5" />
-                        Стоп
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-3.5 h-3.5" />
-                        Ответить голосом
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRevealedSamples((prev) => ({
-                        ...prev,
-                        [q.number]: !prev[q.number],
-                      }))
-                    }
-                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 cursor-pointer"
-                  >
-                    {sampleShown ? 'Скрыть эталон' : 'Эталон ответа'}
-                  </button>
-                </div>
-
-                <textarea
-                  rows={2}
-                  value={
-                    isRecThis && interimText
-                      ? `${userAns} ${interimText}`.trim()
-                      : userAns
-                  }
-                  onChange={(e) =>
-                    setDialogueAnswers((prev) => ({
-                      ...prev,
-                      [q.number]: e.target.value,
-                    }))
-                  }
-                  placeholder="Надиктуйте или запишите развёрнутый ответ..."
-                  className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-cyan-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
-                />
-                {sampleShown && (
-                  <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200 leading-relaxed">
-                    <strong className="text-emerald-300">Пример правильного ответа:</strong>{' '}
-                    {q.sampleAnswer}
-                  </div>
-                )}
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              <div className="space-y-3">
+                {variant.questions.map((q) => {
+                  const userAns = dialogueAnswers[q.number] ?? '';
+                  return (
+                    <div
+                      key={q.number}
+                      className="p-3 rounded-xl bg-slate-950/40 border border-slate-800 space-y-1"
+                    >
+                      <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                        <strong className="text-white">Вопрос {q.number}.</strong>{' '}
+                        {q.question}
+                      </div>
+                      <div className="text-xs text-slate-400 leading-relaxed">
+                        <strong className="text-slate-300">Ваш ответ:</strong>{' '}
+                        {userAns.trim() || <span className="italic text-slate-500">— нет ответа —</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setShowAllQuestions(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  ← Вернуться к пошаговому режиму
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ЧАСТЬ 2 · ЗАДАНИЕ 3: Монологическое высказывание */}
@@ -742,7 +918,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       {/* Кнопка завершения собеседования */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1917]/90 border border-emerald-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs text-slate-300 leading-relaxed">
-          Для получения «Зачёта» на собеседовании нужно набрать от 10 баллов из 17 (включая монолог ≥ 10 фраз).
+          Для получения «Зачёта» на собеседовании нужно набрать от 10 баллов из 20 (включая монолог ≥ 10 фраз).
         </p>
         {!finished ? (
           <button
