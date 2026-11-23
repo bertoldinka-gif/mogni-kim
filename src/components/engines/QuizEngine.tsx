@@ -319,8 +319,12 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   };
       const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
     let preparedText = text;
-    if (
+        const isEgeTask2 =
       question.kimTaskNumber === 2 &&
+      (question.topicTag?.includes('ЕГЭ') || question.id.startsWith('ege-'));
+
+    if (
+      isEgeTask2 &&
       !preparedText.includes('**') &&
       Array.isArray(question.options)
     ) {
