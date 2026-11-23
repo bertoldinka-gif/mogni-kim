@@ -580,12 +580,12 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             </p>
           )}
 
-          {/* Фото из репозитория */}
+                    {/* Фото из репозитория */}
           {activeTopic.photoUrl && (
             <img
               src={activeTopic.photoUrl}
               alt={activeTopic.title}
-              className="max-h-80 w-auto rounded-xl border border-slate-700 object-contain mx-auto"
+              className="max-h-[540px] w-full max-w-2xl rounded-xl border border-slate-700 object-contain mx-auto"
             />
           )}
 
