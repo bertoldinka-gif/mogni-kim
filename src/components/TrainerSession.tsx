@@ -108,6 +108,9 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const mockStartTimeRef = useRef<number>(Date.now());
 
+  // Черновики непроверенных ответов по индексу вопроса
+  const [draftStates, setDraftStates] = useState<Record<number, unknown>>({});
+
   useEffect(() => {
     if (!session.isMockExam || finished) return;
     const interval = window.setInterval(() => {
@@ -127,7 +130,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const answeredIndicesRef = useRef<Set<number>>(new Set());
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
-    const mockDraftKey = session.isMockExam
+  const mockDraftKey = session.isMockExam
     ? `mogni_mock_draft_${activeUserId ?? 'guest'}_${session.id}`
     : null;
 
@@ -145,6 +148,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         setNetXpDelta(draft.netXpDelta ?? 0);
         if (Array.isArray(draft.questionResults)) setQuestionResults(draft.questionResults);
         if (draft.savedStates) setSavedStates(draft.savedStates);
+        if (draft.draftStates) setDraftStates(draft.draftStates);
         if (Array.isArray(draft.answeredIndices)) {
           answeredIndicesRef.current = new Set(draft.answeredIndices);
         }
@@ -173,6 +177,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             elapsedSeconds,
             questionResults,
             savedStates,
+            draftStates,
             answeredIndices: Array.from(answeredIndicesRef.current),
           })
         );
@@ -251,6 +256,10 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     }
   };
 
+  const handleDraftChange = (draft: unknown) => {
+    setDraftStates((prev) => ({ ...prev, [currentIndex]: draft }));
+  };
+
   const handleReviewMarkLearned = (questionId: string) => {
     onMarkLearned(questionId, Boolean(session.isReviewMode));
     if (session.isReviewMode) {
@@ -272,7 +281,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     setCurrentIndex((i) => Math.max(0, i - 1));
   };
 
-   const handleNext = () => {
+  const handleNext = () => {
     if (currentIndex + 1 >= total) {
       const finalDuration = Math.max(
         0,
@@ -313,7 +322,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     }
   };
 
-   const handleRestart = () => {
+  const handleRestart = () => {
     if (mockDraftKey) {
       localStorage.removeItem(mockDraftKey);
     }
@@ -331,6 +340,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     setXpToast(null);
     setQuestionResults(Array(total).fill(null));
     setSavedStates({});
+    setDraftStates({});
     answeredIndicesRef.current.clear();
     setFinished(false);
   };
@@ -499,7 +509,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto space-y-3.5 lg:space-y-4 pb-24 lg:pb-0">
-           {/* Top Session Bar */}
+      {/* Top Session Bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 shrink-0">
           <button
@@ -583,7 +593,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         />
       </div>
 
-      {/* Automatic Subtopic Filter Bar (only when 2+ subtopics exist in module) */}
+      {/* Automatic Subtopic Filter Bar */}
       {!session.isReviewMode &&
         !session.isMockExam &&
         onSelectSubtopic &&
@@ -709,6 +719,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedOption: string | null }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -726,6 +738,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ values: string[]; digitsInput: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -743,6 +757,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedIndices: number[] }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -760,6 +776,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedMapping: Record<string, number | ''> }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -779,6 +797,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ essayText: string; gradingReport: unknown }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           onSaveEssay={onSaveEssay}
@@ -795,6 +815,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ values: string[]; digitsInput: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -812,6 +834,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex]}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -829,6 +853,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ letterValues: string[]; answerInput: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -846,6 +872,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedForms: Record<string, 'solid' | 'separate' | 'hyphen'>; answerInput: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -863,6 +891,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ slotValues: Record<number, 'н' | 'нн'>; digitsInput: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -880,6 +910,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ answer: string }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
@@ -900,6 +932,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
           savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedIndices: number[] }> | undefined}
+          draftState={draftStates[currentIndex]}
+          onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
           activeMentor={activeMentor}
           userXp={userXp}
