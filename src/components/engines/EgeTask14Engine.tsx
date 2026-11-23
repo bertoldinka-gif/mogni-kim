@@ -18,6 +18,14 @@ interface EgeTask14EngineProps {
     selectedForms: Record<string, EgeTask14SpellingForm>;
     answerInput: string;
   }>;
+  draftState?: {
+    selectedForms: Record<string, EgeTask14SpellingForm>;
+    answerInput: string;
+  };
+  onDraftChange?: (draft: {
+    selectedForms: Record<string, EgeTask14SpellingForm>;
+    answerInput: string;
+  }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -69,6 +77,8 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -78,17 +88,28 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
   onNext,
   onMarkLearned,
 }) => {
+  const initialSelectedForms = (): Record<string, EgeTask14SpellingForm> => {
+    if (savedState?.userState?.selectedForms) return savedState.userState.selectedForms;
+    if (draftState?.selectedForms) return draftState.selectedForms;
+    return {};
+  };
+
+  const initialAnswerInput = (): string => {
+    if (savedState?.userState?.answerInput !== undefined) return savedState.userState.answerInput;
+    if (draftState?.answerInput !== undefined) return draftState.answerInput;
+    return '';
+  };
+
   const [selectedForms, setSelectedForms] = useState<
     Record<string, EgeTask14SpellingForm>
-  >(() => savedState?.userState?.selectedForms ?? {});
-  const [answerInput, setAnswerInput] = useState(
-    () => savedState?.userState?.answerInput ?? ''
-  );
+  >(initialSelectedForms);
+  const [answerInput, setAnswerInput] = useState(initialAnswerInput);
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [answerNumbersOk, setAnswerNumbersOk] = useState(() => {
-    if (!savedState?.userState?.answerInput) return false;
-    const parsed = parseAnswerRows(savedState.userState.answerInput);
+    const baseAns = initialAnswerInput();
+    if (!baseAns) return false;
+    const parsed = parseAnswerRows(baseAns);
     const expectedRowsSorted = [...question.correctRows].sort((a, b) => a - b);
     return (
       parsed.isValid &&
@@ -106,7 +127,14 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
   const answerInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const restoredAns = savedState?.userState?.answerInput ?? '';
+    const restoredForms =
+      savedState?.userState?.selectedForms ??
+      draftState?.selectedForms ??
+      {};
+    const restoredAns =
+      savedState?.userState?.answerInput ??
+      draftState?.answerInput ??
+      '';
     const parsed = parseAnswerRows(restoredAns);
     const expectedRowsSorted = [...question.correctRows].sort((a, b) => a - b);
     const restoredNumsOk =
@@ -115,7 +143,7 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
       parsed.rows.length === expectedRowsSorted.length &&
       parsed.rows.every((num, idx) => num === expectedRowsSorted[idx]);
 
-    setSelectedForms(savedState?.userState?.selectedForms ?? {});
+    setSelectedForms(restoredForms);
     setAnswerInput(restoredAns);
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
@@ -124,7 +152,7 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-  }, [question.id, question.correctRows, savedState]);
+  }, [question.id, question.correctRows, savedState, draftState]);
 
   const canAffordHint = userXp >= 5;
 
@@ -143,6 +171,14 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
     setShowHint(true);
   };
 
+  const pushDraft = (
+    nextForms: Record<string, EgeTask14SpellingForm>,
+    nextAnswer: string
+  ) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({ selectedForms: nextForms, answerInput: nextAnswer });
+  };
+
   const handleSelectWordForm = (
     rowNumber: number,
     wordIdx: number,
@@ -150,10 +186,11 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
   ) => {
     if (submitted) return;
     const key = `${rowNumber}-${wordIdx}`;
-    setSelectedForms((prev) => ({
-      ...prev,
-      [key]: form,
-    }));
+    setSelectedForms((prev) => {
+      const next = { ...prev, [key]: form };
+      pushDraft(next, answerInput);
+      return next;
+    });
   };
 
   const handleSubmit = () => {
@@ -382,7 +419,11 @@ export const EgeTask14Engine: React.FC<EgeTask14EngineProps> = ({
               disabled={submitted}
               value={answerInput}
               placeholder="Напр.: 14"
-              onChange={(e) => setAnswerInput(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setAnswerInput(next);
+                pushDraft(selectedForms, next);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
