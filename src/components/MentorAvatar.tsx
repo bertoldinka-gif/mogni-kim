@@ -226,7 +226,7 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
         )}
       </div>
 
-      {/* Всплывающее диалоговое облачко с эффектом печатающегося текста */}
+            {/* Всплывающее диалоговое облачко с эффектом печатающегося текста */}
       {bubbleFullText && !locked && (
         <div
           role="status"
@@ -234,7 +234,7 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
             e.stopPropagation();
             setBubbleFullText(null);
           }}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 z-50 w-56 sm:w-64 px-3 py-2 rounded-xl bg-slate-900/95 border border-violet-400/50 text-xs text-slate-100 shadow-2xl shadow-black/70 backdrop-blur-md pointer-events-auto cursor-pointer animate-fade-in"
+          className="absolute bottom-full left-0 mb-2.5 z-50 w-56 sm:w-64 max-w-[calc(100vw-2rem)] px-3 py-2 rounded-xl bg-slate-900/95 border border-violet-400/50 text-xs text-slate-100 shadow-2xl shadow-black/70 backdrop-blur-md pointer-events-auto cursor-pointer animate-fade-in"
         >
           <div className="font-semibold text-[10px] uppercase tracking-wider text-violet-300 mb-0.5">
             {mentor.name}
@@ -245,10 +245,11 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
               <span className="inline-block w-1.5 h-3 ml-0.5 bg-violet-400 animate-pulse align-middle" />
             )}
           </p>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-900/95" />
+          <div className="absolute top-full left-5 -mt-px border-4 border-transparent border-t-slate-900/95" />
         </div>
       )}
     </div>
   );
 };
+
 
