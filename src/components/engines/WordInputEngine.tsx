@@ -77,12 +77,20 @@ const MARKER_STYLE_BY_ID: Record<Exclude<MarkerTool, 'none'>, string> = {
   conjunction: 'bg-fuchsia-500/25 text-fuchsia-200 rounded px-1',
 };
 
+export interface WordInputDraftState {
+  answer: string;
+  wordMarks: Record<string, Exclude<MarkerTool, 'none'>>;
+  ruleWordMarks: Record<string, string>;
+}
+
 interface WordInputEngineProps {
   question: WordInputQuestion;
   isReviewMode?: boolean;
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ answer: string }>;
+  draftState?: WordInputDraftState;
+  onDraftChange?: (draft: WordInputDraftState) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -121,6 +129,8 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -130,7 +140,13 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   onNext,
   onMarkLearned,
 }) => {
-  const [answer, setAnswer] = useState(() => savedState?.userState?.answer ?? '');
+  const initialAnswer = (): string => {
+    if (savedState?.userState?.answer !== undefined) return savedState.userState.answer;
+    if (draftState?.answer !== undefined) return draftState.answer;
+    return '';
+  };
+
+  const [answer, setAnswer] = useState<string>(initialAnswer);
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [showHint, setShowHint] = useState(false);
@@ -139,12 +155,14 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-      const [activeTool, setActiveTool] = useState<MarkerTool>('none');
+  const [activeTool, setActiveTool] = useState<MarkerTool>('none');
   const [wordMarks, setWordMarks] = useState<
     Record<string, Exclude<MarkerTool, 'none'>>
-  >({});
+  >(() => draftState?.wordMarks ?? {});
   const [activeRuleId, setActiveRuleId] = useState<string>('none');
-  const [ruleWordMarks, setRuleWordMarks] = useState<Record<string, string>>({});
+  const [ruleWordMarks, setRuleWordMarks] = useState<Record<string, string>>(
+    () => draftState?.ruleWordMarks ?? {}
+  );
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -158,26 +176,41 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     Boolean(question.ignoreSpaces) || question.submode === 'phrase_transform';
 
   useEffect(() => {
-    setAnswer(savedState?.userState?.answer ?? '');
+    setAnswer(
+      savedState?.userState?.answer ??
+        draftState?.answer ??
+        ''
+    );
+    setWordMarks(draftState?.wordMarks ?? {});
+    setRuleWordMarks(draftState?.ruleWordMarks ?? {});
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-        setActiveTool('none');
-    setWordMarks({});
-        setActiveTool('none');
-    setWordMarks({});
+    setActiveTool('none');
     setActiveRuleId('none');
-    setRuleWordMarks({});
-  
+
     if (!savedState) {
       setTimeout(() => {
         inputRef.current?.focus();
       }, 30);
     }
-  }, [question.id, savedState]);
+  }, [question.id, savedState, draftState]);
+
+  const pushDraft = (
+    nextAnswer: string,
+    nextMarks: Record<string, Exclude<MarkerTool, 'none'>>,
+    nextRuleMarks: Record<string, string>
+  ) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({
+      answer: nextAnswer,
+      wordMarks: nextMarks,
+      ruleWordMarks: nextRuleMarks,
+    });
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -308,7 +341,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     );
   };
 
-    const hasInlinePassageBlank =
+  const hasInlinePassageBlank =
     question.kimTaskNumber === 1 &&
     Boolean(question.passage) &&
     /(?:<\.\.\.>|<…>|\(\.\.\.\)|\[_\])/.test(question.passage || '');
@@ -335,7 +368,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                 disabled={submitted}
                 value={answer}
                 onChange={(e) => {
-                  if (!submitted) setAnswer(e.target.value);
+                  if (submitted) return;
+                  const v = e.target.value;
+                  setAnswer(v);
+                  pushDraft(v, wordMarks, ruleWordMarks);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -390,6 +426,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       } else {
         next[key] = activeTool;
       }
+      pushDraft(answer, next, ruleWordMarks);
       return next;
     });
   };
@@ -435,7 +472,8 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
       );
     });
   };
-        const isTask21Punctuation =
+
+  const isTask21Punctuation =
     question.kimTaskNumber === 21 ||
     (question.topicTag || '').toLowerCase().includes('задание 21');
 
@@ -624,7 +662,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     const matchedNums = new Set(getTask21MatchedNumbers());
     const blocks = passage.split(/(?=\(\d+\))/g);
 
-        return blocks.map((block, bIdx) => {
+    return blocks.map((block, bIdx) => {
       const numMatch = block.match(/^\((\d+)\)/);
       const sentNum = numMatch ? numMatch[1] : `b${bIdx}`;
       const isSentenceMatched = Boolean(numMatch) && matchedNums.has(sentNum);
@@ -683,6 +721,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                     } else {
                       next[markKey] = activeRuleId;
                     }
+                    pushDraft(answer, wordMarks, next);
                     return next;
                   })
                 }
@@ -696,6 +735,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
                       } else {
                         next[markKey] = activeRuleId;
                       }
+                      pushDraft(answer, wordMarks, next);
                       return next;
                     });
                   }
@@ -711,7 +751,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     });
   };
 
-    const renderScratchpadToolbar = () => {
+  const renderScratchpadToolbar = () => {
     if (!showScratchpad) return null;
 
     if (isTask21Punctuation) {
@@ -733,7 +773,11 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
               {matchedNums.length >= 2 && !submitted && (
                 <button
                   type="button"
-                  onClick={() => setAnswer(matchedNums.join(''))}
+                  onClick={() => {
+                    const joined = matchedNums.join('');
+                    setAnswer(joined);
+                    pushDraft(joined, wordMarks, ruleWordMarks);
+                  }}
                   className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/60 hover:bg-emerald-500/30 text-[11px] font-semibold text-emerald-200 transition-all cursor-pointer"
                 >
                   <CheckCircle2 className="w-3 h-3 text-emerald-300" />
@@ -744,7 +788,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
               {hasAnyMarks && (
                 <button
                   type="button"
-                  onClick={() => setRuleWordMarks({})}
+                  onClick={() => {
+                    setRuleWordMarks({});
+                    pushDraft(answer, wordMarks, {});
+                  }}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -819,7 +866,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
         {hasMarks && (
           <button
             type="button"
-            onClick={() => setWordMarks({})}
+            onClick={() => {
+              setWordMarks({});
+              pushDraft(answer, {}, ruleWordMarks);
+            }}
             className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer ml-auto"
           >
             <RotateCcw className="w-3 h-3" />
@@ -830,7 +880,7 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
     );
   };
 
-    const renderAnswerInput = () => {
+  const renderAnswerInput = () => {
     if (hasInlinePassageBlank) {
       return !submitted ? (
         <div className="flex justify-end pt-1">
@@ -868,7 +918,10 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
               disabled={submitted}
               value={answer}
               onChange={(e) => {
-                if (!submitted) setAnswer(e.target.value);
+                if (submitted) return;
+                const v = e.target.value;
+                setAnswer(v);
+                pushDraft(v, wordMarks, ruleWordMarks);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -946,10 +999,9 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
             </div>
           )}
 
-          {/* Syntactic Scratchpad Toolbar above reading passage when enabled (e.g., EGE Task 21) */}
           {renderScratchpadToolbar()}
 
-                    {question.passage && (
+          {question.passage && (
             <div
               className={`p-4 sm:p-5 rounded-xl bg-[#080B14]/85 border border-slate-800/90 text-sm sm:text-[15px] text-slate-200 leading-relaxed whitespace-pre-line ${
                 showScratchpad &&
@@ -1010,7 +1062,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
           )}
         </div>
 
-        {/* Full-Width Horizontal Feedback + Mentor Banner */}
         {submitted && (
           <div
             role="status"
@@ -1127,7 +1178,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
           </div>
         )}
 
-        {/* Fixed Mobile Bottom Action Bar (< lg) */}
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#080B14]/95 backdrop-blur-md border-t border-slate-800 px-4 py-3">
           {!submitted ? (
             <div className="flex items-center gap-2">
@@ -1205,7 +1255,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
 
   return (
     <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start max-w-6xl mx-auto">
-      {/* Left Column: Question Card */}
       <div className="lg:col-span-7 p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium text-slate-400">
@@ -1256,7 +1305,6 @@ export const WordInputEngine: React.FC<WordInputEngineProps> = ({
         )}
       </div>
 
-      {/* Right Column (Desktop) / Stacked + Fixed Bottom Bar (Mobile) */}
       <TrainerSidePanel
         submitted={submitted}
         isCorrect={isCorrect}
