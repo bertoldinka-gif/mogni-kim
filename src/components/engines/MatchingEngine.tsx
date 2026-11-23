@@ -75,6 +75,8 @@ interface MatchingEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ selectedMapping: Record<string, number | ''> }>;
+  draftState?: { selectedMapping: Record<string, number | ''> };
+  onDraftChange?: (draft: { selectedMapping: Record<string, number | ''> }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -95,6 +97,8 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -104,16 +108,23 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   onNext,
   onMarkLearned,
 }) => {
-  const [selectedMapping, setSelectedMapping] = useState<Record<string, number | ''>>(() => {
-    if (savedState?.userState?.selectedMapping) {
-      return savedState.userState.selectedMapping;
-    }
+  const buildEmptyMapping = (): Record<string, number | ''> => {
     const initial: Record<string, number | ''> = {};
     for (const item of question.leftItems) {
       initial[item.key] = '';
     }
     return initial;
-  });
+  };
+
+  const initialSelectedMapping = (): Record<string, number | ''> => {
+    if (savedState?.userState?.selectedMapping) return savedState.userState.selectedMapping;
+    if (draftState?.selectedMapping) return draftState.selectedMapping;
+    return buildEmptyMapping();
+  };
+
+  const [selectedMapping, setSelectedMapping] = useState<Record<string, number | ''>>(
+    initialSelectedMapping
+  );
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [showHint, setShowHint] = useState(false);
@@ -126,24 +137,26 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
   const [activeRightNum, setActiveRightNum] = useState<number | null>(null);
 
   useEffect(() => {
-    if (savedState?.userState?.selectedMapping) {
-      setSelectedMapping(savedState.userState.selectedMapping);
-    } else {
-      const initial: Record<string, number | ''> = {};
-      for (const item of question.leftItems) {
-        initial[item.key] = '';
-      }
-      setSelectedMapping(initial);
-    }
+    const restoredMapping =
+      savedState?.userState?.selectedMapping ??
+      draftState?.selectedMapping ??
+      buildEmptyMapping();
+
+    setSelectedMapping(restoredMapping);
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-        setActiveLeftKey(null);
+    setActiveLeftKey(null);
     setActiveRightNum(null);
-  }, [question.id, question.leftItems, savedState]);
+  }, [question.id, question.leftItems, savedState, draftState]);
+
+  const pushDraft = (nextMapping: Record<string, number | ''>) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({ selectedMapping: nextMapping });
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -166,9 +179,13 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
     (item) => typeof selectedMapping[item.key] === 'number'
   );
 
-    const clearPairByLeft = (leftKey: string) => {
+  const clearPairByLeft = (leftKey: string) => {
     if (submitted) return;
-    setSelectedMapping((prev) => ({ ...prev, [leftKey]: '' }));
+    setSelectedMapping((prev) => {
+      const next = { ...prev, [leftKey]: '' as const };
+      pushDraft(next);
+      return next;
+    });
     if (activeLeftKey === leftKey) setActiveLeftKey(null);
   };
 
@@ -181,6 +198,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           if (next[k] === activeRightNum) next[k] = '';
         }
         next[leftKey] = activeRightNum;
+        pushDraft(next);
         return next;
       });
       setActiveRightNum(null);
@@ -199,6 +217,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           if (next[k] === rightNum) next[k] = '';
         }
         next[activeLeftKey] = rightNum;
+        pushDraft(next);
         return next;
       });
       setActiveLeftKey(null);
@@ -303,7 +322,7 @@ export const MatchingEngine: React.FC<MatchingEngineProps> = ({
           )}
         </div>
 
-                {/* Full-Width Two-Column Interactive Pair Matching Grid */}
+        {/* Full-Width Two-Column Interactive Pair Matching Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
           {/* Left Column: Lettered Items (А–Д) */}
           <div className={`${isTask22Mode ? 'md:col-span-7' : 'md:col-span-5'} space-y-2.5`}>
