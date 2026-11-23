@@ -17,6 +17,14 @@ interface EgeTask15EngineProps {
     slotValues: Record<number, 'н' | 'нн'>;
     digitsInput: string;
   }>;
+  draftState?: {
+    slotValues: Record<number, 'н' | 'нн'>;
+    digitsInput: string;
+  };
+  onDraftChange?: (draft: {
+    slotValues: Record<number, 'н' | 'нн'>;
+    digitsInput: string;
+  }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -53,6 +61,8 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -62,17 +72,28 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
   onNext,
   onMarkLearned,
 }) => {
+  const initialSlotValues = (): Record<number, 'н' | 'нн'> => {
+    if (savedState?.userState?.slotValues) return savedState.userState.slotValues;
+    if (draftState?.slotValues) return draftState.slotValues;
+    return {};
+  };
+
+  const initialDigitsInput = (): string => {
+    if (savedState?.userState?.digitsInput !== undefined) return savedState.userState.digitsInput;
+    if (draftState?.digitsInput !== undefined) return draftState.digitsInput;
+    return '';
+  };
+
   const [slotValues, setSlotValues] = useState<Record<number, 'н' | 'нн'>>(
-    () => savedState?.userState?.slotValues ?? {}
+    initialSlotValues
   );
-  const [digitsInput, setDigitsInput] = useState(
-    () => savedState?.userState?.digitsInput ?? ''
-  );
+  const [digitsInput, setDigitsInput] = useState(initialDigitsInput);
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [digitsOk, setDigitsOk] = useState(() => {
-    if (!savedState?.userState?.digitsInput) return false;
-    const parsed = parseAnswerDigits(savedState.userState.digitsInput);
+    const baseAns = initialDigitsInput();
+    if (!baseAns) return false;
+    const parsed = parseAnswerDigits(baseAns);
     const expectedSorted = [...question.correctSlots].sort((a, b) => a - b);
     return (
       parsed.isValid &&
@@ -90,7 +111,14 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
   const digitsInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const restoredDigits = savedState?.userState?.digitsInput ?? '';
+    const restoredSlots =
+      savedState?.userState?.slotValues ??
+      draftState?.slotValues ??
+      {};
+    const restoredDigits =
+      savedState?.userState?.digitsInput ??
+      draftState?.digitsInput ??
+      '';
     const parsed = parseAnswerDigits(restoredDigits);
     const expectedSorted = [...question.correctSlots].sort((a, b) => a - b);
     const restoredDigitsOk =
@@ -99,7 +127,7 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
       parsed.digits.length === expectedSorted.length &&
       parsed.digits.every((num, idx) => num === expectedSorted[idx]);
 
-    setSlotValues(savedState?.userState?.slotValues ?? {});
+    setSlotValues(restoredSlots);
     setDigitsInput(restoredDigits);
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
@@ -108,7 +136,7 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-  }, [question.id, question.correctSlots, savedState]);
+  }, [question.id, question.correctSlots, savedState, draftState]);
 
   const canAffordHint = userXp >= 5;
 
@@ -127,12 +155,21 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
     setShowHint(true);
   };
 
+  const pushDraft = (
+    nextSlots: Record<number, 'н' | 'нн'>,
+    nextDigits: string
+  ) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({ slotValues: nextSlots, digitsInput: nextDigits });
+  };
+
   const handleSelectSlot = (slotNumber: number, val: 'н' | 'нн') => {
     if (submitted) return;
-    setSlotValues((prev) => ({
-      ...prev,
-      [slotNumber]: val,
-    }));
+    setSlotValues((prev) => {
+      const next = { ...prev, [slotNumber]: val };
+      pushDraft(next, digitsInput);
+      return next;
+    });
   };
 
   const handleSubmit = () => {
@@ -328,7 +365,11 @@ export const EgeTask15Engine: React.FC<EgeTask15EngineProps> = ({
               disabled={submitted}
               value={digitsInput}
               placeholder="Напр.: 124"
-              onChange={(e) => setDigitsInput(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDigitsInput(next);
+                pushDraft(slotValues, next);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
