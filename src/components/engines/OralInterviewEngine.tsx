@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BookOpen,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Clock,
-  Image as ImageIcon,
   MessageSquare,
   Sparkles,
   Volume2,
@@ -98,7 +97,6 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
   // ==== Монолог ====
   const [selectedTopicNum, setSelectedTopicNum] = useState<1 | 2 | 3>(1);
-  const [monologueImageUrl, setMonologueImageUrl] = useState<string | null>(null);
   const [showCliches, setShowCliches] = useState(false);
 
   // ==== Оценки ФИПИ ====
@@ -113,19 +111,31 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         (window as unknown as { webkitAudioContext: typeof AudioContext })
           .webkitAudioContext;
       const ctx = new AudioCtx();
-      Array.of(523.25, 659.25, 783.99).forEach((freq, idx) => {
+      if (ctx.state === 'suspended') void ctx.resume();
+
+      // Двойной перезвон из 6 нот: 3 ноты → пауза → 3 ноты
+      const notes = [
+        { freq: 587.33, start: 0.0, dur: 0.85 },
+        { freq: 739.99, start: 0.25, dur: 0.85 },
+        { freq: 880.0, start: 0.5, dur: 1.0 },
+        { freq: 587.33, start: 1.25, dur: 0.85 },
+        { freq: 739.99, start: 1.5, dur: 0.85 },
+        { freq: 880.0, start: 1.75, dur: 1.2 },
+      ];
+
+      notes.forEach(({ freq, start, dur }) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
+        osc.type = 'triangle';
         osc.frequency.value = freq;
-        const start = ctx.currentTime + idx * 0.2;
-        gain.gain.setValueAtTime(0.001, start);
-        gain.gain.exponentialRampToValueAtTime(0.18, start + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.65);
+        const t0 = ctx.currentTime + start;
+        gain.gain.setValueAtTime(0.001, t0);
+        gain.gain.exponentialRampToValueAtTime(0.55, t0 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.7);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.05);
       });
     } catch {
       // ignore
@@ -247,10 +257,6 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     setCurrentQuestion(1);
     setShowAllQuestions(false);
     setRevealedSamples({});
-    setMonologueImageUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
     setShowCliches(false);
     setScores({});
     setSavedToast(false);
@@ -574,35 +580,13 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             </p>
           )}
 
-          {/* Загрузка картинки только для Темы 1 (Описание фотографии) */}
-          {selectedTopicNum === 1 && (
-            <div className="space-y-2">
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 cursor-pointer">
-                <ImageIcon className="w-4 h-4 text-violet-400" />
-                <span>Загрузить картинку</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const url = URL.createObjectURL(file);
-                    setMonologueImageUrl((prev) => {
-                      if (prev) URL.revokeObjectURL(prev);
-                      return url;
-                    });
-                  }}
-                />
-              </label>
-              {monologueImageUrl && (
-                <img
-                  src={monologueImageUrl}
-                  alt="Фотография для описания"
-                  className="max-h-64 rounded-xl border border-slate-700"
-                />
-              )}
-            </div>
+          {/* Фото из репозитория */}
+          {activeTopic.photoUrl && (
+            <img
+              src={activeTopic.photoUrl}
+              alt={activeTopic.title}
+              className="max-h-80 w-auto rounded-xl border border-slate-700 object-contain mx-auto"
+            />
           )}
 
           <div className="text-xs font-medium text-slate-300">
