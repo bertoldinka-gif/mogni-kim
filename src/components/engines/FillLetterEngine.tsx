@@ -10,6 +10,8 @@ interface FillLetterEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ selectedOption: string | null }>;
+  draftState?: { selectedOption: string | null };
+  onDraftChange?: (draft: { selectedOption: string | null }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -30,6 +32,8 @@ export const FillLetterEngine: React.FC<FillLetterEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -39,8 +43,14 @@ export const FillLetterEngine: React.FC<FillLetterEngineProps> = ({
   onNext,
   onMarkLearned,
 }) => {
+  const initialSelectedOption = (): string | null => {
+    if (savedState?.userState) return savedState.userState.selectedOption ?? null;
+    if (draftState) return draftState.selectedOption ?? null;
+    return null;
+  };
+
   const [selectedOption, setSelectedOption] = useState<string | null>(
-    () => savedState?.userState?.selectedOption ?? null
+    initialSelectedOption
   );
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
@@ -52,14 +62,19 @@ export const FillLetterEngine: React.FC<FillLetterEngineProps> = ({
   );
 
   useEffect(() => {
-    setSelectedOption(savedState?.userState?.selectedOption ?? null);
+    const restoredOption =
+      savedState?.userState?.selectedOption ??
+      draftState?.selectedOption ??
+      null;
+
+    setSelectedOption(restoredOption);
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
     setHintUnlocked(false);
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
-  }, [question.id, savedState]);
+  }, [question.id, savedState, draftState]);
 
   const canAffordHint = userXp >= 5;
 
