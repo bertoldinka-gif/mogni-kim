@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { MentorCharacter, pickRandomQuote } from '../../data/petsData';
 import { FillLetterQuestion, SavedQuestionState } from '../../types/platform';
@@ -60,6 +60,18 @@ export const FillLetterEngine: React.FC<FillLetterEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
+
+  // Перемешиваем варианты один раз на каждый question.id — порядок не меняется
+  // при клике, показе подсказки и т.д., но обновляется при переходе к другому вопросу.
+  const shuffledOptions = useMemo(() => {
+    const arr = [...question.options];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question.id]);
 
   useEffect(() => {
     const restoredOption =
@@ -204,9 +216,9 @@ export const FillLetterEngine: React.FC<FillLetterEngineProps> = ({
           {renderSentence()}
         </div>
 
-        {/* Compact, horizontally centered option buttons */}
+        {/* Compact, horizontally centered option buttons (shuffled per question) */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full">
-          {question.options.map((opt) => {
+          {shuffledOptions.map((opt) => {
             const isChosen = selectedOption === opt;
             const isRightOption = opt.toLowerCase() === question.correctAnswer.toLowerCase();
 
