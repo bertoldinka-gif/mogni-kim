@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Lock } from 'lucide-react';
 import { MentorCharacter } from '../data/petsData';
 
@@ -9,13 +10,9 @@ interface MentorAvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   ringTone?: 'violet' | 'amber' | 'emerald';
   locked?: boolean;
-  /** Текущее эмоциональное состояние наставника (влияет на анимацию и подсветку рамки) */
   mood?: MentorMood;
-  /** Счётчик-триггер для повторного запуска анимации реакции (например, номер вопроса или комбо) */
   reactionTrigger?: number;
-  /** Внешняя реплика для автоматического показа в облачке с эффектом печатающегося текста */
   speechText?: string | null;
-  /** Включить реакцию и случайную реплику по клику на портрет (по умолчанию true для незаблокированных) */
   interactive?: boolean;
   className?: string;
 }
@@ -51,9 +48,37 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
   const [activeAnim, setActiveAnim] = useState<'none' | 'mistake' | 'combo' | 'tap'>('none');
   const [bubbleFullText, setBubbleFullText] = useState<string | null>(null);
   const [typedText, setTypedText] = useState('');
+  const [bubblePos, setBubblePos] = useState<{
+    left: number;
+    top: number;
+    placeBelow: boolean;
+  } | null>(null);
+
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const hideTimerRef = useRef<number | null>(null);
 
-  // Запуск анимации при смене настроения (ошибка или комбо)
+  const updateBubbleCoords = () => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const bubbleWidth = 248;
+    const margin = 12;
+
+    let left = rect.left;
+    if (left + bubbleWidth > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - bubbleWidth - margin);
+    }
+    if (left < margin) {
+      left = margin;
+    }
+
+    // Если сверху мало места (меньше 105px), показываем облачко сразу ПОД аватаркой
+    const placeBelow = rect.top < 105;
+    const top = placeBelow ? rect.bottom + 8 : rect.top - 8;
+
+    setBubblePos({ left, top, placeBelow });
+  };
+
   useEffect(() => {
     if (locked || mood === 'idle') return;
     setActiveAnim(mood);
@@ -61,18 +86,17 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
     return () => window.clearTimeout(t);
   }, [mood, reactionTrigger, locked]);
 
-  // Автоматический показ облачка, если сверху передан speechText
   useEffect(() => {
     if (!speechText || locked) return;
     showBubble(speechText);
   }, [speechText, reactionTrigger, locked]);
 
-  // Эффект печатной машинки для текста в облачке
   useEffect(() => {
     if (!bubbleFullText) {
       setTypedText('');
       return;
     }
+    updateBubbleCoords();
     let idx = 0;
     setTypedText('');
     const interval = window.setInterval(() => {
@@ -83,7 +107,15 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
       }
     }, 18);
 
-    return () => window.clearInterval(interval);
+    const handleReposition = () => updateBubbleCoords();
+    window.addEventListener('resize', handleReposition);
+    window.addEventListener('scroll', handleReposition, true);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('resize', handleReposition);
+      window.removeEventListener('scroll', handleReposition, true);
+    };
   }, [bubbleFullText]);
 
   useEffect(() => {
@@ -93,6 +125,7 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
   }, []);
 
   const showBubble = (text: string) => {
+    updateBubbleCoords();
     setBubbleFullText(text);
     if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current);
     hideTimerRef.current = window.setTimeout(() => {
@@ -100,9 +133,8 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
     }, 4500);
   };
 
-  const handleAvatarClick = (e: React.MouseEvent) => {
+  const handleAvatarClick = () => {
     if (locked || !interactive || size === 'xs') return;
-    // Не перехватываем клик, если аватарка находится внутри большой кнопки-карточки, но даём лёгкую анимацию
     setActiveAnim('tap');
     window.setTimeout(() => setActiveAnim('none'), 400);
 
@@ -147,7 +179,7 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
       : '';
 
   return (
-    <div className="relative inline-flex items-center justify-center shrink-0">
+    <div ref={wrapperRef} className="relative inline-flex items-center justify-center shrink-0">
       <style>{`
         @keyframes mentorFloat {
           0%, 100% { transform: translateY(0px); }
@@ -226,30 +258,38 @@ export const MentorAvatar: React.FC<MentorAvatarProps> = ({
         )}
       </div>
 
-            {/* Всплывающее диалоговое облачко с эффектом печатающегося текста */}
-      {bubbleFullText && !locked && (
-        <div
-          role="status"
-          onClick={(e) => {
-            e.stopPropagation();
-            setBubbleFullText(null);
-          }}
-          className="absolute bottom-full left-0 mb-2.5 z-50 w-56 sm:w-64 max-w-[calc(100vw-2rem)] px-3 py-2 rounded-xl bg-slate-900/95 border border-violet-400/50 text-xs text-slate-100 shadow-2xl shadow-black/70 backdrop-blur-md pointer-events-auto cursor-pointer animate-fade-in"
-        >
-          <div className="font-semibold text-[10px] uppercase tracking-wider text-violet-300 mb-0.5">
-            {mentor.name}
-          </div>
-          <p className="leading-snug text-slate-100">
-            {typedText}
-            {typedText.length < bubbleFullText.length && (
-              <span className="inline-block w-1.5 h-3 ml-0.5 bg-violet-400 animate-pulse align-middle" />
-            )}
-          </p>
-          <div className="absolute top-full left-5 -mt-px border-4 border-transparent border-t-slate-900/95" />
-        </div>
-      )}
+      {bubbleFullText &&
+        !locked &&
+        bubblePos &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            role="status"
+            onClick={(e) => {
+              e.stopPropagation();
+              setBubbleFullText(null);
+            }}
+            style={{
+              position: 'fixed',
+              left: `${bubblePos.left}px`,
+              top: `${bubblePos.top}px`,
+              transform: bubblePos.placeBelow ? 'translateY(0)' : 'translateY(-100%)',
+              width: '248px',
+            }}
+            className="z-[9999] px-3 py-2 rounded-xl bg-slate-900/95 border border-violet-400/50 text-xs text-slate-100 shadow-2xl shadow-black/80 backdrop-blur-md pointer-events-auto cursor-pointer animate-fade-in"
+          >
+            <div className="font-semibold text-[10px] uppercase tracking-wider text-violet-300 mb-0.5">
+              {mentor.name}
+            </div>
+            <p className="leading-snug text-slate-100">
+              {typedText}
+              {typedText.length < bubbleFullText.length && (
+                <span className="inline-block w-1.5 h-3 ml-0.5 bg-violet-400 animate-pulse align-middle" />
+              )}
+            </p>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
-
-
