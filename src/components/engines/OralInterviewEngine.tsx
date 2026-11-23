@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
+  Image as ImageIcon,
   MessageSquare,
-  Mic,
-  MicOff,
-  Play,
-  RotateCcw,
   Sparkles,
   Volume2,
   VolumeX,
@@ -18,28 +17,49 @@ interface OralInterviewEngineProps {
   onComplete: (passed: boolean, summaryText: string) => void;
 }
 
-type RecordTarget =
-  | { kind: 'reading' }
-  | { kind: 'dialogue'; questionNumber: number }
-  | { kind: 'monologue' }
-  | null;
-
-function tokenizeWords(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/ё/g, 'е')
-    .replace(/[^а-яa-z0-9\s-]/gi, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
+interface FipaCriterion {
+  id: string;
+  code: string;
+  title: string;
+  maxScore: number;
+  table: number;
 }
 
-function countSentences(text: string): number {
-  const parts = text
-    .trim()
-    .split(/[.!?…]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.split(/\s+/).filter(Boolean).length >= 2);
-  return parts.length;
+const FIPA_CRITERIA: FipaCriterion[] = [
+  // Таблица 1 · Чтение вслух (макс. 3 б.)
+  { id: 'ch1', code: 'Ч1', title: 'Интонация', maxScore: 1, table: 1 },
+  { id: 'ch2', code: 'Ч2', title: 'Темп чтения', maxScore: 1, table: 1 },
+  { id: 'ch3', code: 'Ч3', title: 'Искажения слов', maxScore: 1, table: 1 },
+  // Таблица 2 · Беседа по тексту (макс. 5 б.)
+  { id: 'd1', code: 'Д1', title: 'Вопрос 1', maxScore: 1, table: 2 },
+  { id: 'd2', code: 'Д2', title: 'Вопрос 2', maxScore: 1, table: 2 },
+  { id: 'd3', code: 'Д3', title: 'Вопрос 3', maxScore: 1, table: 2 },
+  { id: 'd4', code: 'Д4', title: 'Вопрос 4', maxScore: 1, table: 2 },
+  { id: 'd5', code: 'Д5', title: 'Вопрос 5', maxScore: 1, table: 2 },
+  // Таблица 3 · Монолог (макс. 3 б.)
+  { id: 'm1', code: 'М1', title: 'Коммуникативная задача: ≥ 10 фраз', maxScore: 2, table: 3 },
+  { id: 'm2', code: 'М2', title: 'Логичность монолога', maxScore: 1, table: 3 },
+  // Таблица 4 · Грамотность речи (макс. 6 б.)
+  { id: 'r1', code: 'Р1', title: 'Орфоэпические нормы', maxScore: 2, table: 4 },
+  { id: 'r2', code: 'Р2', title: 'Грамматические нормы', maxScore: 2, table: 4 },
+  { id: 'r3', code: 'Р3', title: 'Речевые нормы', maxScore: 2, table: 4 },
+];
+
+const FIPA_MAX_TOTAL = 17;
+const FIPA_PASS_THRESHOLD = 10;
+
+const TABLE_TITLES: Record<number, string> = {
+  1: 'Таблица 1 · Чтение вслух (макс. 3 б.)',
+  2: 'Таблица 2 · Беседа по тексту (макс. 5 б.)',
+  3: 'Таблица 3 · Монолог (макс. 3 б.)',
+  4: 'Таблица 4 · Грамотность речи по заданиям 1–3 (макс. 6 б.)',
+};
+
+function formatTime(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
@@ -55,41 +75,35 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     [variantId]
   );
 
-  // Звуковой таймер этапов ФИПИ
-  const [timerLabel, setTimerLabel] = useState('Подготовка к Части 1 (5:00)');
-  const [secondsLeft, setSecondsLeft] = useState(5 * 60);
-  const [timerRunning, setTimerRunning] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Задание 1: чтение вслух
-  const [readingTranscript, setReadingTranscript] = useState('');
-  const [readingAudioUrl, setReadingAudioUrl] = useState<string | null>(null);
-  const [readingDurationSec, setReadingDurationSec] = useState(0);
+  // ==== ЗАДАНИЕ 1: таймеры подготовки 5:00 и чтения 2:00 ====
+  const [prepSeconds, setPrepSeconds] = useState(5 * 60);
+  const [prepRunning, setPrepRunning] = useState(false);
+  const [readSeconds, setReadSeconds] = useState(2 * 60);
+  const [readRunning, setReadRunning] = useState(false);
 
-  // Задание 2: ответы на вопросы беседы
-  const [dialogueAnswers, setDialogueAnswers] = useState<Record<number, string>>({});
-  const [dialogueAudioUrls, setDialogueAudioUrls] = useState<Record<number, string>>({});
-  const [revealedSamples, setRevealedSamples] = useState<Record<number, boolean>>({});
+  // ==== ЗАДАНИЕ 3: таймеры подготовки 2:00 и ответа 3:00 ====
+  const [monoPrepSeconds, setMonoPrepSeconds] = useState(2 * 60);
+  const [monoPrepRunning, setMonoPrepRunning] = useState(false);
+  const [monoAnswerSeconds, setMonoAnswerSeconds] = useState(3 * 60);
+  const [monoAnswerRunning, setMonoAnswerRunning] = useState(false);
+
+  // ==== Чтение завершено / пошаговые вопросы ====
   const [readingCompleted, setReadingCompleted] = useState(false);
-  const [currentDialogueStep, setCurrentDialogueStep] = useState(1);
+  const [readingSpentSec, setReadingSpentSec] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(1);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [revealedSamples, setRevealedSamples] = useState<Record<number, boolean>>({});
 
-  // Задание 3: монолог (1 из 3 тем)
+  // ==== Монолог ====
   const [selectedTopicNum, setSelectedTopicNum] = useState<1 | 2 | 3>(1);
-  const [monologueTranscript, setMonologueTranscript] = useState('');
-  const [monologueAudioUrl, setMonologueAudioUrl] = useState<string | null>(null);
-  const [showMonologueHelp, setShowMonologueHelp] = useState(false);
+  const [monologueImageUrl, setMonologueImageUrl] = useState<string | null>(null);
+  const [showCliches, setShowCliches] = useState(false);
 
-  // Завершение собеседования
-  const [finished, setFinished] = useState(false);
-
-  // Запись аудио через MediaRecorder
-  const [recordingTarget, setRecordingTarget] = useState<RecordTarget>(null);
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const activeStreamRef = useRef<MediaStream | null>(null);
-  const recordingStartRef = useRef<number>(0);
+  // ==== Оценки ФИПИ ====
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [savedToast, setSavedToast] = useState(false);
 
   const playBell = () => {
     if (!soundEnabled) return;
@@ -118,27 +132,13 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     }
   };
 
-  // Очистка при размонтировании
+  // Таймеры
   useEffect(() => {
-    return () => {
-      try {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          mediaRecorderRef.current.stop();
-        }
-      } catch {
-        // ignore
-      }
-      activeStreamRef.current?.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
-
-  // Таймер обратного отсчёта со звонком
-  useEffect(() => {
-    if (!timerRunning) return;
+    if (!prepRunning) return;
     const id = window.setInterval(() => {
-      setSecondsLeft((prev) => {
+      setPrepSeconds((prev) => {
         if (prev <= 1) {
-          setTimerRunning(false);
+          setPrepRunning(false);
           playBell();
           return 0;
         }
@@ -146,208 +146,170 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [timerRunning, soundEnabled]);
+  }, [prepRunning, soundEnabled]);
 
-  const startStageTimer = (label: string, totalSeconds: number) => {
-    setTimerLabel(label);
-    setSecondsLeft(totalSeconds);
-    setTimerRunning(true);
-  };
-
-  const stopActiveRecorder = () => {
-    try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  const toggleRecording = async (target: NonNullable<RecordTarget>) => {
-    const isSame =
-      recordingTarget?.kind === target.kind &&
-      (target.kind !== 'dialogue' ||
-        (recordingTarget?.kind === 'dialogue' &&
-          recordingTarget.questionNumber === target.questionNumber));
-
-    if (isSame) {
-      setRecordingTarget(null);
-      if (target.kind === 'reading' && !readingCompleted) {
-        setReadingCompleted(true);
-      }
-      stopActiveRecorder();
-      return;
-    }
-
-    setSpeechError(null);
-    stopActiveRecorder();
-    activeStreamRef.current?.getTracks().forEach((t) => t.stop());
-    activeStreamRef.current = null;
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setSpeechError(
-        'Микрофон недоступен. Убедитесь, что сайт открыт по HTTPS и браузер поддерживает доступ к микрофону.'
-      );
-      return;
-    }
-
-    if (typeof MediaRecorder === 'undefined') {
-      setSpeechError('Ваш браузер не поддерживает MediaRecorder — запись невозможна.');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      activeStreamRef.current = stream;
-
-      // Подбираем поддерживаемый браузером формат записи
-      const preferredTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/ogg;codecs=opus',
-      ];
-      const supportedType =
-        preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
-      const recorder = supportedType
-        ? new MediaRecorder(stream, { mimeType: supportedType })
-        : new MediaRecorder(stream);
-
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-      recordingStartRef.current = Date.now();
-
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
+  useEffect(() => {
+    if (!readRunning) return;
+    const id = window.setInterval(() => {
+      setReadSeconds((prev) => {
+        if (prev <= 1) {
+          setReadRunning(false);
+          playBell();
+          return 0;
         }
-      };
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [readRunning, soundEnabled]);
 
-      recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        activeStreamRef.current = null;
-
-        const elapsedSec = Math.max(
-          1,
-          Math.round((Date.now() - recordingStartRef.current) / 1000)
-        );
-
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: supportedType || recorder.mimeType || 'audio/webm',
-        });
-        audioChunksRef.current = [];
-
-        if (audioBlob.size < 1000) {
-          setSpeechError(
-            'Запись получилась пустой — проверьте, что в браузере и Windows выбран рабочий микрофон.'
-          );
-          return;
+  useEffect(() => {
+    if (!monoPrepRunning) return;
+    const id = window.setInterval(() => {
+      setMonoPrepSeconds((prev) => {
+        if (prev <= 1) {
+          setMonoPrepRunning(false);
+          playBell();
+          return 0;
         }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [monoPrepRunning, soundEnabled]);
 
-        const url = URL.createObjectURL(audioBlob);
-        if (target.kind === 'reading') {
-          setReadingAudioUrl((prev) => {
-            if (prev) URL.revokeObjectURL(prev);
-            return url;
-          });
-          setReadingDurationSec(elapsedSec);
-        } else if (target.kind === 'dialogue') {
-          setDialogueAudioUrls((prev) => {
-            const old = prev[target.questionNumber];
-            if (old) URL.revokeObjectURL(old);
-            return { ...prev, [target.questionNumber]: url };
-          });
-        } else if (target.kind === 'monologue') {
-          setMonologueAudioUrl((prev) => {
-            if (prev) URL.revokeObjectURL(prev);
-            return url;
-          });
+  useEffect(() => {
+    if (!monoAnswerRunning) return;
+    const id = window.setInterval(() => {
+      setMonoAnswerSeconds((prev) => {
+        if (prev <= 1) {
+          setMonoAnswerRunning(false);
+          playBell();
+          return 0;
         }
-      };
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [monoAnswerRunning, soundEnabled]);
 
-      recorder.start(250);
-      setRecordingTarget(target);
-    } catch {
-      setSpeechError(
-        'Доступ к микрофону запрещён. Разрешите использование микрофона в настройках браузера и попробуйте снова.'
-      );
-      activeStreamRef.current?.getTracks().forEach((t) => t.stop());
-      activeStreamRef.current = null;
-      setRecordingTarget(null);
+  // Примечание ФИПИ: если М1 = 0, то М2 = 0
+  useEffect(() => {
+    if ((scores.m1 ?? 0) === 0 && (scores.m2 ?? 0) !== 0) {
+      setScores((prev) => ({ ...prev, m2: 0 }));
     }
-  };
+  }, [scores.m1, scores.m2]);
 
-  // Аналитика Задания 1
-  const readingAccuracy = useMemo(() => {
-    const refWords = tokenizeWords(variant.readingText);
-    const spokenWords = tokenizeWords(readingTranscript);
-    if (refWords.length === 0 || spokenWords.length === 0) return 0;
-    const spokenSet = new Set(spokenWords);
-    const matchedCount = refWords.filter((w) => spokenSet.has(w)).length;
-    return Math.min(100, Math.round((matchedCount / refWords.length) * 100));
-  }, [variant.readingText, readingTranscript]);
-
-  const readingWpm =
-    readingDurationSec > 0 && variant.wordCount > 0
-      ? Math.round((variant.wordCount / readingDurationSec) * 60)
-      : 0;
-
-  const activeMonologueTopic =
+  const activeTopic =
     variant.monologueTopics.find((t) => t.number === selectedTopicNum) ??
     variant.monologueTopics.at(0)!;
-  const monologueSentences = countSentences(monologueTranscript);
-  const monologueWords = tokenizeWords(monologueTranscript).length;
 
-  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
-  const secs = String(secondsLeft % 60).padStart(2, '0');
+  const totalScore = useMemo(
+    () => FIPA_CRITERIA.reduce((sum, crit) => sum + (scores[crit.id] ?? 0), 0),
+    [scores]
+  );
+  const passed = totalScore >= FIPA_PASS_THRESHOLD;
 
-  const handleFinishExam = () => {
-    stopActiveRecorder();
-    setRecordingTarget(null);
-    setTimerRunning(false);
-    setFinished(true);
-    const summary = `Итоговое собеседование (${variant.title}): темп чтения ~${readingWpm} сл/мин, монолог ${monologueSentences} предл.`;
-    onComplete(true, summary);
+  const readingSpent =
+    readingSpentSec > 0 ? readingSpentSec : Math.max(1, 2 * 60 - readSeconds);
+  const readingWpm =
+    readingSpent > 0 && variant.wordCount > 0
+      ? Math.round((variant.wordCount / readingSpent) * 60)
+      : 0;
+
+  const handleCompleteReading = () => {
+    setReadRunning(false);
+    const spent = Math.max(1, 2 * 60 - readSeconds);
+    setReadingSpentSec(spent);
+    setReadingCompleted(true);
   };
 
-  const handleResetVariant = () => {
-    stopActiveRecorder();
-    activeStreamRef.current?.getTracks().forEach((t) => t.stop());
-    activeStreamRef.current = null;
-    setRecordingTarget(null);
-    setReadingTranscript('');
-    setReadingAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-    setReadingDurationSec(0);
-    setDialogueAnswers({});
-    setDialogueAudioUrls((prev) => {
-      Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
-      return {};
-    });
-    setMonologueTranscript('');
-    setMonologueAudioUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
-    setFinished(false);
+  const handleSaveScores = () => {
+    const summary = `Итоговое собеседование (${variant.title}): ${totalScore}/${FIPA_MAX_TOTAL} б. (${
+      passed ? 'ЗАЧЁТ' : 'НЕЗАЧЁТ'
+    })`;
+    onComplete(passed, summary);
+    setSavedToast(true);
+    window.setTimeout(() => setSavedToast(false), 2000);
+  };
+
+  const handleReset = () => {
+    setPrepSeconds(5 * 60);
+    setPrepRunning(false);
+    setReadSeconds(2 * 60);
+    setReadRunning(false);
+    setMonoPrepSeconds(2 * 60);
+    setMonoPrepRunning(false);
+    setMonoAnswerSeconds(3 * 60);
+    setMonoAnswerRunning(false);
     setReadingCompleted(false);
-    setCurrentDialogueStep(1);
+    setReadingSpentSec(0);
+    setCurrentQuestion(1);
     setShowAllQuestions(false);
+    setRevealedSamples({});
+    setMonologueImageUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setShowCliches(false);
+    setScores({});
+    setSavedToast(false);
+  };
+
+  const renderTimerControls = (
+    label: string,
+    seconds: number,
+    running: boolean,
+    setRunning: (fn: (r: boolean) => boolean) => void,
+    onReset: () => void,
+    accent: 'indigo' | 'emerald' | 'amber' | 'cyan'
+  ) => {
+    const accentMap = {
+      indigo: 'border-indigo-400/40 text-indigo-200 bg-[#080B14]',
+      emerald: 'border-emerald-400/40 text-emerald-200 bg-[#080B14]',
+      amber: 'border-amber-400/40 text-amber-200 bg-[#080B14]',
+      cyan: 'border-cyan-400/40 text-cyan-200 bg-[#080B14]',
+    } as const;
+    const btnMap = {
+      indigo: 'bg-indigo-500 hover:bg-indigo-400',
+      emerald: 'bg-emerald-600 hover:bg-emerald-500',
+      amber: 'bg-amber-500 hover:bg-amber-400 text-slate-950',
+      cyan: 'bg-cyan-600 hover:bg-cyan-500',
+    } as const;
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-medium text-slate-400">{label}</span>
+        <div
+          className={`px-3 py-1.5 rounded-lg border font-mono-num text-base font-bold tracking-wider ${accentMap[accent]}`}
+        >
+          {formatTime(seconds)}
+        </div>
+        <button
+          type="button"
+          onClick={() => setRunning((r) => !r)}
+          className={`px-2.5 py-1.5 rounded-lg text-white text-xs font-semibold transition-colors cursor-pointer ${btnMap[accent]}`}
+        >
+          {running ? 'Пауза' : 'Старт'}
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 cursor-pointer"
+        >
+          Сброс
+        </button>
+      </div>
+    );
   };
 
   return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
-      {/* Верхняя панель экзаменационного таймера со звонком */}
+      {/* Шапка варианта + общий переключатель звонка */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/50 via-[#0F1424] to-violet-950/40 border border-indigo-500/30 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-300">
             <span>ОГЭ · Итоговое собеседование (Допуск)</span>
-            <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">
-              {timerLabel}
-            </span>
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-white">
             {variant.title}
@@ -359,31 +321,8 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                   key={v.id}
                   type="button"
                   onClick={() => {
-                    stopActiveRecorder();
-                    activeStreamRef.current?.getTracks().forEach((t) => t.stop());
-                    activeStreamRef.current = null;
-                    setRecordingTarget(null);
                     setVariantId(v.id);
-                    setReadingTranscript('');
-                    setReadingAudioUrl((prev) => {
-                      if (prev) URL.revokeObjectURL(prev);
-                      return null;
-                    });
-                    setReadingDurationSec(0);
-                    setDialogueAnswers({});
-                    setDialogueAudioUrls((prev) => {
-                      Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
-                      return {};
-                    });
-                    setMonologueTranscript('');
-                    setMonologueAudioUrl((prev) => {
-                      if (prev) URL.revokeObjectURL(prev);
-                      return null;
-                    });
-                    setFinished(false);
-                    setReadingCompleted(false);
-                    setCurrentDialogueStep(1);
-                    setShowAllQuestions(false);
+                    handleReset();
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     v.id === variant.id
@@ -398,432 +337,211 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="px-3.5 py-2 rounded-xl bg-[#080B14] border border-indigo-400/40 font-mono-num text-xl font-bold text-indigo-200 tracking-wider flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-indigo-400" />
-            <span>
-              {mins}:{secs}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setTimerRunning((r) => !r)}
-            className="px-3 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
-          >
-            {timerRunning ? 'Пауза' : 'Старт'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => startStageTimer('Подготовка к Части 1 (5:00)', 5 * 60)}
-            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 cursor-pointer"
-          >
-            5:00 (Ч.1)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => startStageTimer('Подготовка к монологу (2:00)', 2 * 60)}
-            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 cursor-pointer"
-          >
-            2:00 (Монолог)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => startStageTimer('Ответ монолога (3:00)', 3 * 60)}
-            className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 cursor-pointer"
-          >
-            3:00 (Ответ)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSoundEnabled((s) => !s)}
-            title={soundEnabled ? 'Звонок таймера включён' : 'Звонок таймера выключен'}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 cursor-pointer"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
-            )}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setSoundEnabled((s) => !s)}
+          title={soundEnabled ? 'Звонок таймера включён' : 'Звонок таймера выключен'}
+          className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 cursor-pointer shrink-0"
+        >
+          {soundEnabled ? (
+            <Volume2 className="w-4 h-4" />
+          ) : (
+            <VolumeX className="w-4 h-4" />
+          )}
+        </button>
       </div>
 
-      {speechError && (
-        <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300">
-          {speechError}
-        </div>
-      )}
-
-      {/* ЧАСТЬ 1 · ЗАДАНИЕ 1: Чтение текста вслух */}
+      {/* БЛОК 1 · ЧАСТЬ 1 · ЗАДАНИЕ 1 */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-slate-800 space-y-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-violet-400" />
-            Часть 1 · Задание 1 ({variant.wordCount} слов)
+            Блок 1 · Часть 1 · Задание 1 ({variant.wordCount} слов)
           </h3>
-          <span className="text-xs text-slate-400">Чтение текста вслух</span>
-        </div>
-
-        {/* Плашка «Материал к заданию 2» над текстом для чтения */}
-        <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs sm:text-sm text-indigo-100 leading-relaxed">
-          <strong className="text-indigo-300">
-            Материал к заданию 2 (подготовьтесь заранее):
-          </strong>{' '}
-          {variant.quotePrompt}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => toggleRecording({ kind: 'reading' })}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
-              recordingTarget?.kind === 'reading'
-                ? 'bg-rose-500 text-white animate-pulse'
-                : 'bg-violet-600 hover:bg-violet-500 text-white'
-            }`}
-          >
-            {recordingTarget?.kind === 'reading' ? (
-              <>
-                <MicOff className="w-4 h-4" />
-                Остановить
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4" />
-                Записать свой голос
-              </>
+          <div className="flex flex-wrap items-center gap-3">
+            {renderTimerControls(
+              'Подготовка',
+              prepSeconds,
+              prepRunning,
+              setPrepRunning,
+              () => {
+                setPrepSeconds(5 * 60);
+                setPrepRunning(false);
+              },
+              'indigo'
             )}
-          </button>
+            {renderTimerControls(
+              'Чтение',
+              readSeconds,
+              readRunning,
+              setReadRunning,
+              () => {
+                setReadSeconds(2 * 60);
+                setReadRunning(false);
+              },
+              'emerald'
+            )}
+          </div>
+        </div>
 
-          {readingAudioUrl && (
-            <button
-              type="button"
-              onClick={() => {
-                setReadingTranscript('');
-                setReadingDurationSec(0);
-                setReadingAudioUrl((prev) => {
-                  if (prev) URL.revokeObjectURL(prev);
-                  return null;
-                });
-              }}
-              className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 inline-flex items-center gap-1 cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Сбросить запись
-            </button>
-          )}
+        {/* Вопрос 5 по цитате — над текстом */}
+        <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-xs sm:text-sm text-indigo-100 leading-relaxed">
+          <strong className="text-indigo-300">Вопрос 5 по цитате (материал к заданию 2):</strong>{' '}
+          {variant.quotePrompt}
         </div>
 
         <p className="text-xs text-slate-400 leading-relaxed">
           {variant.readingIntro}
         </p>
 
-        {/* Текст для чтения */}
         <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-sm sm:text-base text-slate-200 leading-relaxed space-y-2">
           {variant.readingText.split('\n').map((para, pIdx) => (
             <p key={pIdx}>{para}</p>
           ))}
         </div>
 
-        {/* Встроенный плеер + темп чтения + точность слов */}
-        {readingAudioUrl && (
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
-            <div className="flex flex-wrap items-center gap-3 font-semibold text-slate-300">
-              <span>Ваша запись:</span>
-              <span className="text-cyan-300">
-                Длительность: {readingDurationSec} сек.
-              </span>
-              {readingWpm > 0 && (
-                <span
-                  className={
-                    readingWpm >= 95 && readingWpm <= 130
-                      ? 'text-emerald-300'
-                      : 'text-amber-300'
-                  }
-                >
-                  Темп: ~{readingWpm} слов/мин
-                </span>
-              )}
-              {readingTranscript.trim() && (
-                <span className="text-emerald-300">
-                  Точность слов: {readingAccuracy}%
-                </span>
-              )}
-            </div>
-            <audio controls src={readingAudioUrl} className="w-full" />
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Норма ФИПИ для выразительного чтения — 95–130 слов/мин. Для расчёта точности
-              впишите распознанный текст (например, через системную диктовку Win+H) в поле ниже.
-            </p>
-            <textarea
-              rows={3}
-              value={readingTranscript}
-              onChange={(e) => setReadingTranscript(e.target.value)}
-              placeholder="Впишите или надиктуйте (Win+H) текст, чтобы увидеть точность слов в %..."
-              className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-violet-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
-            />
-          </div>
-        )}
-
-        {/* Кнопка перехода к вопросам после чтения */}
-        {!readingCompleted && (
+        {!readingCompleted ? (
           <button
             type="button"
-            onClick={() => {
-              stopActiveRecorder();
-              setRecordingTarget(null);
-              setReadingCompleted(true);
-            }}
+            onClick={handleCompleteReading}
             className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
-            Я закончил(а) чтение вслух → Перейти к вопросам
+            Завершить чтение и открыть вопросы
           </button>
+        ) : (
+          <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200 space-y-1">
+            <div className="font-semibold">
+              Чтение завершено. Затрачено времени: {formatTime(readingSpent)}.
+            </div>
+            <div>
+              Скорость чтения: <strong>~{readingWpm} слов/мин</strong>{' '}
+              <span className="text-emerald-300/80">(норма ФИПИ — 95–130 слов/мин)</span>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* ЧАСТЬ 1 · ЗАДАНИЕ 2: Беседа по тексту (пошагово) */}
+      {/* БЛОК 2 · ЧАСТЬ 1 · ЗАДАНИЕ 2 */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-slate-800 space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-cyan-400" />
-            Часть 1 · Задание 2
+            Блок 2 · Часть 1 · Задание 2
           </h3>
-          <span className="text-xs text-slate-400">
-            Беседа по тексту (Карточка собеседника · 5 вопросов)
-          </span>
+          <span className="text-xs text-slate-400">Беседа по тексту · 5 вопросов</span>
         </div>
 
         {!readingCompleted ? (
-          <div className="p-6 rounded-xl bg-slate-950/60 border border-dashed border-slate-700 text-center space-y-3">
-            <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
-            <p className="text-xs sm:text-sm text-slate-400">
-              Вопросы собеседника откроются после завершения чтения текста вслух
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                stopActiveRecorder();
-                setRecordingTarget(null);
-                setReadingCompleted(true);
-              }}
-              className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
-            >
-              <Play className="w-4 h-4" />
-              Я закончил(а) чтение вслух → Перейти к вопросам
-            </button>
+          <div className="p-6 rounded-xl bg-slate-950/60 border border-dashed border-slate-700 text-center text-xs sm:text-sm text-slate-400">
+            Вопросы откроются после завершения чтения вслух (Блок 1).
           </div>
         ) : (
           <>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Отвечайте на вопросы развёрнутыми полными предложениями (голосом или с клавиатуры), затем сверьте себя с эталоном.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 font-semibold">
-                Вопрос {currentDialogueStep} из {variant.questions.length}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 font-semibold text-xs">
+                {showAllQuestions ? 'Все вопросы для обзора' : `Вопрос ${currentQuestion} из 5`}
               </span>
-              {currentDialogueStep >= variant.questions.length && (
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 font-semibold">
-                  Все 5 вопросов пройдены ✓
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowAllQuestions((v) => !v)}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 cursor-pointer"
+              >
+                {showAllQuestions ? 'По одному' : 'Показать все вопросы'}
+              </button>
             </div>
 
-            {!showAllQuestions ? (
-              <div className="space-y-3">
-                {variant.questions
-                  .filter((q) => q.number === currentDialogueStep)
-                  .map((q) => {
-                    const isRecThis =
-                      recordingTarget?.kind === 'dialogue' &&
-                      recordingTarget.questionNumber === q.number;
-                    const userAns = dialogueAnswers[q.number] ?? '';
-                    const sampleShown = Boolean(revealedSamples[q.number]);
-                    const audioUrl = dialogueAudioUrls[q.number];
-                    return (
-                      <div
-                        key={q.number}
-                        className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2"
-                      >
-                        <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                          <strong className="text-white">Вопрос {q.number}.</strong>{' '}
-                          {q.question}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toggleRecording({ kind: 'dialogue', questionNumber: q.number })
-                            }
-                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer ${
-                              isRecThis
-                                ? 'bg-rose-500 text-white animate-pulse'
-                                : 'bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 hover:bg-cyan-600/50'
-                            }`}
-                          >
-                            {isRecThis ? (
-                              <>
-                                <MicOff className="w-3.5 h-3.5" />
-                                Остановить
-                              </>
-                            ) : (
-                              <>
-                                <Mic className="w-3.5 h-3.5" />
-                                Записать свой голос
-                              </>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setRevealedSamples((prev) => ({
-                                ...prev,
-                                [q.number]: !prev[q.number],
-                              }))
-                            }
-                            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 cursor-pointer"
-                          >
-                            {sampleShown ? 'Скрыть эталон' : 'Эталон ответа'}
-                          </button>
-                        </div>
-
-                        {audioUrl && (
-                          <audio controls src={audioUrl} className="w-full" />
-                        )}
-
-                        <textarea
-                          rows={2}
-                          value={userAns}
-                          onChange={(e) =>
-                            setDialogueAnswers((prev) => ({
-                              ...prev,
-                              [q.number]: e.target.value,
-                            }))
-                          }
-                          placeholder="Впишите ответ или надиктуйте его через Win+H..."
-                          className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-cyan-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
-                        />
-                        {sampleShown && (
-                          <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200 leading-relaxed">
-                            <strong className="text-emerald-300">Пример правильного ответа:</strong>{' '}
-                            {q.sampleAnswer}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                  {currentDialogueStep < variant.questions.length ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        stopActiveRecorder();
-                        setRecordingTarget(null);
-                        setCurrentDialogueStep((s) => Math.min(variant.questions.length, s + 1));
-                      }}
-                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      Следующий вопрос →
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllQuestions(true)}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Показать все 5 вопросов для обзора
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {variant.questions.map((q) => {
-                  const userAns = dialogueAnswers[q.number] ?? '';
+            <div className="space-y-3">
+              {variant.questions
+                .filter((q) => showAllQuestions || q.number === currentQuestion)
+                .map((q) => {
+                  const sampleShown = Boolean(revealedSamples[q.number]);
                   return (
                     <div
                       key={q.number}
-                      className="p-3 rounded-xl bg-slate-950/40 border border-slate-800 space-y-1"
+                      className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2"
                     >
                       <div className="text-xs sm:text-sm text-slate-200 leading-relaxed">
                         <strong className="text-white">Вопрос {q.number}.</strong>{' '}
                         {q.question}
                       </div>
-                      <div className="text-xs text-slate-400 leading-relaxed">
-                        <strong className="text-slate-300">Ваш ответ:</strong>{' '}
-                        {userAns.trim() || <span className="italic text-slate-500">— нет ответа —</span>}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setRevealedSamples((prev) => ({
+                            ...prev,
+                            [q.number]: !prev[q.number],
+                          }))
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 cursor-pointer"
+                      >
+                        {sampleShown ? 'Скрыть эталон' : 'Проверить по эталону'}
+                      </button>
+                      {sampleShown && (
+                        <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-200 leading-relaxed">
+                          <strong className="text-emerald-300">Эталон ответа:</strong>{' '}
+                          {q.sampleAnswer}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
-                <button
-                  type="button"
-                  onClick={() => setShowAllQuestions(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
-                >
-                  ← Вернуться к пошаговому режиму
-                </button>
+            </div>
+
+            {!showAllQuestions && currentQuestion < variant.questions.length && (
+              <button
+                type="button"
+                onClick={() => setCurrentQuestion((n) => Math.min(variant.questions.length, n + 1))}
+                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                Следующий вопрос →
+              </button>
+            )}
+            {!showAllQuestions && currentQuestion >= variant.questions.length && (
+              <div className="text-xs font-semibold text-emerald-300">
+                Все 5 вопросов пройдены ✓
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* ЧАСТЬ 2 · ЗАДАНИЕ 3: Монологическое высказывание */}
+      {/* БЛОК 3 · ЧАСТЬ 2 · ЗАДАНИЕ 3 */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-slate-800 space-y-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            Часть 2 · Задание 3 (не менее 10 предложений, до 3 минут)
+            Блок 3 · Часть 2 · Задание 3
           </h3>
-          <span className="text-xs text-slate-400">Монологическое высказывание</span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowMonologueHelp((v) => !v)}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-amber-200 inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            {showMonologueHelp ? 'Скрыть клише' : 'Речевые клише для монолога'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => toggleRecording({ kind: 'monologue' })}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer ${
-              recordingTarget?.kind === 'monologue'
-                ? 'bg-rose-500 text-white animate-pulse'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-            }`}
-          >
-            {recordingTarget?.kind === 'monologue' ? (
-              <>
-                <MicOff className="w-4 h-4" />
-                Остановить
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4" />
-                Записать свой голос
-              </>
+          <div className="flex flex-wrap items-center gap-3">
+            {renderTimerControls(
+              'Подготовка',
+              monoPrepSeconds,
+              monoPrepRunning,
+              setMonoPrepRunning,
+              () => {
+                setMonoPrepSeconds(2 * 60);
+                setMonoPrepRunning(false);
+              },
+              'amber'
             )}
-          </button>
+            {renderTimerControls(
+              'Ответ',
+              monoAnswerSeconds,
+              monoAnswerRunning,
+              setMonoAnswerRunning,
+              () => {
+                setMonoAnswerSeconds(3 * 60);
+                setMonoAnswerRunning(false);
+              },
+              'cyan'
+            )}
+          </div>
         </div>
 
-        {/* Выбор 1 из 3 тем */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {variant.monologueTopics.map((topic) => {
-            const isSel = topic.number === activeMonologueTopic.number;
+            const isSel = topic.number === activeTopic.number;
             return (
               <button
                 key={topic.number}
@@ -846,115 +564,183 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           })}
         </div>
 
-        {/* Карточка участника собеседования */}
-        <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+        <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
           <div className="text-xs sm:text-sm font-semibold text-white">
-            Карточка участника · {activeMonologueTopic.title}
+            Карточка участника · {activeTopic.title}
           </div>
-          {activeMonologueTopic.sceneHint && (
+          {activeTopic.sceneHint && (
             <p className="text-xs text-slate-400 italic leading-relaxed">
-              {activeMonologueTopic.sceneHint}
+              {activeTopic.sceneHint}
             </p>
           )}
+
+          {/* Загрузка картинки только для Темы 1 (Описание фотографии) */}
+          {selectedTopicNum === 1 && (
+            <div className="space-y-2">
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 cursor-pointer">
+                <ImageIcon className="w-4 h-4 text-violet-400" />
+                <span>Загрузить картинку</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const url = URL.createObjectURL(file);
+                    setMonologueImageUrl((prev) => {
+                      if (prev) URL.revokeObjectURL(prev);
+                      return url;
+                    });
+                  }}
+                />
+              </label>
+              {monologueImageUrl && (
+                <img
+                  src={monologueImageUrl}
+                  alt="Фотография для описания"
+                  className="max-h-64 rounded-xl border border-slate-700"
+                />
+              )}
+            </div>
+          )}
+
           <div className="text-xs font-medium text-slate-300">
             Не забудьте раскрыть все 4 пункта плана:
           </div>
           <ul className="space-y-1 text-xs sm:text-sm text-slate-200 list-disc pl-4 leading-relaxed">
-            {activeMonologueTopic.planPoints.map((pt, idx) => (
+            {activeTopic.planPoints.map((pt, idx) => (
               <li key={idx}>{pt}</li>
             ))}
           </ul>
-          {showMonologueHelp && (
-            <div className="pt-2 border-t border-slate-800/70 space-y-1.5">
-              <div className="text-xs font-semibold text-amber-200">
-                Речевые клише (нажмите, чтобы добавить в текст монолога):
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {activeMonologueTopic.cliches.map((cl, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() =>
-                      setMonologueTranscript((prev) =>
-                        prev ? `${prev} ${cl}` : cl
-                      )
-                    }
-                    className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-violet-500/20 border border-slate-700 text-xs text-slate-200 cursor-pointer text-left"
-                  >
-                    + {cl}
-                  </button>
-                ))}
-              </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCliches((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-amber-200 cursor-pointer"
+          >
+            {showCliches ? 'Скрыть клише' : 'Показать речевые клише'}
+            {showCliches ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          {showCliches && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {activeTopic.cliches.map((cl, idx) => (
+                <span
+                  key={idx}
+                  className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200"
+                >
+                  {cl}
+                </span>
+              ))}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Плеер записи монолога */}
-        {monologueAudioUrl && (
-          <audio controls src={monologueAudioUrl} className="w-full" />
-        )}
+      {/* БЛОК 4 · КРИТЕРИИ ФИПИ 2027 */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0F1424] border border-emerald-500/40 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm sm:text-base font-semibold text-white">
+            Блок 4 · Критерии оценивания ФИПИ · 2027 г. (макс. 17 баллов, зачёт от 10 б.)
+          </h3>
+          <span
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${
+              passed
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                : 'bg-rose-500/20 border-rose-500/50 text-rose-300'
+            }`}
+          >
+            {passed ? 'ЗАЧЁТ' : 'НЕЗАЧЁТ'}
+          </span>
+        </div>
 
-        {/* Расшифровка монолога + живой счётчик предложений */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="font-medium text-slate-300">Текст вашего монолога:</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`px-2.5 py-0.5 rounded-md font-semibold ${
-                  monologueSentences >= 10
-                    ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40'
-                    : 'bg-slate-800 text-amber-200'
-                }`}
-              >
-                Предложений: {monologueSentences} / 10 (норма ФИПИ)
-              </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 font-semibold">
-                Слов: {monologueWords}
-              </span>
+        {[1, 2, 3, 4].map((tableNum) => (
+          <div
+            key={tableNum}
+            className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2"
+          >
+            <div className="text-xs font-semibold text-slate-300">
+              {TABLE_TITLES[tableNum]}
+            </div>
+            <div className="space-y-1.5">
+              {FIPA_CRITERIA.filter((c) => c.table === tableNum).map((crit) => {
+                const current = scores[crit.id] ?? 0;
+                const m2Disabled = crit.id === 'm2' && (scores.m1 ?? 0) === 0;
+                const options = Array.from({ length: crit.maxScore + 1 }, (_, i) => i);
+                return (
+                  <div
+                    key={crit.id}
+                    className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="text-slate-300">
+                      <span className="font-mono-num text-violet-300 mr-1.5">
+                        {crit.code}
+                      </span>
+                      {crit.title} (0–{crit.maxScore})
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {options.map((pt) => {
+                        const disabled = m2Disabled && pt > 0;
+                        const selected = current === pt;
+                        return (
+                          <button
+                            key={pt}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() =>
+                              setScores((prev) => ({ ...prev, [crit.id]: pt }))
+                            }
+                            className={`w-8 h-7 rounded-md border text-xs font-semibold transition-colors ${
+                              selected
+                                ? 'bg-violet-600 border-violet-400 text-white'
+                                : disabled
+                                ? 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-violet-500/60 cursor-pointer'
+                            }`}
+                          >
+                            {pt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        ))}
 
-          <textarea
-            rows={5}
-            value={monologueTranscript}
-            onChange={(e) => setMonologueTranscript(e.target.value)}
-            placeholder="Впишите текст монолога или надиктуйте его через Win+H для подсчёта предложений..."
-            className="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-amber-400/60 focus:outline-none p-3 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600 leading-relaxed"
-          />
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+          <div className="text-sm font-semibold text-white">
+            Итого: <span className="font-mono-num text-lg">{totalScore}</span> / {FIPA_MAX_TOTAL} б.
+          </div>
+          <button
+            type="button"
+            onClick={handleSaveScores}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
+              savedToast
+                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {savedToast ? 'Сохранено!' : 'Сохранить баллы в результатах ученика'}
+          </button>
         </div>
       </div>
 
-      {/* Кнопка завершения собеседования */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1917]/90 border border-emerald-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <p className="text-xs text-slate-300 leading-relaxed">
-          Для получения «Зачёта» на собеседовании нужно набрать от 10 баллов из 20 (включая монолог ≥ 10 фраз).
-        </p>
-        {!finished ? (
-          <button
-            type="button"
-            onClick={handleFinishExam}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 transition-all cursor-pointer whitespace-nowrap"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Завершить собеседование и засчитать
-          </button>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-sm font-semibold">
-            <CheckCircle2 className="w-4 h-4" />
-            Собеседование завершено · Зачёт!
-          </span>
-        )}
-      </div>
-
-      {/* Сброс варианта */}
       <div className="flex justify-center">
         <button
           type="button"
-          onClick={handleResetVariant}
+          onClick={handleReset}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Сбросить текущий вариант
+          Сбросить всё
         </button>
       </div>
     </div>
