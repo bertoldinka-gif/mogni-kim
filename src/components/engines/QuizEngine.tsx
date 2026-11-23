@@ -98,6 +98,12 @@ const MARKER_STYLE_BY_ID: Record<Exclude<MarkerTool, 'none'>, string> = {
   conjunction: 'bg-fuchsia-500/25 text-fuchsia-200 rounded px-1',
 };
 
+export interface QuizDraftState {
+  selectedIndices: number[];
+  wordMarks: Record<string, Exclude<MarkerTool, 'none'>>;
+  optionCommas: Record<string, boolean>;
+}
+
 interface QuizEngineProps {
   question: QuizQuestion;
   sessionId?: string;
@@ -106,6 +112,8 @@ interface QuizEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ selectedIndices: number[] }>;
+  draftState?: QuizDraftState;
+  onDraftChange?: (draft: QuizDraftState) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -128,6 +136,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -138,8 +148,25 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   onMarkLearned,
 }) => {
   const isMultiple = question.type === 'multiple_choice';
+
+  const initialSelectedIndices = (): number[] => {
+    if (savedState?.userState?.selectedIndices) return savedState.userState.selectedIndices;
+    if (draftState?.selectedIndices) return draftState.selectedIndices;
+    return [];
+  };
+
+  const initialWordMarks = (): Record<string, Exclude<MarkerTool, 'none'>> => {
+    if (draftState?.wordMarks) return draftState.wordMarks;
+    return {};
+  };
+
+  const initialOptionCommas = (): Record<string, boolean> => {
+    if (draftState?.optionCommas) return draftState.optionCommas;
+    return {};
+  };
+
   const [selectedIndices, setSelectedIndices] = useState<number[]>(
-    () => savedState?.userState?.selectedIndices ?? []
+    initialSelectedIndices
   );
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
@@ -149,12 +176,25 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   const [mentorQuote, setMentorQuote] = useState<string | null>(
     () => savedState?.mentorQuote ?? null
   );
-   const [activeTool, setActiveTool] = useState<MarkerTool>('none');
-  const [wordMarks, setWordMarks] = useState<Record<string, Exclude<MarkerTool, 'none'>>>({});
-  const [optionCommas, setOptionCommas] = useState<Record<string, boolean>>({});
+  const [activeTool, setActiveTool] = useState<MarkerTool>('none');
+  const [wordMarks, setWordMarks] = useState<Record<string, Exclude<MarkerTool, 'none'>>>(
+    initialWordMarks
+  );
+  const [optionCommas, setOptionCommas] = useState<Record<string, boolean>>(
+    initialOptionCommas
+  );
 
   useEffect(() => {
-    setSelectedIndices(savedState?.userState?.selectedIndices ?? []);
+    const restoredIndices =
+      savedState?.userState?.selectedIndices ??
+      draftState?.selectedIndices ??
+      [];
+    const restoredMarks = draftState?.wordMarks ?? {};
+    const restoredCommas = draftState?.optionCommas ?? {};
+
+    setSelectedIndices(restoredIndices);
+    setWordMarks(restoredMarks);
+    setOptionCommas(restoredCommas);
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
@@ -162,9 +202,20 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     setLearnedClicked(false);
     setMentorQuote(savedState?.mentorQuote ?? null);
     setActiveTool('none');
-    setWordMarks({});
-    setOptionCommas({});
-  }, [question.id, savedState]);
+  }, [question.id, savedState, draftState]);
+
+  const pushDraft = (
+    nextIndices: number[],
+    nextMarks: Record<string, Exclude<MarkerTool, 'none'>>,
+    nextCommas: Record<string, boolean>
+  ) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({
+      selectedIndices: nextIndices,
+      wordMarks: nextMarks,
+      optionCommas: nextCommas,
+    });
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -198,9 +249,11 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       } else {
         next[key] = activeTool;
       }
+      pushDraft(selectedIndices, next, optionCommas);
       return next;
     });
   };
+
   const toggleOptionComma = (commaKey: string) => {
     if (submitted) return;
     setOptionCommas((prev) => {
@@ -210,6 +263,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       } else {
         next[commaKey] = true;
       }
+      pushDraft(selectedIndices, wordMarks, next);
       return next;
     });
   };
@@ -317,9 +371,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       );
     });
   };
-      const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
+
+  const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
     let preparedText = text;
-        const isEgeTask2 =
+    const isEgeTask2 =
       question.kimTaskNumber === 2 &&
       (question.topicTag?.includes('ЕГЭ') || question.id.startsWith('ege-'));
 
@@ -466,9 +521,13 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       checkAnswer(next);
       return;
     }
-    setSelectedIndices((prev) =>
-      prev.includes(idx) ? prev.filter((item) => item !== idx) : [...prev, idx]
-    );
+    setSelectedIndices((prev) => {
+      const next = prev.includes(idx)
+        ? prev.filter((item) => item !== idx)
+        : [...prev, idx];
+      pushDraft(next, wordMarks, optionCommas);
+      return next;
+    });
   };
 
   const isOptionCorrect = (idx: number): boolean => {
@@ -494,8 +553,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     question.options.length >= 2 &&
     question.options.every((opt) => stripLeadingOptionNumber(opt).length <= 36);
 
-  // Detect text-based comprehension tasks (Работа с текстом, ОГЭ 10–13, ЕГЭ 23–26, or passage/contextText)
-  // while keeping short grammar/lexicon items (e.g., Задание 4 Орфоэпия, Задание 5 Паронимы) in 2-column split-screen.
   const combinedLabel = `${sessionTitle} ${question.topicTag || ''}`.toLowerCase();
   const isTextAnalysisModule =
     sessionId === 'g-text-work' ||
@@ -515,7 +572,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
     ) ||
     (combinedLabel.includes('егэ') &&
       /задание\s*(2|3)\b/.test(combinedLabel));
-    const isTask16CommaMode =
+  const isTask16CommaMode =
     question.kimTaskNumber === 16 ||
     sessionId === 'ege-16' ||
     /задани[ея]\s*16\b/.test(combinedLabel);
@@ -574,7 +631,10 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
         {hasMarks && (
           <button
             type="button"
-            onClick={() => setWordMarks({})}
+            onClick={() => {
+              setWordMarks({});
+              pushDraft(selectedIndices, {}, optionCommas);
+            }}
             className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-rose-500/40 text-[11px] text-slate-400 hover:text-rose-300 transition-colors cursor-pointer ml-auto"
           >
             <RotateCcw className="w-3 h-3" />
@@ -683,7 +743,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           );
         }
 
-                if (showScratchpad && !hasOptionQuotes) {
+        if (showScratchpad && !hasOptionQuotes) {
           const cleaned = stripLeadingOptionNumber(option);
           const commaCount = isTask16CommaMode ? countCommasForOption(idx) : 0;
           const useTargetParen =
@@ -814,9 +874,7 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
   if (isFullWidthTextMode) {
     return (
       <div className="max-w-5xl mx-auto w-full space-y-4">
-        {/* Full-Width Single-Column Question Card */}
         <div className="p-4 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
-          {/* Header with Top-Right Hint Toggle */}
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-medium text-slate-400">
               {question.topicTag || 'Работа с текстом'} ·{' '}
@@ -840,7 +898,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             )}
           </div>
 
-          {/* Collapsible Hint Inline */}
           {showHint && question.hint && !submitted && (
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 leading-relaxed flex items-start gap-2.5">
               <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
@@ -848,7 +905,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             </div>
           )}
 
-          {/* Spacious Reading Passage Container (supports bold targets & optional marker scratchpad) */}
           {passageText && (
             <div
               className={`p-4 sm:p-5 rounded-xl bg-[#080B14]/85 border border-slate-800/90 text-sm sm:text-[15px] text-slate-200 leading-relaxed whitespace-pre-line ${
@@ -863,18 +919,14 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             </div>
           )}
 
-          {/* Question Prompt */}
           <h3 className="w-full [text-wrap:wrap] font-display text-base sm:text-lg font-semibold text-white leading-snug">
             {question.prompt}
           </h3>
 
-          {/* Syntactic Scratchpad Marker Toolbar */}
           {renderScratchpadToolbar()}
 
-          {/* Options Grid */}
           {renderOptionsGrid()}
 
-          {/* Desktop Pre-Submit Navigation & Multiple-choice Submit Row */}
           {!submitted && (
             <div className="hidden lg:flex items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2">
@@ -915,7 +967,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           )}
         </div>
 
-        {/* Full-Width Horizontal Feedback + Mentor Banner */}
         {submitted && (
           <div
             role="status"
@@ -927,7 +978,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
             }`}
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Left: Status, Mentor Bubble, Correct Highlight & Explanation */}
               <div className="flex-1 min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-2.5">
                   {isCorrect ? (
@@ -982,7 +1032,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
                 </div>
               </div>
 
-              {/* Right: Desktop Action Buttons alongside explanation */}
               <div className="hidden lg:flex flex-col gap-2.5 shrink-0 min-w-[230px]">
                 {isReviewMode && isCorrect && onMarkLearned && (
                   <button
@@ -1034,7 +1083,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           </div>
         )}
 
-        {/* Fixed Mobile Bottom Action Bar (< lg) */}
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#080B14]/95 backdrop-blur-md border-t border-slate-800 px-4 py-3">
           {!submitted ? (
             <div className="flex items-center gap-2">
@@ -1124,16 +1172,13 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
 
   return (
     <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start max-w-6xl mx-auto">
-      {/* Left Column: Unobstructed Question Card */}
       <div className="lg:col-span-7 p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-3.5 lg:space-y-5">
-        {/* Context text if provided */}
         {question.contextText && (
           <div className="p-3 lg:p-3.5 rounded-xl bg-[#080B14]/80 border border-slate-800/80 text-xs sm:text-sm text-slate-300 leading-relaxed">
             {question.contextText}
           </div>
         )}
 
-        {/* Question prompt & type indicator */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-medium text-slate-400">
@@ -1163,10 +1208,8 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
           </h3>
         </div>
 
-        {/* Smart 2-Column or 1-Column Options Grid */}
         {renderOptionsGrid()}
 
-        {/* Multiple-choice submit button */}
         {isMultiple && !submitted && (
           <div className="flex justify-end pt-1">
             <button
@@ -1181,7 +1224,6 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
         )}
       </div>
 
-      {/* Right Column (Desktop) / Stacked + Fixed Bottom Bar (Mobile) */}
       <TrainerSidePanel
         submitted={submitted}
         isCorrect={isCorrect}
