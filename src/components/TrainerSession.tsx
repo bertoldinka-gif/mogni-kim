@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Award,
+  Bookmark,
   CheckCircle2,
   Clock,
   Flame,
@@ -126,6 +127,61 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const answeredIndicesRef = useRef<Set<number>>(new Set());
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
+    const mockDraftKey = session.isMockExam
+    ? `mogni_mock_draft_${activeUserId ?? 'guest'}_${session.id}`
+    : null;
+
+  useEffect(() => {
+    if (!mockDraftKey) return;
+    try {
+      const raw = localStorage.getItem(mockDraftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft && draft.total === total && !draft.finished) {
+        setCurrentIndex(draft.currentIndex ?? 0);
+        setCorrectCount(draft.correctCount ?? 0);
+        setWrongCount(draft.wrongCount ?? 0);
+        setComboStreak(draft.comboStreak ?? 0);
+        setNetXpDelta(draft.netXpDelta ?? 0);
+        if (Array.isArray(draft.questionResults)) setQuestionResults(draft.questionResults);
+        if (draft.savedStates) setSavedStates(draft.savedStates);
+        if (Array.isArray(draft.answeredIndices)) {
+          answeredIndicesRef.current = new Set(draft.answeredIndices);
+        }
+        const prevElapsed = Number(draft.elapsedSeconds ?? 0);
+        setElapsedSeconds(prevElapsed);
+        mockStartTimeRef.current = Date.now() - prevElapsed * 1000;
+      }
+    } catch {
+      // ignore
+    }
+  }, [mockDraftKey, total]);
+
+  const handleSaveMockAndExit = () => {
+    if (mockDraftKey) {
+      try {
+        localStorage.setItem(
+          mockDraftKey,
+          JSON.stringify({
+            total,
+            finished: false,
+            currentIndex,
+            correctCount,
+            wrongCount,
+            comboStreak,
+            netXpDelta,
+            elapsedSeconds,
+            questionResults,
+            savedStates,
+            answeredIndices: Array.from(answeredIndicesRef.current),
+          })
+        );
+      } catch {
+        // ignore
+      }
+    }
+    onExit();
+  };
 
   const triggerXpToast = (amount: number, isPenalty: boolean) => {
     const key = Date.now() + Math.random();
@@ -216,7 +272,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     setCurrentIndex((i) => Math.max(0, i - 1));
   };
 
-  const handleNext = () => {
+   const handleNext = () => {
     if (currentIndex + 1 >= total) {
       const finalDuration = Math.max(
         0,
@@ -226,6 +282,9 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         setElapsedSeconds(finalDuration);
       }
       setFinished(true);
+      if (mockDraftKey) {
+        localStorage.removeItem(mockDraftKey);
+      }
       if (!session.isReviewMode) {
         if (session.isMockExam) {
           const examType: 'oge' | 'ege' =
@@ -254,7 +313,10 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     }
   };
 
-  const handleRestart = () => {
+   const handleRestart = () => {
+    if (mockDraftKey) {
+      localStorage.removeItem(mockDraftKey);
+    }
     if (onRestartFresh && !session.isReviewMode) {
       onRestartFresh();
       return;
@@ -437,16 +499,29 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto space-y-3.5 lg:space-y-4 pb-24 lg:pb-0">
-      {/* Top Session Bar */}
+           {/* Top Session Bar */}
       <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onExit}
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Завершить</span>
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onExit}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Завершить</span>
+          </button>
+
+          {session.isMockExam && (
+            <button
+              type="button"
+              onClick={handleSaveMockAndExit}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-xs font-semibold text-emerald-200 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>Сохранить</span>
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-400 min-w-0">
           {/* Glowing Combo Streak Badge when >= 2 */}
