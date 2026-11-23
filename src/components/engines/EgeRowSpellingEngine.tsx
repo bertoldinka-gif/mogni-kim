@@ -153,7 +153,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
       }, 30);
       return () => window.clearTimeout(timer);
     }
-  }, [question.id, question.correctRows, totalSlots, savedState, draftState]);
+  }, [question.id, question.correctRows, totalSlots, savedState]);
 
   const canAffordHint = userXp >= 5;
 
