@@ -10,6 +10,8 @@ interface EgeRowSpellingEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ letterValues: string[]; answerInput: string }>;
+  draftState?: { letterValues: string[]; answerInput: string };
+  onDraftChange?: (draft: { letterValues: string[]; answerInput: string }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -67,6 +69,8 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -78,18 +82,27 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
 }) => {
   const totalSlots = question.rows.reduce((acc, r) => acc + r.words.length, 0);
 
-  const [letterValues, setLetterValues] = useState<string[]>(() =>
-    savedState?.userState?.letterValues ?? Array(totalSlots).fill('')
-  );
-  const [answerInput, setAnswerInput] = useState(
-    () => savedState?.userState?.answerInput ?? ''
-  );
+  const initialLetterValues = (): string[] => {
+    if (savedState?.userState?.letterValues) return savedState.userState.letterValues;
+    if (draftState?.letterValues) return draftState.letterValues;
+    return Array(totalSlots).fill('');
+  };
+
+  const initialAnswerInput = (): string => {
+    if (savedState?.userState?.answerInput !== undefined) return savedState.userState.answerInput;
+    if (draftState?.answerInput !== undefined) return draftState.answerInput;
+    return '';
+  };
+
+  const [letterValues, setLetterValues] = useState<string[]>(initialLetterValues);
+  const [answerInput, setAnswerInput] = useState(initialAnswerInput);
   const [focusedSlot, setFocusedSlot] = useState<number>(0);
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [answerNumbersOk, setAnswerNumbersOk] = useState(() => {
-    if (!savedState?.userState?.answerInput) return false;
-    const parsed = parseAnswerRows(savedState.userState.answerInput);
+    const baseAns = initialAnswerInput();
+    if (!baseAns) return false;
+    const parsed = parseAnswerRows(baseAns);
     const expectedRowsSorted = [...question.correctRows].sort((a, b) => a - b);
     return (
       parsed.isValid &&
@@ -108,8 +121,14 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
   const answerInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const restoredLetters = savedState?.userState?.letterValues ?? Array(totalSlots).fill('');
-    const restoredAns = savedState?.userState?.answerInput ?? '';
+    const restoredLetters =
+      savedState?.userState?.letterValues ??
+      draftState?.letterValues ??
+      Array(totalSlots).fill('');
+    const restoredAns =
+      savedState?.userState?.answerInput ??
+      draftState?.answerInput ??
+      '';
     const parsed = parseAnswerRows(restoredAns);
     const expectedRowsSorted = [...question.correctRows].sort((a, b) => a - b);
     const restoredNumsOk =
@@ -134,7 +153,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
       }, 30);
       return () => window.clearTimeout(timer);
     }
-  }, [question.id, question.correctRows, totalSlots, savedState]);
+  }, [question.id, question.correctRows, totalSlots, savedState, draftState]);
 
   const canAffordHint = userXp >= 5;
 
@@ -164,6 +183,11 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
     slotRefs.current[index]?.focus();
   };
 
+  const pushDraft = (nextLetters: string[], nextAnswer: string) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({ letterValues: nextLetters, answerInput: nextAnswer });
+  };
+
   const handleSlotChange = (
     slotIdx: number,
     e: React.ChangeEvent<HTMLInputElement>
@@ -174,6 +198,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
       setLetterValues((prev) => {
         const copy = [...prev];
         copy[slotIdx] = '';
+        pushDraft(copy, answerInput);
         return copy;
       });
       return;
@@ -188,6 +213,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
     setLetterValues((prev) => {
       const copy = [...prev];
       copy[slotIdx] = normalized;
+      pushDraft(copy, answerInput);
       return copy;
     });
 
@@ -233,6 +259,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
       setLetterValues((prev) => {
         const copy = [...prev];
         copy[slotIdx] = '';
+        pushDraft(copy, answerInput);
         return copy;
       });
       focusSlot(slotIdx + 1);
@@ -248,6 +275,7 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
         setLetterValues((prev) => {
           const copy = [...prev];
           copy[slotIdx] = '';
+          pushDraft(copy, answerInput);
           return copy;
         });
       }
@@ -506,7 +534,11 @@ export const EgeRowSpellingEngine: React.FC<EgeRowSpellingEngineProps> = ({
               value={answerInput}
               placeholder="Напр.: 12"
               onFocus={() => setFocusedSlot(-1)}
-              onChange={(e) => setAnswerInput(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setAnswerInput(next);
+                pushDraft(letterValues, next);
+              }}
               onKeyDown={handleAnswerInputKeyDown}
               className={`w-32 px-3.5 py-2 rounded-lg border font-mono-num text-base font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-500 focus:outline-none transition-all ${
                 submitted
