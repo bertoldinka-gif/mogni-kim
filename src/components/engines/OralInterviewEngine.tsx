@@ -3,7 +3,6 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
-  Loader2,
   MessageSquare,
   Mic,
   MicOff,
@@ -14,13 +13,12 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { ORAL_INTERVIEW_VARIANTS } from '../../data/oge/oralInterviewBank';
-import { transcribeRussianAudio } from '../../services/whisperStt';
 
 interface OralInterviewEngineProps {
   onComplete: (passed: boolean, summaryText: string) => void;
 }
 
-type SpeechTarget =
+type RecordTarget =
   | { kind: 'reading' }
   | { kind: 'dialogue'; questionNumber: number }
   | { kind: 'monologue' }
@@ -65,10 +63,12 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
   // Задание 1: чтение вслух
   const [readingTranscript, setReadingTranscript] = useState('');
-  const [readingSecondsSpent, setReadingSecondsSpent] = useState(0);
+  const [readingAudioUrl, setReadingAudioUrl] = useState<string | null>(null);
+  const [readingDurationSec, setReadingDurationSec] = useState(0);
 
   // Задание 2: ответы на вопросы беседы
   const [dialogueAnswers, setDialogueAnswers] = useState<Record<number, string>>({});
+  const [dialogueAudioUrls, setDialogueAudioUrls] = useState<Record<number, string>>({});
   const [revealedSamples, setRevealedSamples] = useState<Record<number, boolean>>({});
   const [readingCompleted, setReadingCompleted] = useState(false);
   const [currentDialogueStep, setCurrentDialogueStep] = useState(1);
@@ -77,19 +77,19 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
   // Задание 3: монолог (1 из 3 тем)
   const [selectedTopicNum, setSelectedTopicNum] = useState<1 | 2 | 3>(1);
   const [monologueTranscript, setMonologueTranscript] = useState('');
+  const [monologueAudioUrl, setMonologueAudioUrl] = useState<string | null>(null);
   const [showMonologueHelp, setShowMonologueHelp] = useState(false);
 
   // Завершение собеседования
   const [finished, setFinished] = useState(false);
 
-  // Локальная запись и распознавание через Whisper
-  const [recordingTarget, setRecordingTarget] = useState<SpeechTarget>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [modelStatus, setModelStatus] = useState<string | null>(null);
+  // Запись аудио через MediaRecorder
+  const [recordingTarget, setRecordingTarget] = useState<RecordTarget>(null);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const activeStreamRef = useRef<MediaStream | null>(null);
+  const recordingStartRef = useRef<number>(0);
 
   const playBell = () => {
     if (!soundEnabled) return;
@@ -148,15 +148,6 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     return () => window.clearInterval(id);
   }, [timerRunning, soundEnabled]);
 
-  // Секундомер чтения вслух для подсчёта темпа (слов/мин)
-  useEffect(() => {
-    if (recordingTarget?.kind !== 'reading') return;
-    const id = window.setInterval(() => {
-      setReadingSecondsSpent((s) => s + 1);
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [recordingTarget]);
-
   const startStageTimer = (label: string, totalSeconds: number) => {
     setTimerLabel(label);
     setSecondsLeft(totalSeconds);
@@ -173,16 +164,13 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     }
   };
 
-  const toggleRecording = async (target: NonNullable<SpeechTarget>) => {
-    if (isTranscribing) return;
-
+  const toggleRecording = async (target: NonNullable<RecordTarget>) => {
     const isSame =
       recordingTarget?.kind === target.kind &&
       (target.kind !== 'dialogue' ||
         (recordingTarget?.kind === 'dialogue' &&
           recordingTarget.questionNumber === target.questionNumber));
 
-    // Остановка текущей записи
     if (isSame) {
       setRecordingTarget(null);
       if (target.kind === 'reading' && !readingCompleted) {
@@ -192,7 +180,6 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       return;
     }
 
-    // Начинаем новую запись
     setSpeechError(null);
     stopActiveRecorder();
     activeStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -217,6 +204,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
+      recordingStartRef.current = Date.now();
 
       recorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) {
@@ -224,10 +212,14 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         }
       };
 
-      recorder.onstop = async () => {
-        // Освобождаем микрофон сразу
+      recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         activeStreamRef.current = null;
+
+        const elapsedSec = Math.max(
+          1,
+          Math.round((Date.now() - recordingStartRef.current) / 1000)
+        );
 
         const audioBlob = new Blob(audioChunksRef.current, {
           type: recorder.mimeType || 'audio/webm',
@@ -239,36 +231,24 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           return;
         }
 
-        setIsTranscribing(true);
-        setModelStatus(null);
-        try {
-          const text = await transcribeRussianAudio(audioBlob, (_pct, status) => {
-            setModelStatus(status);
+        const url = URL.createObjectURL(audioBlob);
+        if (target.kind === 'reading') {
+          setReadingAudioUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
           });
-          const clean = (text ?? '').trim();
-          if (!clean) {
-            setSpeechError('Не удалось распознать речь. Попробуйте записать ещё раз.');
-            return;
-          }
-          if (target.kind === 'reading') {
-            setReadingTranscript((prev) => `${prev} ${clean}`.trim());
-          } else if (target.kind === 'dialogue') {
-            setDialogueAnswers((prev) => ({
-              ...prev,
-              [target.questionNumber]: `${prev[target.questionNumber] ?? ''} ${clean}`.trim(),
-            }));
-          } else if (target.kind === 'monologue') {
-            setMonologueTranscript((prev) => `${prev} ${clean}`.trim());
-          }
-        } catch (err) {
-          setSpeechError(
-            err instanceof Error
-              ? `Ошибка распознавания: ${err.message}`
-              : 'Ошибка распознавания речи. Попробуйте ещё раз.'
-          );
-        } finally {
-          setIsTranscribing(false);
-          setModelStatus(null);
+          setReadingDurationSec(elapsedSec);
+        } else if (target.kind === 'dialogue') {
+          setDialogueAudioUrls((prev) => {
+            const old = prev[target.questionNumber];
+            if (old) URL.revokeObjectURL(old);
+            return { ...prev, [target.questionNumber]: url };
+          });
+        } else if (target.kind === 'monologue') {
+          setMonologueAudioUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
         }
       };
 
@@ -284,28 +264,20 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
     }
   };
 
-  // Аналитика Задания 1 (сверка прочитанного вслух с эталонным текстом)
-  const readingStats = useMemo(() => {
+  // Аналитика Задания 1
+  const readingAccuracy = useMemo(() => {
     const refWords = tokenizeWords(variant.readingText);
     const spokenWords = tokenizeWords(readingTranscript);
+    if (refWords.length === 0 || spokenWords.length === 0) return 0;
     const spokenSet = new Set(spokenWords);
     const matchedCount = refWords.filter((w) => spokenSet.has(w)).length;
-    const accuracy =
-      refWords.length > 0 && spokenWords.length > 0
-        ? Math.min(100, Math.round((matchedCount / refWords.length) * 100))
-        : 0;
-    const wpm =
-      readingSecondsSpent >= 3 && spokenWords.length > 0
-        ? Math.round((spokenWords.length / readingSecondsSpent) * 60)
-        : 0;
-    return {
-      totalRef: refWords.length,
-      spokenCount: spokenWords.length,
-      accuracy,
-      wpm,
-      spokenSet,
-    };
-  }, [variant.readingText, readingTranscript, readingSecondsSpent]);
+    return Math.min(100, Math.round((matchedCount / refWords.length) * 100));
+  }, [variant.readingText, readingTranscript]);
+
+  const readingWpm =
+    readingDurationSec > 0 && variant.wordCount > 0
+      ? Math.round((variant.wordCount / readingDurationSec) * 60)
+      : 0;
 
   const activeMonologueTopic =
     variant.monologueTopics.find((t) => t.number === selectedTopicNum) ??
@@ -318,10 +290,38 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
   const handleFinishExam = () => {
     stopActiveRecorder();
+    setRecordingTarget(null);
     setTimerRunning(false);
     setFinished(true);
-    const summary = `Итоговое собеседование (${variant.title}): чтение ${readingStats.accuracy}%, монолог ${monologueSentences} предл.`;
+    const summary = `Итоговое собеседование (${variant.title}): темп чтения ~${readingWpm} сл/мин, монолог ${monologueSentences} предл.`;
     onComplete(true, summary);
+  };
+
+  const handleResetVariant = () => {
+    stopActiveRecorder();
+    activeStreamRef.current?.getTracks().forEach((t) => t.stop());
+    activeStreamRef.current = null;
+    setRecordingTarget(null);
+    setReadingTranscript('');
+    setReadingAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setReadingDurationSec(0);
+    setDialogueAnswers({});
+    setDialogueAudioUrls((prev) => {
+      Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
+      return {};
+    });
+    setMonologueTranscript('');
+    setMonologueAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setFinished(false);
+    setReadingCompleted(false);
+    setCurrentDialogueStep(1);
+    setShowAllQuestions(false);
   };
 
   return (
@@ -351,9 +351,21 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                     setRecordingTarget(null);
                     setVariantId(v.id);
                     setReadingTranscript('');
-                    setReadingSecondsSpent(0);
+                    setReadingAudioUrl((prev) => {
+                      if (prev) URL.revokeObjectURL(prev);
+                      return null;
+                    });
+                    setReadingDurationSec(0);
                     setDialogueAnswers({});
+                    setDialogueAudioUrls((prev) => {
+                      Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
+                      return {};
+                    });
                     setMonologueTranscript('');
+                    setMonologueAudioUrl((prev) => {
+                      if (prev) URL.revokeObjectURL(prev);
+                      return null;
+                    });
                     setFinished(false);
                     setReadingCompleted(false);
                     setCurrentDialogueStep(1);
@@ -426,16 +438,6 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         </div>
       </div>
 
-      {/* Плашка статуса локальной расшифровки Whisper */}
-      {(isTranscribing || modelStatus) && (
-        <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/40 text-xs sm:text-sm text-violet-200 flex items-center gap-2.5">
-          <Loader2 className="w-4 h-4 animate-spin shrink-0 text-violet-300" />
-          <span>
-            Идёт локальная расшифровка речи (Whisper)... {modelStatus ?? ''}
-          </span>
-        </div>
-      )}
-
       {speechError && (
         <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/40 text-xs text-rose-300">
           {speechError}
@@ -463,9 +465,8 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            disabled={isTranscribing}
             onClick={() => toggleRecording({ kind: 'reading' })}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
               recordingTarget?.kind === 'reading'
                 ? 'bg-rose-500 text-white animate-pulse'
                 : 'bg-violet-600 hover:bg-violet-500 text-white'
@@ -474,27 +475,31 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             {recordingTarget?.kind === 'reading' ? (
               <>
                 <MicOff className="w-4 h-4" />
-                Остановить и расшифровать
+                Остановить
               </>
             ) : (
               <>
                 <Mic className="w-4 h-4" />
-                Читать вслух (Запись речи)
+                Записать свой голос
               </>
             )}
           </button>
 
-          {readingTranscript && (
+          {readingAudioUrl && (
             <button
               type="button"
               onClick={() => {
                 setReadingTranscript('');
-                setReadingSecondsSpent(0);
+                setReadingDurationSec(0);
+                setReadingAudioUrl((prev) => {
+                  if (prev) URL.revokeObjectURL(prev);
+                  return null;
+                });
               }}
               className="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 inline-flex items-center gap-1 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Сбросить
+              Сбросить запись
             </button>
           )}
         </div>
@@ -503,53 +508,50 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           {variant.readingIntro}
         </p>
 
-        {/* Текст для чтения с подсветкой распознанных слов */}
+        {/* Текст для чтения */}
         <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-sm sm:text-base text-slate-200 leading-relaxed space-y-2">
           {variant.readingText.split('\n').map((para, pIdx) => (
-            <p key={pIdx}>
-              {para.split(/(\s+)/).map((tok, tIdx) => {
-                if (/^\s+$/.test(tok) || !tok) return tok;
-                const clean = tokenizeWords(tok).at(0) ?? '';
-                const isMatched =
-                  readingStats.spokenCount > 0 &&
-                  clean &&
-                  readingStats.spokenSet.has(clean);
-                return (
-                  <span
-                    key={tIdx}
-                    className={
-                      readingStats.spokenCount > 0
-                        ? isMatched
-                          ? 'text-emerald-300'
-                          : 'text-amber-300/90 underline decoration-amber-500/40'
-                        : undefined
-                    }
-                  >
-                    {tok}
-                  </span>
-                );
-              })}
-            </p>
+            <p key={pIdx}>{para}</p>
           ))}
         </div>
 
-        {/* Расшифровка чтения и метрики точности / темпа */}
-        {(isTranscribing || readingTranscript) && (
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5 text-xs">
+        {/* Встроенный плеер + темп чтения + точность слов */}
+        {readingAudioUrl && (
+          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
             <div className="flex flex-wrap items-center gap-3 font-semibold text-slate-300">
-              <span>Распознанная речь:</span>
-              <span className="text-emerald-300">
-                Точность слов: {readingStats.accuracy}%
+              <span>Ваша запись:</span>
+              <span className="text-cyan-300">
+                Длительность: {readingDurationSec} сек.
               </span>
-              {readingStats.wpm > 0 && (
-                <span className="text-cyan-300">
-                  Темп: ~{readingStats.wpm} слов/мин
+              {readingWpm > 0 && (
+                <span
+                  className={
+                    readingWpm >= 95 && readingWpm <= 130
+                      ? 'text-emerald-300'
+                      : 'text-amber-300'
+                  }
+                >
+                  Темп: ~{readingWpm} слов/мин
+                </span>
+              )}
+              {readingTranscript.trim() && (
+                <span className="text-emerald-300">
+                  Точность слов: {readingAccuracy}%
                 </span>
               )}
             </div>
-            <div className="text-slate-400 leading-relaxed">
-              {readingTranscript}
-            </div>
+            <audio controls src={readingAudioUrl} className="w-full" />
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Норма ФИПИ для выразительного чтения — 95–130 слов/мин. Для расчёта точности
+              впишите распознанный текст (например, через системную диктовку Win+H) в поле ниже.
+            </p>
+            <textarea
+              rows={3}
+              value={readingTranscript}
+              onChange={(e) => setReadingTranscript(e.target.value)}
+              placeholder="Впишите или надиктуйте (Win+H) текст, чтобы увидеть точность слов в %..."
+              className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-violet-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
+            />
           </div>
         )}
 
@@ -628,6 +630,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                       recordingTarget.questionNumber === q.number;
                     const userAns = dialogueAnswers[q.number] ?? '';
                     const sampleShown = Boolean(revealedSamples[q.number]);
+                    const audioUrl = dialogueAudioUrls[q.number];
                     return (
                       <div
                         key={q.number}
@@ -641,11 +644,10 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            disabled={isTranscribing}
                             onClick={() =>
                               toggleRecording({ kind: 'dialogue', questionNumber: q.number })
                             }
-                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 cursor-pointer ${
                               isRecThis
                                 ? 'bg-rose-500 text-white animate-pulse'
                                 : 'bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 hover:bg-cyan-600/50'
@@ -654,12 +656,12 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                             {isRecThis ? (
                               <>
                                 <MicOff className="w-3.5 h-3.5" />
-                                Остановить и расшифровать
+                                Остановить
                               </>
                             ) : (
                               <>
                                 <Mic className="w-3.5 h-3.5" />
-                                Ответить голосом
+                                Записать свой голос
                               </>
                             )}
                           </button>
@@ -678,6 +680,10 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                           </button>
                         </div>
 
+                        {audioUrl && (
+                          <audio controls src={audioUrl} className="w-full" />
+                        )}
+
                         <textarea
                           rows={2}
                           value={userAns}
@@ -687,7 +693,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
                               [q.number]: e.target.value,
                             }))
                           }
-                          placeholder="Надиктуйте или запишите развёрнутый ответ..."
+                          placeholder="Впишите ответ или надиктуйте его через Win+H..."
                           className="w-full rounded-lg bg-slate-950 border border-slate-800 focus:border-cyan-500/60 focus:outline-none p-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600"
                         />
                         {sampleShown && (
@@ -779,9 +785,8 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
 
           <button
             type="button"
-            disabled={isTranscribing}
             onClick={() => toggleRecording({ kind: 'monologue' })}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer ${
               recordingTarget?.kind === 'monologue'
                 ? 'bg-rose-500 text-white animate-pulse'
                 : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
@@ -790,12 +795,12 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             {recordingTarget?.kind === 'monologue' ? (
               <>
                 <MicOff className="w-4 h-4" />
-                Остановить и расшифровать
+                Остановить
               </>
             ) : (
               <>
                 <Mic className="w-4 h-4" />
-                Произнести монолог (Запись)
+                Записать свой голос
               </>
             )}
           </button>
@@ -870,10 +875,15 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
           )}
         </div>
 
+        {/* Плеер записи монолога */}
+        {monologueAudioUrl && (
+          <audio controls src={monologueAudioUrl} className="w-full" />
+        )}
+
         {/* Расшифровка монолога + живой счётчик предложений */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="font-medium text-slate-300">Расшифровка вашего монолога:</span>
+            <span className="font-medium text-slate-300">Текст вашего монолога:</span>
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`px-2.5 py-0.5 rounded-md font-semibold ${
@@ -894,7 +904,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             rows={5}
             value={monologueTranscript}
             onChange={(e) => setMonologueTranscript(e.target.value)}
-            placeholder="Нажмите «Произнести монолог» и говорите в микрофон (или введите текст для проверки)..."
+            placeholder="Впишите текст монолога или надиктуйте его через Win+H для подсчёта предложений..."
             className="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-amber-400/60 focus:outline-none p-3 text-xs sm:text-sm text-slate-100 placeholder:text-slate-600 leading-relaxed"
           />
         </div>
@@ -920,6 +930,18 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
             Собеседование завершено · Зачёт!
           </span>
         )}
+      </div>
+
+      {/* Сброс варианта */}
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleResetVariant}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Сбросить текущий вариант
+        </button>
       </div>
     </div>
   );
