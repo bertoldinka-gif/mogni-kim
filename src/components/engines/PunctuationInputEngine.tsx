@@ -88,12 +88,20 @@ export interface PunctuationSavedState {
   digitsInput: string;
 }
 
+export interface PunctuationDraftState {
+  values: string[];
+  digitsInput: string;
+  wordMarks: Record<string, Exclude<MarkerTool, 'none'>>;
+}
+
 interface PunctuationInputEngineProps {
   question: PunctuationInputQuestion;
   isReviewMode?: boolean;
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<PunctuationSavedState>;
+  draftState?: PunctuationDraftState;
+  onDraftChange?: (draft: PunctuationDraftState) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -134,6 +142,8 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -148,15 +158,30 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   const slotCount = isDigitMode ? 0 : Math.max(0, segments.length - 1);
   const expectedMarks = question.expectedMarks ?? [];
 
-  const [values, setValues] = useState<string[]>(
-    () => savedState?.userState?.values ?? Array(slotCount).fill('')
-  );
-  const [digitsInput, setDigitsInput] = useState<string>(
-    () => savedState?.userState?.digitsInput ?? ''
-  );
+  const initialValues = (): string[] => {
+    if (savedState?.userState?.values) return savedState.userState.values;
+    if (draftState?.values) return draftState.values;
+    return Array(slotCount).fill('');
+  };
+
+  const initialDigitsInput = (): string => {
+    if (savedState?.userState?.digitsInput !== undefined) return savedState.userState.digitsInput;
+    if (draftState?.digitsInput !== undefined) return draftState.digitsInput;
+    return '';
+  };
+
+  const initialWordMarks = (): Record<string, Exclude<MarkerTool, 'none'>> => {
+    if (draftState?.wordMarks) return draftState.wordMarks;
+    return {};
+  };
+
+  const [values, setValues] = useState<string[]>(initialValues);
+  const [digitsInput, setDigitsInput] = useState<string>(initialDigitsInput);
   const [focusedSlot, setFocusedSlot] = useState<number>(0);
   const [activeTool, setActiveTool] = useState<MarkerTool>('none');
-  const [wordMarks, setWordMarks] = useState<Record<string, Exclude<MarkerTool, 'none'>>>({});
+  const [wordMarks, setWordMarks] = useState<Record<string, Exclude<MarkerTool, 'none'>>>(
+    initialWordMarks
+  );
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
   const [showHint, setShowHint] = useState(false);
@@ -170,10 +195,20 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
   const digitsInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    setValues(savedState?.userState?.values ?? Array(slotCount).fill(''));
-    setDigitsInput(savedState?.userState?.digitsInput ?? '');
+    const restoredValues =
+      savedState?.userState?.values ??
+      draftState?.values ??
+      Array(slotCount).fill('');
+    const restoredDigits =
+      savedState?.userState?.digitsInput ??
+      draftState?.digitsInput ??
+      '';
+    const restoredMarks = draftState?.wordMarks ?? {};
+
+    setValues(restoredValues);
+    setDigitsInput(restoredDigits);
+    setWordMarks(restoredMarks);
     setFocusedSlot(0);
-    setWordMarks({});
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
@@ -189,7 +224,20 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
         }
       }, 30);
     }
-  }, [question.id, slotCount, isDigitMode, savedState]);
+  }, [question.id, slotCount, isDigitMode, savedState, draftState]);
+
+  const pushDraft = (
+    nextValues: string[],
+    nextDigits: string,
+    nextMarks: Record<string, Exclude<MarkerTool, 'none'>>
+  ) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({
+      values: nextValues,
+      digitsInput: nextDigits,
+      wordMarks: nextMarks,
+    });
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -217,10 +265,12 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
       } else {
         next[tokenKey] = activeTool;
       }
+      pushDraft(values, digitsInput, next);
       return next;
     });
   };
-    const toggleDigitClick = (digit: string) => {
+
+  const toggleDigitClick = (digit: string) => {
     if (submitted) return;
     const validNums = Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1]);
     const raw = digitsInput.replace(/\D/g, '');
@@ -238,7 +288,9 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     const next = selected.includes(digit)
       ? selected.filter((d) => d !== digit)
       : [...selected, digit].sort((a, b) => Number(a) - Number(b));
-    setDigitsInput(Array.from(new Set(next)).join(''));
+    const nextDigits = Array.from(new Set(next)).join('');
+    setDigitsInput(nextDigits);
+    pushDraft(values, nextDigits, wordMarks);
   };
 
   const focusSlot = (index: number) => {
@@ -256,6 +308,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     setValues((prev) => {
       const copy = [...prev];
       copy[index] = nextChar;
+      pushDraft(copy, digitsInput, wordMarks);
       return copy;
     });
 
@@ -406,7 +459,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
     });
   };
 
-    const renderDigitSentence = () => {
+  const renderDigitSentence = () => {
     const validNums = Array.from(question.sentenceTemplate.matchAll(/\((\d+)\)/g), (m) => m[1]);
     const parseSet = (str: string) => {
       const clean = str.replace(/\D/g, '');
@@ -423,7 +476,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
       }
       return res;
     };
-        const expectedSet = parseSet(question.expectedDigits ?? '');
+    const expectedSet = parseSet(question.expectedDigits ?? '');
     const userSet = parseSet(digitsInput);
     const parts = question.sentenceTemplate.split(/(\(\d+\))/g);
 
@@ -536,7 +589,10 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
             {Object.keys(wordMarks).length > 0 && (
               <button
                 type="button"
-                onClick={() => setWordMarks({})}
+                onClick={() => {
+                  setWordMarks({});
+                  pushDraft(values, digitsInput, {});
+                }}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 hover:border-rose-500/50 text-[11px] text-slate-300 hover:text-rose-200 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -634,7 +690,7 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
               })}
         </div>
 
-        {/* Bottom Controls: Numeric Input (ФИПИ digit mode) or Quick Punctuation Toolbar (slot mode) */}
+        {/* Bottom Controls */}
         {isDigitMode ? (
           <div className="space-y-2.5 pt-1">
             <label
@@ -654,7 +710,10 @@ export const PunctuationInputEngine: React.FC<PunctuationInputEngineProps> = ({
                   disabled={submitted}
                   value={digitsInput}
                   onChange={(e) => {
-                    if (!submitted) setDigitsInput(e.target.value);
+                    if (submitted) return;
+                    const v = e.target.value;
+                    setDigitsInput(v);
+                    pushDraft(values, v, wordMarks);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
