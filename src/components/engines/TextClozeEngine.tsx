@@ -22,6 +22,8 @@ interface TextClozeEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<{ values: string[]; digitsInput: string }>;
+  draftState?: { values: string[]; digitsInput: string };
+  onDraftChange?: (draft: { values: string[]; digitsInput: string }) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -68,6 +70,8 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -84,15 +88,22 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
   const { paragraphs, slots } = parsed;
   const hasDigitAnswerMode = Boolean(question.expectedDigits?.trim());
 
-  const [values, setValues] = useState<string[]>(() => {
-    if (savedState?.userState?.values && savedState.userState.values.length === slots.length) {
-      return savedState.userState.values;
-    }
+  const initialValues = (): string[] => {
+    const fromSaved = savedState?.userState?.values;
+    if (fromSaved && fromSaved.length === slots.length) return fromSaved;
+    const fromDraft = draftState?.values;
+    if (fromDraft && fromDraft.length === slots.length) return fromDraft;
     return Array(slots.length).fill('');
-  });
-  const [digitsInput, setDigitsInput] = useState(
-    () => savedState?.userState?.digitsInput ?? ''
-  );
+  };
+
+  const initialDigitsInput = (): string => {
+    if (savedState?.userState?.digitsInput !== undefined) return savedState.userState.digitsInput;
+    if (draftState?.digitsInput !== undefined) return draftState.digitsInput;
+    return '';
+  };
+
+  const [values, setValues] = useState<string[]>(initialValues);
+  const [digitsInput, setDigitsInput] = useState(initialDigitsInput);
   const [focusedSlot, setFocusedSlot] = useState<number>(0);
   const [openChoiceIdx, setOpenChoiceIdx] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
@@ -109,12 +120,20 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setValues(
-      savedState?.userState?.values && savedState.userState.values.length === slots.length
-        ? savedState.userState.values
-        : Array(slots.length).fill('')
-    );
-    setDigitsInput(savedState?.userState?.digitsInput ?? '');
+    const restoredValues = (() => {
+      const fromSaved = savedState?.userState?.values;
+      if (fromSaved && fromSaved.length === slots.length) return fromSaved;
+      const fromDraft = draftState?.values;
+      if (fromDraft && fromDraft.length === slots.length) return fromDraft;
+      return Array(slots.length).fill('');
+    })();
+    const restoredDigits =
+      savedState?.userState?.digitsInput ??
+      draftState?.digitsInput ??
+      '';
+
+    setValues(restoredValues);
+    setDigitsInput(restoredDigits);
     setFocusedSlot(0);
     setOpenChoiceIdx(null);
     setSubmitted(Boolean(savedState));
@@ -128,7 +147,12 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
         slotRefs.current[0]?.focus();
       }, 30);
     }
-  }, [question.id, slots.length, savedState]);
+  }, [question.id, slots.length, savedState, draftState]);
+
+  const pushDraft = (nextValues: string[], nextDigits: string) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange({ values: nextValues, digitsInput: nextDigits });
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -178,6 +202,7 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
     setValues((prev) => {
       const copy = [...prev];
       copy[index] = nextValue;
+      pushDraft(copy, digitsInput);
       return copy;
     });
     if (advance) {
@@ -399,7 +424,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
             )}
           </button>
 
-          {/* Left-aligned Floating Dark Choice Popover Pill above the word */}
           {!submitted && isOpen && slot.options && (
             <span
               role="listbox"
@@ -435,7 +459,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
       );
     }
 
-    // Tight inline Letter or Punctuation keyboard input slot
     const isPunct = slot.kind === 'punct';
     const isFocused = focusedSlot === slot.index;
     const displayVal = isPunct && val === '-' ? '—' : val;
@@ -499,9 +522,7 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
 
   return (
     <div ref={containerRef} className="max-w-5xl mx-auto w-full space-y-4">
-      {/* Full-Width Dictation Workspace Card */}
       <div className="p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
-        {/* Card Header with Top-Right Hint Toggle */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
             <span className="text-xs font-medium text-slate-400">
@@ -545,7 +566,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
           )}
         </div>
 
-        {/* Rendered Cloze Paragraph(s) with Generous Word Spacing */}
         <div className="p-4 sm:p-6 rounded-xl bg-[#080B14]/85 border border-slate-800/90 space-y-4 text-base sm:text-lg text-slate-100">
           {paragraphs.map((paraItems, pIdx) => (
             <div
@@ -580,7 +600,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
           ))}
         </div>
 
-        {/* OGE Task 7 Final Digit Answer Box */}
         {hasDigitAnswerMode && (
           <div className="p-3.5 sm:p-4 rounded-xl bg-[#080B14]/75 border border-slate-800/85 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
@@ -606,7 +625,9 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
                 value={digitsInput}
                 onChange={(e) => {
                   if (submitted) return;
-                  setDigitsInput(e.target.value.replace(/\D/g, ''));
+                  const v = e.target.value.replace(/\D/g, '');
+                  setDigitsInput(v);
+                  pushDraft(values, v);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -634,7 +655,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
           </div>
         )}
 
-        {/* Context Helper Toolbar & Desktop Submit Button */}
         {!submitted ? (
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -747,7 +767,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
         )}
       </div>
 
-      {/* Full-Width Horizontal Feedback Banner below text (after submit) */}
       {submitted && (
         <div
           role="status"
@@ -759,7 +778,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
           }`}
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Left: Status, Mentor Bubble, Missed Positions & Rule Explanation */}
             <div className="flex-1 min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-2.5">
                 {isCorrect ? (
@@ -816,7 +834,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
               </div>
             </div>
 
-            {/* Right: Desktop Action Buttons alongside explanation */}
             <div className="hidden lg:flex flex-col gap-2.5 shrink-0 min-w-[230px]">
               {isReviewMode && isCorrect && onMarkLearned && (
                 <button
@@ -868,7 +885,6 @@ export const TextClozeEngine: React.FC<TextClozeEngineProps> = ({
         </div>
       )}
 
-      {/* Fixed Mobile Bottom Action Bar (< lg) */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#080B14]/95 backdrop-blur-md border-t border-slate-800 px-4 py-3">
         {!submitted ? (
           <div className="flex items-center gap-2">
