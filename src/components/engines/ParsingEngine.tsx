@@ -47,6 +47,8 @@ interface ParsingEngineProps {
   isLastQuestion?: boolean;
   canGoPrev?: boolean;
   savedState?: SavedQuestionState<unknown>;
+  draftState?: Partial<ParsingSavedState>;
+  onDraftChange?: (draft: Partial<ParsingSavedState>) => void;
   comboStreak?: number;
   activeMentor?: MentorCharacter | null;
   userXp?: number;
@@ -522,7 +524,6 @@ const SyntacticUnderline: React.FC<{ role: SyntacticRole }> = ({ role }) => {
     );
   }
 
-  // adverbial: dash-dot
   return (
     <svg
       className="block w-full h-[7px]"
@@ -554,6 +555,8 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
   isLastQuestion = false,
   canGoPrev = false,
   savedState,
+  draftState,
+  onDraftChange,
   comboStreak = 0,
   activeMentor = null,
   userXp = 999,
@@ -564,6 +567,33 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
   onMarkLearned,
 }) => {
   const restored = (savedState?.userState ?? null) as Partial<ParsingSavedState> | null;
+  const draft = draftState ?? null;
+
+  const pickString = (key: keyof ParsingSavedState): string => {
+    const fromSaved = (restored as any)?.[key];
+    if (typeof fromSaved === 'string') return fromSaved;
+    const fromDraft = (draft as any)?.[key];
+    if (typeof fromDraft === 'string') return fromDraft;
+    return '';
+  };
+
+  const pickPhoneticRows = (): PhoneticRowState[] => {
+    if (question.mode !== 'phonetic') return [];
+    const fromSaved = restored?.phoneticRows;
+    if (fromSaved && fromSaved.length === question.letterRows.length) return fromSaved;
+    const fromDraft = draft?.phoneticRows;
+    if (fromDraft && fromDraft.length === question.letterRows.length) return fromDraft;
+    return createInitialPhoneticRows(question);
+  };
+
+  const pickTokenRoles = (): SyntacticRole[] => {
+    if (question.mode !== 'syntactic') return [];
+    const fromSaved = restored?.tokenRoles;
+    if (fromSaved && fromSaved.length === question.tokens.length) return fromSaved;
+    const fromDraft = draft?.tokenRoles;
+    if (fromDraft && fromDraft.length === question.tokens.length) return fromDraft;
+    return question.tokens.map(() => 'none');
+  };
 
   const [submitted, setSubmitted] = useState(() => Boolean(savedState));
   const [isCorrect, setIsCorrect] = useState(() => Boolean(savedState?.isCorrect));
@@ -575,27 +605,23 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
   );
 
   // Phonetic states
-  const [missingLetterVal, setMissingLetterVal] = useState(
-    () => restored?.missingLetterVal ?? ''
+  const [missingLetterVal, setMissingLetterVal] = useState(() =>
+    pickString('missingLetterVal')
   );
-  const [syllableCountVal, setSyllableCountVal] = useState(
-    () => restored?.syllableCountVal ?? ''
+  const [syllableCountVal, setSyllableCountVal] = useState(() =>
+    pickString('syllableCountVal')
   );
-  const [syllableDivisionVal, setSyllableDivisionVal] = useState(
-    () => restored?.syllableDivisionVal ?? ''
+  const [syllableDivisionVal, setSyllableDivisionVal] = useState(() =>
+    pickString('syllableDivisionVal')
   );
-  const [totalLettersVal, setTotalLettersVal] = useState(
-    () => restored?.totalLettersVal ?? ''
+  const [totalLettersVal, setTotalLettersVal] = useState(() =>
+    pickString('totalLettersVal')
   );
-  const [totalSoundsVal, setTotalSoundsVal] = useState(
-    () => restored?.totalSoundsVal ?? ''
+  const [totalSoundsVal, setTotalSoundsVal] = useState(() =>
+    pickString('totalSoundsVal')
   );
-  const [phoneticRows, setPhoneticRows] = useState<PhoneticRowState[]>(() =>
-    question.mode === 'phonetic'
-      ? restored?.phoneticRows?.length === question.letterRows.length
-        ? restored.phoneticRows
-        : createInitialPhoneticRows(question)
-      : []
+  const [phoneticRows, setPhoneticRows] = useState<PhoneticRowState[]>(
+    pickPhoneticRows
   );
   const [activeSoundTarget, setActiveSoundTarget] = useState<{
     rowIdx: number;
@@ -604,36 +630,34 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
   const soundInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Morphological states
-  const [selectedPos, setSelectedPos] = useState<MorphPartOfSpeech | ''>(
-    () => restored?.selectedPos ?? ''
+  const [selectedPos, setSelectedPos] = useState<MorphPartOfSpeech | ''>(() => {
+    if (restored?.selectedPos) return restored.selectedPos;
+    if (draft?.selectedPos) return draft.selectedPos;
+    return '';
+  });
+  const [morphQuestionInput, setMorphQuestionInput] = useState(() =>
+    pickString('morphQuestionInput')
   );
-  const [morphQuestionInput, setMorphQuestionInput] = useState(
-    () => restored?.morphQuestionInput ?? ''
-  );
-  const [morphBaseFormInput, setMorphBaseFormInput] = useState(
-    () => restored?.morphBaseFormInput ?? ''
+  const [morphBaseFormInput, setMorphBaseFormInput] = useState(() =>
+    pickString('morphBaseFormInput')
   );
   const [morphFeatures, setMorphFeatures] = useState<Record<string, string>>(
-    () => restored?.morphFeatures ?? {}
+    () => restored?.morphFeatures ?? draft?.morphFeatures ?? {}
   );
-  const [morphSyntacticRole, setMorphSyntacticRole] = useState(
-    () => restored?.morphSyntacticRole ?? ''
+  const [morphSyntacticRole, setMorphSyntacticRole] = useState(() =>
+    pickString('morphSyntacticRole')
   );
 
   // Syntactic states
-  const [tokenRoles, setTokenRoles] = useState<SyntacticRole[]>(() =>
-    question.mode === 'syntactic'
-      ? restored?.tokenRoles?.length === question.tokens.length
-        ? restored.tokenRoles
-        : question.tokens.map(() => 'none')
-      : []
-  );
+  const [tokenRoles, setTokenRoles] = useState<SyntacticRole[]>(pickTokenRoles);
   const [selectedCharacteristics, setSelectedCharacteristics] = useState<string[]>(
-    () => restored?.selectedCharacteristics ?? []
+    () => restored?.selectedCharacteristics ?? draft?.selectedCharacteristics ?? []
   );
 
   useEffect(() => {
     const nextRestored = (savedState?.userState ?? null) as Partial<ParsingSavedState> | null;
+    const nextDraft = draftState ?? null;
+
     setSubmitted(Boolean(savedState));
     setIsCorrect(Boolean(savedState?.isCorrect));
     setShowHint(false);
@@ -642,33 +666,60 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
     setMentorQuote(savedState?.mentorQuote ?? null);
 
     if (question.mode === 'phonetic') {
-      setMissingLetterVal(nextRestored?.missingLetterVal ?? '');
-      setSyllableCountVal(nextRestored?.syllableCountVal ?? '');
-      setSyllableDivisionVal(nextRestored?.syllableDivisionVal ?? '');
-      setTotalLettersVal(nextRestored?.totalLettersVal ?? '');
-      setTotalSoundsVal(nextRestored?.totalSoundsVal ?? '');
+      setMissingLetterVal(
+        nextRestored?.missingLetterVal ?? nextDraft?.missingLetterVal ?? ''
+      );
+      setSyllableCountVal(
+        nextRestored?.syllableCountVal ?? nextDraft?.syllableCountVal ?? ''
+      );
+      setSyllableDivisionVal(
+        nextRestored?.syllableDivisionVal ?? nextDraft?.syllableDivisionVal ?? ''
+      );
+      setTotalLettersVal(
+        nextRestored?.totalLettersVal ?? nextDraft?.totalLettersVal ?? ''
+      );
+      setTotalSoundsVal(
+        nextRestored?.totalSoundsVal ?? nextDraft?.totalSoundsVal ?? ''
+      );
+      const rowsCandidate = nextRestored?.phoneticRows ?? nextDraft?.phoneticRows;
       setPhoneticRows(
-        nextRestored?.phoneticRows?.length === question.letterRows.length
-          ? nextRestored.phoneticRows
+        rowsCandidate && rowsCandidate.length === question.letterRows.length
+          ? rowsCandidate
           : createInitialPhoneticRows(question)
       );
       setActiveSoundTarget({ rowIdx: 0, subIdx: 0 });
       soundInputRefs.current = {};
     } else if (question.mode === 'morphological') {
-      setSelectedPos(nextRestored?.selectedPos ?? '');
-      setMorphQuestionInput(nextRestored?.morphQuestionInput ?? '');
-      setMorphBaseFormInput(nextRestored?.morphBaseFormInput ?? '');
-      setMorphFeatures(nextRestored?.morphFeatures ?? {});
-      setMorphSyntacticRole(nextRestored?.morphSyntacticRole ?? '');
+      setSelectedPos(nextRestored?.selectedPos ?? nextDraft?.selectedPos ?? '');
+      setMorphQuestionInput(
+        nextRestored?.morphQuestionInput ?? nextDraft?.morphQuestionInput ?? ''
+      );
+      setMorphBaseFormInput(
+        nextRestored?.morphBaseFormInput ?? nextDraft?.morphBaseFormInput ?? ''
+      );
+      setMorphFeatures(nextRestored?.morphFeatures ?? nextDraft?.morphFeatures ?? {});
+      setMorphSyntacticRole(
+        nextRestored?.morphSyntacticRole ?? nextDraft?.morphSyntacticRole ?? ''
+      );
     } else if (question.mode === 'syntactic') {
+      const rolesCandidate = nextRestored?.tokenRoles ?? nextDraft?.tokenRoles;
       setTokenRoles(
-        nextRestored?.tokenRoles?.length === question.tokens.length
-          ? nextRestored.tokenRoles
+        rolesCandidate && rolesCandidate.length === question.tokens.length
+          ? rolesCandidate
           : question.tokens.map(() => 'none')
       );
-      setSelectedCharacteristics(nextRestored?.selectedCharacteristics ?? []);
+      setSelectedCharacteristics(
+        nextRestored?.selectedCharacteristics ??
+          nextDraft?.selectedCharacteristics ??
+          []
+      );
     }
-  }, [question, savedState]);
+  }, [question, savedState, draftState]);
+
+  const pushDraft = (partial: Partial<ParsingSavedState>) => {
+    if (!onDraftChange || submitted) return;
+    onDraftChange(partial);
+  };
 
   const canAffordHint = userXp >= 5;
 
@@ -731,6 +782,7 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
       ] as [PhoneticSubSoundState, PhoneticSubSoundState];
       nextSounds[subIdx] = { ...nextSounds[subIdx], sound: updated };
       next[rowIdx] = { ...row, sounds: nextSounds };
+      pushDraft({ phoneticRows: next });
       return next;
     });
   };
@@ -893,6 +945,7 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
         ] as [PhoneticSubSoundState, PhoneticSubSoundState];
         nextSounds[subIdx] = updater(nextSounds[subIdx]);
         next[rowIdx] = { ...row, sounds: nextSounds };
+        pushDraft({ phoneticRows: next });
         return next;
       });
     };
@@ -925,7 +978,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
 
       return (
         <div className="space-y-2">
-          {/* Primary Type: Vowel vs Consonant */}
           <div className="flex flex-wrap items-center gap-1.5">
             {(
               [
@@ -965,7 +1017,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
               );
             })}
 
-            {/* Vowel sub-pills */}
             {subState.soundType === 'vowel' && (
               <div className="inline-flex flex-wrap items-center gap-1 pl-1.5 border-l border-slate-800">
                 {(
@@ -1006,10 +1057,8 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
             )}
           </div>
 
-          {/* Consonant two clean rows: Voicing & Pair + Hardness & Pair */}
           {subState.soundType === 'consonant' && (
             <div className="space-y-1.5 pt-0.5">
-              {/* Row 1: Voicing & Pair */}
               <div className="flex flex-wrap items-center gap-1">
                 {VOICING_OPTIONS.map((opt) => {
                   const active = subState.voicing === opt.id;
@@ -1042,7 +1091,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 })}
               </div>
 
-              {/* Row 2: Hardness & Pair */}
               <div className="flex flex-wrap items-center gap-1">
                 {HARDNESS_OPTIONS.map((opt) => {
                   const active = subState.hardness === opt.id;
@@ -1151,7 +1199,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
 
     return (
       <div className="space-y-4">
-        {/* Top Bar: Word, Missing Letter (if any), Syllable Count & Syllable Division */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3.5 sm:p-4 rounded-xl bg-[#080B14]/85 border border-slate-800/90">
           <div className="sm:col-span-4 flex flex-col justify-center gap-1">
             <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
@@ -1167,7 +1214,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                   maxLength={1}
                   disabled={submitted}
                   value={missingLetterVal}
-                  onChange={(e) => setMissingLetterVal(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setMissingLetterVal(v);
+                    pushDraft({ missingLetterVal: v });
+                  }}
                   placeholder="_"
                   aria-label="Пропущенная буква"
                   className={`w-8 h-9 rounded-lg border text-center font-display text-lg font-bold focus:outline-none transition-all ${
@@ -1209,7 +1260,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 max={10}
                 disabled={submitted}
                 value={syllableCountVal}
-                onChange={(e) => setSyllableCountVal(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSyllableCountVal(v);
+                  pushDraft({ syllableCountVal: v });
+                }}
                 placeholder="Напр. 3"
                 className={`w-full px-3 py-2 rounded-lg border font-mono-num text-sm focus:outline-none transition-all ${
                   submitted
@@ -1240,7 +1295,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 type="text"
                 disabled={submitted}
                 value={syllableDivisionVal}
-                onChange={(e) => setSyllableDivisionVal(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSyllableDivisionVal(v);
+                  pushDraft({ syllableDivisionVal: v });
+                }}
                 placeholder="Напр.: жёл-ты-е"
                 className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all ${
                   submitted
@@ -1259,7 +1318,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </div>
         </div>
 
-        {/* Compact Phonetic Virtual Keyboard Bar */}
         {!submitted && (
           <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-[#080B14]/75 border border-slate-800/80">
             <span className="text-xs text-slate-400">
@@ -1291,7 +1349,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </div>
         )}
 
-        {/* Row-by-Row Phonetic Table */}
         <div className="overflow-x-auto rounded-xl border border-slate-800/90 bg-[#080B14]/80">
           <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
@@ -1368,6 +1425,7 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                               setPhoneticRows((prev) => {
                                 const next = [...prev];
                                 next[idx] = { ...next[idx], soundCount: cnt };
+                                pushDraft({ phoneticRows: next });
                                 return next;
                               });
                               if (cnt !== 0) {
@@ -1474,7 +1532,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                   );
                 }
 
-                // Single sound mode (soundCount === null || soundCount === 1)
                 return (
                   <tr key={`phon-row-${q.id}-${idx}`} className={rowBgClass}>
                     {letterCell}
@@ -1527,7 +1584,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </table>
         </div>
 
-        {/* Bottom Summary Row: Total Letters & Total Sounds */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-[#080B14]/85 border border-slate-800/90">
           <span className="text-xs sm:text-sm font-medium text-slate-300">
             Итоговый подсчёт
@@ -1548,7 +1604,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 max={30}
                 disabled={submitted}
                 value={totalLettersVal}
-                onChange={(e) => setTotalLettersVal(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setTotalLettersVal(v);
+                  pushDraft({ totalLettersVal: v });
+                }}
                 placeholder="0"
                 className={`w-16 px-2.5 py-1.5 rounded-lg border font-mono-num text-sm text-center focus:outline-none transition-all ${
                   submitted
@@ -1579,7 +1639,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 max={30}
                 disabled={submitted}
                 value={totalSoundsVal}
-                onChange={(e) => setTotalSoundsVal(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setTotalSoundsVal(v);
+                  pushDraft({ totalSoundsVal: v });
+                }}
                 placeholder="0"
                 className={`w-16 px-2.5 py-1.5 rounded-lg border font-mono-num text-sm text-center focus:outline-none transition-all ${
                   submitted
@@ -1621,7 +1685,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
 
     return (
       <div className="space-y-4">
-        {/* Highlighted Sentence Banner */}
         <div className="p-4 sm:p-5 rounded-xl bg-[#080B14]/85 border border-slate-800/90 text-base sm:text-lg text-slate-100 leading-relaxed">
           {parts.map((chunk, idx) =>
             chunk.toLowerCase() === q.targetWord.toLowerCase() ? (
@@ -1637,7 +1700,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           )}
         </div>
 
-        {/* Core Morphological Row: POS + Question + Base Form */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="p-3.5 rounded-xl bg-[#080B14]/80 border border-slate-800/90 space-y-1.5">
             <label
@@ -1651,8 +1713,10 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
               disabled={submitted}
               value={selectedPos}
               onChange={(e) => {
-                setSelectedPos(e.target.value as MorphPartOfSpeech | '');
+                const nextPos = e.target.value as MorphPartOfSpeech | '';
+                setSelectedPos(nextPos);
                 setMorphFeatures({});
+                pushDraft({ selectedPos: nextPos, morphFeatures: {} });
               }}
               className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all ${
                 submitted
@@ -1686,7 +1750,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
               type="text"
               disabled={submitted}
               value={morphQuestionInput}
-              onChange={(e) => setMorphQuestionInput(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setMorphQuestionInput(v);
+                pushDraft({ morphQuestionInput: v });
+              }}
               placeholder="Напр.: что сделает?"
               className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all ${
                 submitted
@@ -1715,7 +1783,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
               type="text"
               disabled={submitted}
               value={morphBaseFormInput}
-              onChange={(e) => setMorphBaseFormInput(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setMorphBaseFormInput(v);
+                pushDraft({ morphBaseFormInput: v });
+              }}
               placeholder="Начальная форма слова"
               className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all ${
                 submitted
@@ -1731,7 +1803,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </div>
         </div>
 
-        {/* Dynamic Grammatical Feature Cards */}
         {selectedPos ? (
           <div className="space-y-2">
             <div className="text-xs font-medium text-slate-400">
@@ -1778,6 +1849,7 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                               delete next.gender;
                             }
                           }
+                          pushDraft({ morphFeatures: next });
                           return next;
                         });
                       }}
@@ -1810,7 +1882,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </div>
         )}
 
-        {/* Show full expected features summary if wrong POS was chosen */}
         {submitted && selectedPos !== q.expectedPos && (
           <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 space-y-1">
             <div className="font-semibold text-emerald-300">
@@ -1838,7 +1909,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </div>
         )}
 
-        {/* Final Field: Syntactic Role (always shown at bottom regardless of POS) */}
         {(() => {
           const expectedRole = q.expectedSyntacticRole;
           const syntacticRoleOk = expectedRole
@@ -1868,7 +1938,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
                 id={`morph-syntactic-role-${q.id}`}
                 disabled={submitted}
                 value={morphSyntacticRole}
-                onChange={(e) => setMorphSyntacticRole(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setMorphSyntacticRole(v);
+                  pushDraft({ morphSyntacticRole: v });
+                }}
                 className={`w-full px-3 py-2 rounded-lg border text-xs sm:text-sm focus:outline-none transition-all ${
                   submitted
                     ? syntacticRoleOk
@@ -1907,15 +1981,20 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
         const curr = next[idx] ?? 'none';
         const nextIdx = (SYNTACTIC_CYCLE.indexOf(curr) + 1) % SYNTACTIC_CYCLE.length;
         next[idx] = SYNTACTIC_CYCLE[nextIdx];
+        pushDraft({ tokenRoles: next });
         return next;
       });
     };
 
     const toggleCharacteristic = (item: string) => {
       if (submitted) return;
-      setSelectedCharacteristics((prev) =>
-        prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item]
-      );
+      setSelectedCharacteristics((prev) => {
+        const next = prev.includes(item)
+          ? prev.filter((x) => x !== item)
+          : [...prev, item];
+        pushDraft({ selectedCharacteristics: next });
+        return next;
+      });
     };
 
     const hasUnderlinedFunctionWord =
@@ -1927,7 +2006,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
 
     return (
       <div className="space-y-4">
-        {/* Compact Legend Bar + Rule Notice + Reset Button */}
         <div className="p-3 rounded-xl bg-[#080B14]/80 border border-slate-800/90 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -1954,7 +2032,11 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
             {!submitted && (
               <button
                 type="button"
-                onClick={() => setTokenRoles(q.tokens.map(() => 'none'))}
+                onClick={() => {
+                  const next = q.tokens.map(() => 'none' as SyntacticRole);
+                  setTokenRoles(next);
+                  pushDraft({ tokenRoles: next });
+                }}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1968,7 +2050,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           </p>
         </div>
 
-        {/* Clickable Sentence with Syntactic Underlines */}
         <div className="p-4 sm:p-6 rounded-xl bg-[#080B14]/85 border border-slate-800/90 space-y-3">
           <div className="flex flex-wrap items-start gap-x-2.5 gap-y-4 text-lg sm:text-xl leading-snug">
             {q.tokens.map((tok, idx) => {
@@ -2057,7 +2138,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           )}
         </div>
 
-        {/* Multi-column Checkbox Grid for Sentence Characteristics */}
         <div className="space-y-2.5">
           <div className="text-xs font-medium text-slate-400">
             Характеристики предложения (отметьте все подходящие):
@@ -2124,9 +2204,7 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
 
   return (
     <div className="max-w-5xl mx-auto w-full space-y-4">
-      {/* Full-Width Single-Column Parsing Card */}
       <div className="p-3.5 sm:p-6 lg:p-7 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-black/20 space-y-4 lg:space-y-5">
-        {/* Header with Top-Right Hint Toggle */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
             <span className="text-xs font-medium text-slate-400">
@@ -2169,12 +2247,10 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
           )}
         </div>
 
-        {/* Mode-specific interactive workspace */}
         {question.mode === 'phonetic' && renderPhoneticWorkspace(question)}
         {question.mode === 'morphological' && renderMorphologicalWorkspace(question)}
         {question.mode === 'syntactic' && renderSyntacticWorkspace(question)}
 
-        {/* Desktop Pre-Submit Navigation & Submit Row */}
         {!submitted && (
           <div className="hidden lg:flex items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-2">
@@ -2213,7 +2289,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
         )}
       </div>
 
-      {/* Full-Width Horizontal Feedback Banner (after submit) */}
       {submitted && (
         <div
           role="status"
@@ -2272,7 +2347,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
               </div>
             </div>
 
-            {/* Desktop Action Buttons */}
             <div className="hidden lg:flex flex-col gap-2.5 shrink-0 min-w-[230px]">
               {isReviewMode && isCorrect && onMarkLearned && (
                 <button
@@ -2324,7 +2398,6 @@ export const ParsingEngine: React.FC<ParsingEngineProps> = ({
         </div>
       )}
 
-      {/* Fixed Mobile Bottom Action Bar (< lg) */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#080B14]/95 backdrop-blur-md border-t border-slate-800 px-4 py-3">
         {!submitted ? (
           <div className="flex items-center gap-2">
