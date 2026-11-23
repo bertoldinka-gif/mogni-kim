@@ -45,7 +45,7 @@ export const VOCABULARY_WORDS_BY_GRADE: {
       type: 'fill_letter',
       difficulty: 'base',
       topicTag: 'Словарные слова · 2–4 кл.',
-      sentence: 'Вечером дедушка привёз с рынка спелый б..гряный арбуз и жёлтую дыню, а затем поставил на стол м..ндарин.',
+      sentence: 'Вечером дедушка привёз с рынка спелый багряный арбуз и жёлтую дыню, а затем поставил на стол м..ндарин.',
       targetWord: 'м..ндарин',
       options: ['о', 'а'],
       correctAnswer: 'а',
