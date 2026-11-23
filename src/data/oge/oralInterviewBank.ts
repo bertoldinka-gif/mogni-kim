@@ -75,13 +75,12 @@ export const ORAL_INTERVIEW_VARIANTS: OralInterviewVariant[] = [
         keywords: Array.of('пейзаж', 'наслед', 'третьяковск', 'валаам', 'академ'),
       }
     ),
-    monologueTopics: Array.of(
+        monologueTopics: Array.of(
       {
         number: 1,
         modeLabel: 'Описание фотографии',
         title: 'Тема 1. Виртуальное общение',
-        sceneHint:
-          'Представьте снимок: подростки сидят вместе в кафе или парке, но каждый смотрит в экран своего смартфона (либо общаются по видеосвязи через ноутбук/телефон).',
+        photoUrl: './oral-1-photo.jpg',
         planPoints: Array.of(
           'Чем занимаются ребята на фотографии?',
           'Как они выглядят и какие у них выражения лиц?',
