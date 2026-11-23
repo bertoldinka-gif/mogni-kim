@@ -201,7 +201,19 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       activeStreamRef.current = stream;
 
-      const recorder = new MediaRecorder(stream);
+      // Подбираем поддерживаемый браузером формат записи
+      const preferredTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+      ];
+      const supportedType =
+        preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+      const recorder = supportedType
+        ? new MediaRecorder(stream, { mimeType: supportedType })
+        : new MediaRecorder(stream);
+
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
       recordingStartRef.current = Date.now();
@@ -222,12 +234,14 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         );
 
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: recorder.mimeType || 'audio/webm',
+          type: supportedType || recorder.mimeType || 'audio/webm',
         });
         audioChunksRef.current = [];
 
-        if (audioBlob.size === 0) {
-          setSpeechError('Запись пустая — произнесите текст громче и попробуйте снова.');
+        if (audioBlob.size < 1000) {
+          setSpeechError(
+            'Запись получилась пустой — проверьте, что в браузере и Windows выбран рабочий микрофон.'
+          );
           return;
         }
 
@@ -252,7 +266,7 @@ export const OralInterviewEngine: React.FC<OralInterviewEngineProps> = ({
         }
       };
 
-      recorder.start();
+      recorder.start(250);
       setRecordingTarget(target);
     } catch {
       setSpeechError(
