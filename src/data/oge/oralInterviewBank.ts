@@ -14,18 +14,15 @@ export interface OralMonologueTopic {
   cliches: string[];
 }
 
-export interface OralInterviewVariant {
-  id: string;
+export interface OralMonologueTopic {
+  number: 1 | 2 | 3;
+  modeLabel: string;
   title: string;
-  heroName: string;
-  wordCount: number;
-  readingIntro: string;
-  readingText: string;
-  quotePrompt: string;
-  questions: OralInterviewQuestion[];
-  monologueTopics: OralMonologueTopic[];
+  photoUrl?: string;
+  sceneHint?: string;
+  planPoints: string[];
+  cliches: string[];
 }
-
 export const ORAL_INTERVIEW_VARIANTS: OralInterviewVariant[] = [
   {
     id: 'oral-var-1',
