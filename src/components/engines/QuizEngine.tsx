@@ -317,9 +317,30 @@ export const QuizEngine: React.FC<QuizEngineProps> = ({
       );
     });
   };
+      const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
+    let preparedText = text;
+    if (
+      question.kimTaskNumber === 2 &&
+      !preparedText.includes('**') &&
+      Array.isArray(question.options)
+    ) {
+      const stems = question.options
+        .map((opt) => {
+          const clean = stripLeadingOptionNumber(opt);
+          const head = clean.split(/[.\s(–—-]/).at(0)?.toLowerCase() ?? '';
+          if (head.length < 3) return '';
+          return head.length >= 5 ? head.slice(0, head.length - 2) : head.slice(0, head.length - 1);
+        })
+        .filter((s) => s.length >= 3);
 
-  const renderMarkableText = (text: string, keyPrefix: string, stopCardClick = false) => {
-    const segments = text.split(/(\*\*[^*]+\*\*)/g);
+      if (stems.length > 0) {
+        const escaped = stems.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const rx = new RegExp(`(?<![а-яёА-ЯЁ])((?:${escaped.join('|')})[а-яёА-ЯЁ]*)(?![а-яёА-ЯЁ])`, 'gi');
+        preparedText = preparedText.replace(rx, '**$1**');
+      }
+    }
+
+    const segments = preparedText.split(/(\*\*[^*]+\*\*)/g);
     let globalTokIdx = 0;
 
     return segments.map((seg, sIdx) => {
