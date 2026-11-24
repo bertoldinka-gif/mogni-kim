@@ -25,6 +25,7 @@ import {
   SkillStatsMap,
   UserProfile,
 } from '../types/platform';
+import { scheduleCloudSync } from './cloudSync';
 
 const USERS_KEY = 'mogni_kim_users';
 const ACTIVE_USER_KEY = 'mogni_kim_active_user';
@@ -225,6 +226,10 @@ export function registerOrLoginUser(
   users[key] = newUser;
   writeUsersMap(users);
   localStorage.setItem(ACTIVE_USER_KEY, key);
+    users[key] = newUser;
+  writeUsersMap(users);
+  localStorage.setItem(ACTIVE_USER_KEY, key);
+  scheduleCloudSync(newUser);
   return { user: newUser };
 }
 
@@ -262,6 +267,7 @@ export function updateUserProfile(updated: UserProfile): UserProfile {
   const key = normalized.nickname.toLowerCase();
   users[key] = normalized;
   writeUsersMap(users);
+  scheduleCloudSync(normalized);
   return normalized;
 }
 
