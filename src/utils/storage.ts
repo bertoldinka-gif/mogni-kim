@@ -1193,5 +1193,41 @@ export function importProfileBackupCode(rawCode: string): {
     return { error: 'Не удалось расшифровать код. Проверьте, что строка скопирована полностью.' };
   }
 }
+export function applyCloudProfilePayload(payload: {
+  user: UserProfile;
+  mistakes?: MistakeItem[];
+  categoryStats?: CategoryStatsMap | null;
+}): UserProfile {
+  const normalized = normalizeUser(payload.user);
+  const key = normalized.nickname.toLowerCase();
 
+  const users = readUsersMap();
+  users[key] = normalized;
+  writeUsersMap(users);
+  localStorage.setItem(ACTIVE_USER_KEY, key);
+
+  if (Array.isArray(payload.mistakes)) {
+    try {
+      localStorage.setItem(
+        `${MISTAKES_PREFIX}${key}`,
+        JSON.stringify(payload.mistakes)
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  if (payload.categoryStats && typeof payload.categoryStats === 'object') {
+    try {
+      localStorage.setItem(
+        `mogni_kim_cat_stats_v1_${key}`,
+        JSON.stringify(payload.categoryStats)
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  return normalized;
+}
 
