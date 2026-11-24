@@ -13,11 +13,13 @@ import { GRADE_LABELS, GRADE_OPTIONS } from '../data/curriculum';
 import { getMentorById } from '../data/petsData';
 import { GradeLevel, UserProfile } from '../types/platform';
 import {
+  applyCloudProfilePayload,
   getSavedUsers,
   importProfileBackupCode,
   loginSavedProfile,
   registerOrLoginUser,
 } from '../utils/storage';
+import { loadProfileFromCloud } from '../utils/cloudSync';
 import { LogoMark } from './LogoMark';
 import { MentorAvatar } from './MentorAvatar';
 
@@ -64,14 +66,25 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
   const [inviteCode, setInviteCode] = useState('');
   const [grade, setGrade] = useState<GradeLevel>('ege');
   const [error, setError] = useState<string | null>(null);
+  const [isCloudLoading, setIsCloudLoading] = useState(false);
 
   const [showRestoreBox, setShowRestoreBox] = useState(false);
   const [backupCode, setBackupCode] = useState('');
   const [restoreError, setRestoreError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const cleanNickname = nickname.trim();
+    if (cleanNickname.length < 2) {
+      setError('Никнейм должен содержать минимум 2 символа.');
+      return;
+    }
+    if (password.length < 3) {
+      setError('Пароль должен содержать минимум 3 символа.');
+      return;
+    }
 
     if (mode === 'register' && !isInvited) {
       if (inviteCode.trim().toUpperCase() !== INVITE_CODE) {
@@ -80,34 +93,79 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
       }
     }
 
-    const result = registerOrLoginUser(mode, nickname, password, grade);
-    if (result.error) {
-      setError(result.error);
-      return;
+    // Сначала пробуем локально
+    const localResult = registerOrLoginUser(mode, cleanNickname, password, grade);
+
+    if (mode === 'login') {
+      if (localResult.user) {
+        onAuthenticated(localResult.user);
+        return;
+      }
+      // Если локально профиль не найден (новый телефон / новый домен), ищем в базе YDB
+      if (localResult.error?.includes('не найден')) {
+        setIsCloudLoading(true);
+        const cloudPayload = await loadProfileFromCloud(cleanNickname);
+        setIsCloudLoading(false);
+
+        if (!cloudPayload?.user) {
+          setError('Профиль с таким никнеймом не найден ни в браузере, ни в облачной базе.');
+          return;
+        }
+        if (cloudPayload.user.password !== password) {
+          setError('Неверный пароль.');
+          return;
+        }
+        const restored = applyCloudProfilePayload(cloudPayload);
+        onAuthenticated(restored);
+        return;
+      }
+      if (localResult.error) {
+        setError(localResult.error);
+        return;
+      }
     }
-    if (result.user) {
-      onAuthenticated(result.user);
+
+    // Режим регистрации: проверяем, не занят ли никнейм в облаке YDB
+    if (mode === 'register') {
+      if (localResult.error) {
+        setError(localResult.error);
+        return;
+      }
+      setIsCloudLoading(true);
+      const existingCloud = await loadProfileFromCloud(cleanNickname);
+      setIsCloudLoading(false);
+
+      if (existingCloud?.user) {
+        // Откатываем локальное создание и просим войти в существующий профиль
+        setError('Этот никнейм уже зарегистрирован в облаке. Переключитесь на «Войти» и введите свой пароль.');
+        return;
+      }
+      if (localResult.user) {
+        onAuthenticated(localResult.user);
+      }
     }
   };
 
-  const handleQuickLogin = (profileNickname: string) => {
-    const user = loginSavedProfile(profileNickname);
-    if (user) {
-      onAuthenticated(user);
-    }
-  };
+  const handleQuickLogin = async (profileNickname: string) => {
+    const localUser = loginSavedProfile(profileNickname);
+    if (!localUser) return;
 
-  const handleRestoreFromCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRestoreError(null);
-    const result = importProfileBackupCode(backupCode);
-    if (result.error) {
-      setRestoreError(result.error);
+    // Проверяем, нет ли в облаке более свежей версии профиля с другого устройства
+    setIsCloudLoading(true);
+    const cloudPayload = await loadProfileFromCloud(profileNickname);
+    setIsCloudLoading(false);
+
+    if (
+      cloudPayload?.user &&
+      (cloudPayload.user.xp > localUser.xp ||
+        cloudPayload.user.totalAnswered > localUser.totalAnswered)
+    ) {
+      const merged = applyCloudProfilePayload(cloudPayload);
+      onAuthenticated(merged);
       return;
     }
-    if (result.user) {
-      onAuthenticated(result.user);
-    }
+
+    onAuthenticated(localUser);
   };
 
   return (
@@ -134,7 +192,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
             </h1>
             <p className="text-sm text-slate-400 mt-3 leading-relaxed">
               Орфография, пунктуация, орфоэпические спринты и системная работа над ошибками.
-              Весь прогресс сохраняется локально в вашем браузере.
+              Весь прогресс автоматически сохраняется в облаке и доступен с любого устройства.
             </p>
           </div>
 
