@@ -1,7 +1,6 @@
 import { CategoryStatsMap, MistakeItem, UserProfile } from '../types/platform';
 
-export const CLOUD_SYNC_URL =
-  'https://yandexcloud.net';
+export const CLOUD_SYNC_URL = 'https://yandexcloud.net';
 
 export interface CloudStudentPayload {
   user: UserProfile;
@@ -56,11 +55,7 @@ export function scheduleCloudSync(
       }
     }
 
-    const payload: CloudStudentPayload = {
-      user,
-      mistakes,
-      categoryStats,
-    };
+    const payload: CloudStudentPayload = { user, mistakes, categoryStats };
 
     fetch(CLOUD_SYNC_URL, {
       method: 'POST',
@@ -71,7 +66,10 @@ export function scheduleCloudSync(
         grade: user.grade,
         payload,
       }),
-    }).catch(() => {});
+      credentials: 'omit',
+    }).catch(() => {
+      // Локальное сохранение уже произошло в storage.ts — сетевой сбой не теряет данные
+    });
   }, 1200);
 
   syncTimers.set(profileId, timerId);
@@ -84,10 +82,8 @@ export async function loadProfileFromCloud(
   if (!profileId) return null;
 
   try {
-    const url = `${CLOUD_SYNC_URL}?action=load&profileId=${encodeURIComponent(
-      profileId
-    )}`;
-    const res = await fetch(url, { method: 'GET' });
+    const url = `${CLOUD_SYNC_URL}?action=load&profileId=${encodeURIComponent(profileId)}`;
+    const res = await fetch(url, { method: 'GET', credentials: 'omit' });
     if (!res.ok) return null;
     const data = await res.json();
     if (data?.ok && data?.profile?.payload?.user) {
@@ -102,7 +98,7 @@ export async function loadProfileFromCloud(
 export async function listStudentsFromCloud(): Promise<CloudStudentSummary[]> {
   try {
     const url = `${CLOUD_SYNC_URL}?action=list`;
-    const res = await fetch(url, { method: 'GET' });
+    const res = await fetch(url, { method: 'GET', credentials: 'omit' });
     if (!res.ok) return [];
     const data = await res.json();
     if (data?.ok && Array.isArray(data.students)) {
