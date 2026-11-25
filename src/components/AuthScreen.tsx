@@ -13,13 +13,11 @@ import { GRADE_LABELS, GRADE_OPTIONS } from '../data/curriculum';
 import { getMentorById } from '../data/petsData';
 import { GradeLevel, UserProfile } from '../types/platform';
 import {
-  applyCloudProfilePayload,
   getSavedUsers,
   importProfileBackupCode,
   loginSavedProfile,
   registerOrLoginUser,
 } from '../utils/storage';
-import { loadProfileFromCloud } from '../utils/cloudSync';
 import { LogoMark } from './LogoMark';
 import { MentorAvatar } from './MentorAvatar';
 
@@ -66,25 +64,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
   const [inviteCode, setInviteCode] = useState('');
   const [grade, setGrade] = useState<GradeLevel>('ege');
   const [error, setError] = useState<string | null>(null);
-  const [isCloudLoading, setIsCloudLoading] = useState(false);
 
   const [showRestoreBox, setShowRestoreBox] = useState(false);
   const [backupCode, setBackupCode] = useState('');
   const [restoreError, setRestoreError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    const cleanNickname = nickname.trim();
-    if (cleanNickname.length < 2) {
-      setError('Никнейм должен содержать минимум 2 символа.');
-      return;
-    }
-    if (password.length < 3) {
-      setError('Пароль должен содержать минимум 3 символа.');
-      return;
-    }
 
     if (mode === 'register' && !isInvited) {
       if (inviteCode.trim().toUpperCase() !== INVITE_CODE) {
@@ -93,110 +80,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
       }
     }
 
-    // Сначала пробуем локально
-    const localResult = registerOrLoginUser(mode, cleanNickname, password, grade);
-
-    if (mode === 'login') {
-      if (localResult.user) {
-        onAuthenticated(localResult.user);
-        return;
-      }
-
-      // Если локально профиль не найден (новый телефон / новый домен), ищем в базе YDB
-      if (localResult.error?.includes('не найден')) {
-        setIsCloudLoading(true);
-        const cloudPayload = await loadProfileFromCloud(cleanNickname);
-        setIsCloudLoading(false);
-
-        if (!cloudPayload?.user) {
-          setError('Профиль с таким никнеймом не найден ни в браузере, ни в облачной базе.');
-          return;
-        }
-        if (cloudPayload.user.password !== password) {
-          setError('Неверный пароль.');
-          return;
-        }
-        const restored = applyCloudProfilePayload(cloudPayload);
-        onAuthenticated(restored);
-        return;
-      }
-
-      if (localResult.error) {
-        setError(localResult.error);
-      }
+    const result = registerOrLoginUser(mode, nickname, password, grade);
+    if (result.error) {
+      setError(result.error);
       return;
     }
-
-    // Режим регистрации: проверяем, не занят ли никнейм в облаке YDB
-    if (localResult.error) {
-      setError(localResult.error);
-      return;
-    }
-
-    setIsCloudLoading(true);
-    const existingCloud = await loadProfileFromCloud(cleanNickname);
-    setIsCloudLoading(false);
-
-    if (existingCloud?.user) {
-      // Профиль уже есть в облаке — просим войти в него
-      setError('Этот никнейм уже зарегистрирован в облаке. Переключитесь на «Войти» и введите свой пароль.');
-      return;
-    }
-
-    if (localResult.user) {
-      onAuthenticated(localResult.user);
+    if (result.user) {
+      onAuthenticated(result.user);
     }
   };
 
-  const handleQuickLogin = async (profileNickname: string) => {
-    const localUser = loginSavedProfile(profileNickname);
-    if (!localUser) return;
-
-    // Проверяем, нет ли в облаке более свежей версии профиля с другого устройства
-    setIsCloudLoading(true);
-    const cloudPayload = await loadProfileFromCloud(profileNickname);
-    setIsCloudLoading(false);
-
-    if (
-      cloudPayload?.user &&
-      (cloudPayload.user.xp > localUser.xp ||
-        cloudPayload.user.totalAnswered > localUser.totalAnswered)
-    ) {
-      const merged = applyCloudProfilePayload(cloudPayload);
-      onAuthenticated(merged);
-      return;
+  const handleQuickLogin = (profileNickname: string) => {
+    const user = loginSavedProfile(profileNickname);
+    if (user) {
+      onAuthenticated(user);
     }
-
-    onAuthenticated(localUser);
   };
 
-  const handleRestoreFromCode = () => {
+  const handleRestoreFromCode = (e: React.FormEvent) => {
+    e.preventDefault();
     setRestoreError(null);
-
-    if (!backupCode.trim()) {
-      setRestoreError('Вставьте код восстановления.');
-      return;
-    }
-
     const result = importProfileBackupCode(backupCode);
     if (result.error) {
       setRestoreError(result.error);
       return;
     }
-
     if (result.user) {
-      // importProfileBackupCode уже сохранил профиль в localStorage
-      // и поставил его в очередь scheduleCloudSync для YDB.
-      // Переводим пользователя в тренажёр.
       onAuthenticated(result.user);
     }
-  };
-
-  const handleSwitchMode = (nextMode: 'register' | 'login') => {
-    setMode(nextMode);
-    setError(null);
-    setShowRestoreBox(false);
-    setRestoreError(null);
   };
 
   return (
@@ -223,7 +134,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
             </h1>
             <p className="text-sm text-slate-400 mt-3 leading-relaxed">
               Орфография, пунктуация, орфоэпические спринты и системная работа над ошибками.
-              Весь прогресс автоматически сохраняется в облаке и доступен с любого устройства.
+              Весь прогресс сохраняется локально в вашем браузере.
             </p>
           </div>
 
@@ -308,7 +219,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
               <div className="flex items-center gap-1 p-1 bg-[#080B14] border border-slate-800/80 rounded-lg w-fit">
                 <button
                   type="button"
-                  onClick={() => handleSwitchMode('register')}
+                  onClick={() => {
+                    setMode('register');
+                    setError(null);
+                  }}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                     mode === 'register'
                       ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white shadow-sm'
@@ -319,7 +233,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSwitchMode('login')}
+                  onClick={() => {
+                    setMode('login');
+                    setError(null);
+                  }}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                     mode === 'login'
                       ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white shadow-sm'
@@ -345,10 +262,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
 
             {showRestoreBox ? (
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleRestoreFromCode();
-                }}
+                onSubmit={handleRestoreFromCode}
                 className="p-4 rounded-xl bg-[#080B14]/85 border border-violet-500/30 space-y-3 mb-4"
               >
                 <div className="space-y-1">
@@ -372,10 +286,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={isCloudLoading}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-xs font-medium text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-xs font-medium text-white cursor-pointer"
                   >
-                    {isCloudLoading ? 'Восстановление...' : 'Восстановить и войти'}
+                    Восстановить и войти
                   </button>
                 </div>
               </form>
@@ -494,15 +407,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
 
                   <button
                     type="submit"
-                    disabled={isCloudLoading}
-                    className="w-full mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                   >
                     <span>
-                      {isCloudLoading
-                        ? 'Проверка облака...'
-                        : mode === 'register'
-                        ? 'Начать обучение'
-                        : 'Войти в кабинет'}
+                      {mode === 'register' ? 'Начать обучение' : 'Войти в кабинет'}
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
