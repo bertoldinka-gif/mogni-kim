@@ -101,6 +101,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
         onAuthenticated(localResult.user);
         return;
       }
+
       // Если локально профиль не найден (новый телефон / новый домен), ищем в базе YDB
       if (localResult.error?.includes('не найден')) {
         setIsCloudLoading(true);
@@ -119,30 +120,31 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
         onAuthenticated(restored);
         return;
       }
+
       if (localResult.error) {
         setError(localResult.error);
-        return;
       }
+      return;
     }
 
     // Режим регистрации: проверяем, не занят ли никнейм в облаке YDB
-    if (mode === 'register') {
-      if (localResult.error) {
-        setError(localResult.error);
-        return;
-      }
-      setIsCloudLoading(true);
-      const existingCloud = await loadProfileFromCloud(cleanNickname);
-      setIsCloudLoading(false);
+    if (localResult.error) {
+      setError(localResult.error);
+      return;
+    }
 
-      if (existingCloud?.user) {
-        // Откатываем локальное создание и просим войти в существующий профиль
-        setError('Этот никнейм уже зарегистрирован в облаке. Переключитесь на «Войти» и введите свой пароль.');
-        return;
-      }
-      if (localResult.user) {
-        onAuthenticated(localResult.user);
-      }
+    setIsCloudLoading(true);
+    const existingCloud = await loadProfileFromCloud(cleanNickname);
+    setIsCloudLoading(false);
+
+    if (existingCloud?.user) {
+      // Профиль уже есть в облаке — просим войти в него
+      setError('Этот никнейм уже зарегистрирован в облаке. Переключитесь на «Войти» и введите свой пароль.');
+      return;
+    }
+
+    if (localResult.user) {
+      onAuthenticated(localResult.user);
     }
   };
 
@@ -188,6 +190,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
       // Переводим пользователя в тренажёр.
       onAuthenticated(result.user);
     }
+  };
+
+  const handleSwitchMode = (nextMode: 'register' | 'login') => {
+    setMode(nextMode);
+    setError(null);
+    setShowRestoreBox(false);
+    setRestoreError(null);
   };
 
   return (
@@ -299,10 +308,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
               <div className="flex items-center gap-1 p-1 bg-[#080B14] border border-slate-800/80 rounded-lg w-fit">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode('register');
-                    setError(null);
-                  }}
+                  onClick={() => handleSwitchMode('register')}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                     mode === 'register'
                       ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white shadow-sm'
@@ -313,10 +319,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode('login');
-                    setError(null);
-                  }}
+                  onClick={() => handleSwitchMode('login')}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                     mode === 'login'
                       ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white shadow-sm'
@@ -369,9 +372,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-xs font-medium text-white cursor-pointer"
+                    disabled={isCloudLoading}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-xs font-medium text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Восстановить и войти
+                    {isCloudLoading ? 'Восстановление...' : 'Восстановить и войти'}
                   </button>
                 </div>
               </form>
