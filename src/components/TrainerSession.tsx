@@ -119,7 +119,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     return () => window.clearInterval(interval);
   }, [session.isMockExam, finished]);
 
-   const mockDraftKey = session.isMockExam
+  const mockDraftKey = session.isMockExam
     ? `mogni_mock_draft_${(activeUserId ?? 'guest').trim().toLowerCase() || 'guest'}_${session.id}`
     : null;
 
@@ -132,31 +132,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const answeredIndicesRef = useRef<Set<number>>(new Set());
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
-
-    useEffect(() => {
-    setQuestions(session.questions);
-  }, [session.questions]);
-
-  const isEge21 = session.id === 'ege-21' && !session.isMockExam && !session.isReviewMode;
-  const [ege21SignFilter, setEge21SignFilter] = useState<'mix' | 'comma' | 'dash' | 'colon'>('mix');
-
-  const allEge21Questions = useMemo(() => {
-    if (!isEge21) return [];
-    const mod = getModulesForGrade('ege').find((m) => m.id === 'ege-21');
-    return mod ? mod.questions : session.questions;
-  }, [isEge21, session.questions]);
-
-  const ege21Counts = useMemo(() => {
-    if (!isEge21) return { mix: 0, comma: 0, dash: 0, colon: 0 };
-    const getText = (q: (typeof allEge21Questions)[number]) =>
-      `${q.subtopic ?? ''} ${q.prompt ?? ''}`.toLowerCase();
-    return {
-      mix: allEge21Questions.length,
-      comma: allEge21Questions.filter((q) => getText(q).includes('запят')).length,
-      dash: allEge21Questions.filter((q) => getText(q).includes('тире')).length,
-      colon: allEge21Questions.filter((q) => getText(q).includes('двоеточ')).length,
-    };
-  }, [isEge21, allEge21Questions]);
 
   useEffect(() => {
     setQuestions(session.questions);
@@ -205,7 +180,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     answeredIndicesRef.current = new Set();
   };
 
-    useEffect(() => {
+  useEffect(() => {
     if (!mockDraftKey) return;
     try {
       const raw = localStorage.getItem(mockDraftKey);
@@ -350,7 +325,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     setCurrentIndex((i) => Math.max(0, i - 1));
   };
 
-   const handleNext = () => {
+  const handleNext = () => {
     if (currentIndex + 1 >= total) {
       const finalDuration = Math.max(
         0,
@@ -391,7 +366,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     }
   };
 
-   const handleRestart = () => {
+  const handleRestart = () => {
     if (mockDraftKey) {
       localStorage.removeItem(mockDraftKey);
     }
@@ -575,7 +550,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   const progressPct = Math.round(((currentIndex + 1) / total) * 100);
 
-   return (
+  return (
     <div className="max-w-6xl mx-auto space-y-3.5 lg:space-y-4 pb-24 lg:pb-0">
       {isEge21 && (
         <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/80">
@@ -611,7 +586,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           })}
         </div>
       )}
-           {/* Top Session Bar */}
+      {/* Top Session Bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 shrink-0">
           <button
