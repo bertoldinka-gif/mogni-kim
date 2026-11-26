@@ -118,18 +118,23 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     return () => window.clearInterval(interval);
   }, [session.isMockExam, finished]);
 
-  const questions = session.questions;
+   const mockDraftKey = session.isMockExam
+    ? `mogni_mock_draft_${(activeUserId ?? 'guest').trim().toLowerCase() || 'guest'}_${session.id}`
+    : null;
+
+  const [questions, setQuestions] = useState(() => session.questions);
   const total = questions.length;
   const [questionResults, setQuestionResults] = useState<Array<boolean | null>>(() =>
-    Array(total).fill(null)
+    Array(session.questions.length).fill(null)
   );
   const [savedStates, setSavedStates] = useState<Record<number, SavedQuestionState>>({});
   const answeredIndicesRef = useRef<Set<number>>(new Set());
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
-    const mockDraftKey = session.isMockExam
-    ? `mogni_mock_draft_${activeUserId ?? 'guest'}_${session.id}`
-    : null;
+
+  useEffect(() => {
+    setQuestions(session.questions);
+  }, [session.questions]);
 
   useEffect(() => {
     if (!mockDraftKey) return;
@@ -137,7 +142,10 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
       const raw = localStorage.getItem(mockDraftKey);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      if (draft && draft.total === total && !draft.finished) {
+      if (draft && draft.total === session.questions.length && !draft.finished) {
+        if (Array.isArray(draft.questions) && draft.questions.length === session.questions.length) {
+          setQuestions(draft.questions);
+        }
         setCurrentIndex(draft.currentIndex ?? 0);
         setCorrectCount(draft.correctCount ?? 0);
         setWrongCount(draft.wrongCount ?? 0);
@@ -155,7 +163,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     } catch {
       // ignore
     }
-  }, [mockDraftKey, total]);
+  }, [mockDraftKey, session.questions.length]);
 
   const handleSaveMockAndExit = () => {
     if (mockDraftKey) {
@@ -164,6 +172,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           mockDraftKey,
           JSON.stringify({
             total,
+            questions,
             finished: false,
             currentIndex,
             correctCount,
