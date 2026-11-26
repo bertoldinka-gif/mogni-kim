@@ -133,9 +133,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
 
-  useEffect(() => {
+    useEffect(() => {
     setQuestions(session.questions);
-      const isEge21 = session.id === 'ege-21' && !session.isMockExam && !session.isReviewMode;
+  }, [session.questions]);
+
+  const isEge21 = session.id === 'ege-21' && !session.isMockExam && !session.isReviewMode;
   const [ege21SignFilter, setEge21SignFilter] = useState<'mix' | 'comma' | 'dash' | 'colon'>('mix');
 
   const allEge21Questions = useMemo(() => {
