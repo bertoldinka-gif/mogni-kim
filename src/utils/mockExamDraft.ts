@@ -30,8 +30,17 @@ export interface MockExamDraft {
   updatedAt: string;
 }
 
-export function draftStorageKey(userId: string | undefined, sessionId: string): string {
-  return `mogni_mock_draft_${userId ?? 'guest'}_${sessionId}`;
+/**
+ * Ключ localStorage для черновика пробника.
+ * userId нормализуется (trim + lowercase, fallback 'guest'),
+ * чтобы регистр или пробелы в нике никогда не ломали поиск.
+ */
+export function draftStorageKey(
+  userId: string | undefined,
+  sessionId: string
+): string {
+  const normalizedUser = (userId ?? '').trim().toLowerCase() || 'guest';
+  return `mogni_mock_draft_${normalizedUser}_${sessionId}`;
 }
 
 export function loadDraft(
@@ -42,34 +51,54 @@ export function loadDraft(
     const raw = localStorage.getItem(draftStorageKey(userId, sessionId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<MockExamDraft>;
-    if (!parsed || !Array.isArray(parsed.questionIds) || parsed.questionIds.length === 0) {
+    if (
+      !parsed ||
+      !Array.isArray(parsed.questionIds) ||
+      parsed.questionIds.length === 0
+    ) {
       return null;
     }
     return {
       version: 2,
-      questionIds: parsed.questionIds.filter((x): x is string => typeof x === 'string'),
-      total: typeof parsed.total === 'number' ? parsed.total : parsed.questionIds.length,
+      questionIds: parsed.questionIds.filter(
+        (x): x is string => typeof x === 'string'
+      ),
+      total:
+        typeof parsed.total === 'number'
+          ? parsed.total
+          : parsed.questionIds.length,
       finished: false,
-      currentIndex: typeof parsed.currentIndex === 'number' ? parsed.currentIndex : 0,
-      correctCount: typeof parsed.correctCount === 'number' ? parsed.correctCount : 0,
-      wrongCount: typeof parsed.wrongCount === 'number' ? parsed.wrongCount : 0,
-      comboStreak: typeof parsed.comboStreak === 'number' ? parsed.comboStreak : 0,
-      netXpDelta: typeof parsed.netXpDelta === 'number' ? parsed.netXpDelta : 0,
-      elapsedSeconds: typeof parsed.elapsedSeconds === 'number' ? parsed.elapsedSeconds : 0,
+      currentIndex:
+        typeof parsed.currentIndex === 'number' ? parsed.currentIndex : 0,
+      correctCount:
+        typeof parsed.correctCount === 'number' ? parsed.correctCount : 0,
+      wrongCount:
+        typeof parsed.wrongCount === 'number' ? parsed.wrongCount : 0,
+      comboStreak:
+        typeof parsed.comboStreak === 'number' ? parsed.comboStreak : 0,
+      netXpDelta:
+        typeof parsed.netXpDelta === 'number' ? parsed.netXpDelta : 0,
+      elapsedSeconds:
+        typeof parsed.elapsedSeconds === 'number' ? parsed.elapsedSeconds : 0,
       resultsByQuestionId:
-        parsed.resultsByQuestionId && typeof parsed.resultsByQuestionId === 'object'
+        parsed.resultsByQuestionId &&
+        typeof parsed.resultsByQuestionId === 'object'
           ? parsed.resultsByQuestionId
           : {},
       savedStatesByQuestionId:
-        parsed.savedStatesByQuestionId && typeof parsed.savedStatesByQuestionId === 'object'
+        parsed.savedStatesByQuestionId &&
+        typeof parsed.savedStatesByQuestionId === 'object'
           ? parsed.savedStatesByQuestionId
           : {},
       draftStatesByQuestionId:
-        parsed.draftStatesByQuestionId && typeof parsed.draftStatesByQuestionId === 'object'
+        parsed.draftStatesByQuestionId &&
+        typeof parsed.draftStatesByQuestionId === 'object'
           ? parsed.draftStatesByQuestionId
           : {},
       answeredQuestionIds: Array.isArray(parsed.answeredQuestionIds)
-        ? parsed.answeredQuestionIds.filter((x): x is string => typeof x === 'string')
+        ? parsed.answeredQuestionIds.filter(
+            (x): x is string => typeof x === 'string'
+          )
         : [],
       createdAt: parsed.createdAt || new Date().toISOString(),
       updatedAt: parsed.updatedAt || new Date().toISOString(),
@@ -86,14 +115,20 @@ export function saveDraft(
 ): MockExamDraft {
   const next: MockExamDraft = { ...draft, updatedAt: new Date().toISOString() };
   try {
-    localStorage.setItem(draftStorageKey(userId, sessionId), JSON.stringify(next));
+    localStorage.setItem(
+      draftStorageKey(userId, sessionId),
+      JSON.stringify(next)
+    );
   } catch {
     // ignore storage errors
   }
   return next;
 }
 
-export function clearDraft(userId: string | undefined, sessionId: string): void {
+export function clearDraft(
+  userId: string | undefined,
+  sessionId: string
+): void {
   try {
     localStorage.removeItem(draftStorageKey(userId, sessionId));
   } catch {
@@ -101,7 +136,10 @@ export function clearDraft(userId: string | undefined, sessionId: string): void 
   }
 }
 
-/** Пересобирает вопросы строго по questionIds из черновика. */
+/**
+ * Пересобирает вопросы строго по questionIds из черновика.
+ * Если какого-то id нет в базе — попадает в missing, порядок остальных сохраняется.
+ */
 export function rebuildQuestionsByIds(
   ids: string[],
   questionPool: PlatformQuestion[]
