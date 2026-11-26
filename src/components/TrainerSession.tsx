@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Award,
@@ -56,7 +56,7 @@ export interface ActiveSessionConfig {
   selectedSubtopic?: string | null;
   gradeLevelOverride?: AttemptGradeLevel;
   essayArchiveId?: string | null;
-  /** Признак того, что сессия собрана строго по questionIds черновика. */
+  /** Признак: сессия собрана строго по questionIds черновика. */
   restoredFromDraft?: boolean;
   /** id, которые были в черновике, но отсутствуют в базе. */
   missingDraftQuestionIds?: string[];
@@ -118,15 +118,20 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const [shakeKey, setShakeKey] = useState(0);
   const [finished, setFinished] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [draftRestoreWarning, setDraftRestoreWarning] = useState<string | null>(null);
+  const [draftRestoreWarning, setDraftRestoreWarning] = useState<string | null>(
+    null
+  );
+
   const mockStartTimeRef = useRef<number>(Date.now());
   const restoredOnceRef = useRef(false);
 
   const [draftStates, setDraftStates] = useState<Record<number, unknown>>({});
-  const [questionResults, setQuestionResults] = useState<Array<boolean | null>>(() =>
-    Array(session.questions.length).fill(null)
+  const [questionResults, setQuestionResults] = useState<Array<boolean | null>>(
+    () => Array(session.questions.length).fill(null)
   );
-  const [savedStates, setSavedStates] = useState<Record<number, SavedQuestionState>>({});
+  const [savedStates, setSavedStates] = useState<
+    Record<number, SavedQuestionState>
+  >({});
   const answeredIndicesRef = useRef<Set<number>>(new Set());
 
   const questions = session.questions;
@@ -134,8 +139,13 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const currentQuestion = questions[currentIndex];
   const xpReward = session.xpPerCorrect ?? 20;
   const isMock = Boolean(session.isMockExam);
-  const mockDraftKey = isMock ? draftStorageKey(activeUserId, session.id) : null;
 
+  // Единый источник ключа черновика — только через draftStorageKey.
+  const mockDraftKey = isMock
+    ? draftStorageKey(activeUserId, session.id)
+    : null;
+
+  // --- Таймер для пробника ---
   useEffect(() => {
     if (!isMock || finished) return;
     const interval = window.setInterval(() => {
@@ -146,7 +156,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     return () => window.clearInterval(interval);
   }, [isMock, finished]);
 
-  // --- Восстановление черновика (только один раз на монтирование) ---
+  // --- Восстановление черновика при монтировании ---
   useEffect(() => {
     if (!isMock || restoredOnceRef.current) return;
     restoredOnceRef.current = true;
@@ -157,30 +167,26 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     const currentIds = questions.map((q) => q.id);
     const savedIds = draft.questionIds;
 
-    // Если сессия уже собрана строго по questionIds черновика — применяем всё.
-    if (currentIds.length === savedIds.length) {
-      let exactMatch = true;
+    const sameLength = currentIds.length === savedIds.length;
+    let exactMatch = sameLength;
+    if (sameLength) {
       for (let i = 0; i < savedIds.length; i++) {
         if (currentIds[i] !== savedIds[i]) {
           exactMatch = false;
           break;
         }
       }
-
-      if (exactMatch) {
-        applyDraftByQuestionId(draft, questions, savedIds);
-        return;
-      }
     }
 
-    // Иначе: сессия собрана заново (другие id / другой порядок).
-    // Применяем черновик частично — только по совпадающим questionId.
-    // Так ответы не «переедут» на чужие вопросы.
+    if (exactMatch) {
+      applyDraftByQuestionId(draft, questions);
+      return;
+    }
+
     const currentIdSet = new Set(currentIds);
     const matchedCount = savedIds.filter((id) => currentIdSet.has(id)).length;
 
     if (matchedCount === 0) {
-      // Совпадений нет — безопаснее не применять ничего.
       clearDraft(activeUserId, session.id);
       setDraftRestoreWarning(
         'Сохранённый черновик относится к другому варианту. Запущен новый чистый вариант.'
@@ -188,72 +194,74 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
       return;
     }
 
-    applyDraftByQuestionId(draft, questions, currentIds);
+    applyDraftByQuestionId(draft, questions);
     if (matchedCount < savedIds.length) {
       setDraftRestoreWarning(
-        `В сохранённом черновике было ${savedIds.length} вопросов, из них найдено ${matchedCount}. Остальные пропущены.`
+        `В черновике было ${savedIds.length} вопросов, найдено ${matchedCount}. Остальные пропущены.`
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMock, activeUserId, session.id]);
 
   /**
-   * Применяет черновик к текущей сессии, сопоставляя данные по questionId.
-   * Ответы, результаты и черновики переносятся на индекс текущего вопроса,
-   * только если questionId есть в targetQuestions.
+   * Переносит данные черновика на индексы текущей сессии строго по questionId.
+   * currentIndex восстанавливается по id сохранённого текущего вопроса.
    */
   function applyDraftByQuestionId(
     draft: MockExamDraft,
-    targetQuestions: PlatformQuestion[],
-    orderedIdsForWarning: string[]
+    targetQuestions: PlatformQuestion[]
   ) {
     const idToIndex: Record<string, number> = {};
     targetQuestions.forEach((q, i) => {
       idToIndex[q.id] = i;
     });
 
-    const nextResults: Array<boolean | null> = Array(targetQuestions.length).fill(null);
+    const nextResults: Array<boolean | null> = Array(
+      targetQuestions.length
+    ).fill(null);
     const nextSavedStates: Record<number, SavedQuestionState> = {};
     const nextDraftStates: Record<number, unknown> = {};
     const nextAnswered = new Set<number>();
 
-    // Результаты
-    for (const [qid, val] of Object.entries(draft.resultsByQuestionId || {})) {
+    for (const [qid, val] of Object.entries(
+      draft.resultsByQuestionId || {}
+    )) {
       const idx = idToIndex[qid];
       if (idx === undefined) continue;
       nextResults[idx] = val === true ? true : val === false ? false : null;
     }
 
-    // Проверенные состояния
-    for (const [qid, state] of Object.entries(draft.savedStatesByQuestionId || {})) {
+    for (const [qid, state] of Object.entries(
+      draft.savedStatesByQuestionId || {}
+    )) {
       const idx = idToIndex[qid];
       if (idx === undefined) continue;
       nextSavedStates[idx] = {
         isCorrect: Boolean(state?.isCorrect),
-        userState: (state as MockExamDraftSavedState | undefined)?.userState ?? null,
-        mentorQuote: (state as MockExamDraftSavedState | undefined)?.mentorQuote ?? null,
+        userState:
+          (state as MockExamDraftSavedState | undefined)?.userState ?? null,
+        mentorQuote:
+          (state as MockExamDraftSavedState | undefined)?.mentorQuote ?? null,
       };
     }
 
-    // Черновики непроверенных ответов
-    for (const [qid, val] of Object.entries(draft.draftStatesByQuestionId || {})) {
+    for (const [qid, val] of Object.entries(
+      draft.draftStatesByQuestionId || {}
+    )) {
       const idx = idToIndex[qid];
       if (idx === undefined) continue;
       nextDraftStates[idx] = val;
     }
 
-    // Отвеченные
     for (const qid of draft.answeredQuestionIds || []) {
       const idx = idToIndex[qid];
       if (idx === undefined) continue;
       nextAnswered.add(idx);
     }
 
-    // Восстанавливаем счётчики
     const restoredCorrect = nextResults.filter((v) => v === true).length;
     const restoredWrong = nextResults.filter((v) => v === false).length;
 
-    // currentIndex: если в черновике был валидный id — берём его индекс в новой сессии
     let restoredIndex = 0;
     const savedCurrentId = draft.questionIds[draft.currentIndex];
     if (savedCurrentId && idToIndex[savedCurrentId] !== undefined) {
@@ -275,16 +283,15 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     const prevElapsed = Number(draft.elapsedSeconds ?? 0);
     setElapsedSeconds(prevElapsed);
     mockStartTimeRef.current = Date.now() - prevElapsed * 1000;
-
-    // Приводим orderedIdsForWarning к виду, чтобы линтер не ругался (не используется)
-    void orderedIdsForWarning;
   }
 
+  // --- «Сохранить и выйти»: только saveDraft + onExit, без clearDraft ---
   const handleSaveMockAndExit = () => {
     if (!mockDraftKey) {
       onExit();
       return;
     }
+
     const resultsByQuestionId: Record<string, boolean | null> = {};
     const savedStatesByQuestionId: Record<string, MockExamDraftSavedState> = {};
     const draftStatesByQuestionId: Record<string, unknown> = {};
@@ -427,12 +434,16 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
       );
       if (isMock) setElapsedSeconds(finalDuration);
       setFinished(true);
+
+      // Штатное завершение: здесь и только здесь чистим черновик.
       if (mockDraftKey) clearDraft(activeUserId, session.id);
 
       if (!session.isReviewMode) {
         if (isMock) {
           const examType: 'oge' | 'ege' =
-            session.examLabel === 'ОГЭ' || session.id.includes('oge') ? 'oge' : 'ege';
+            session.examLabel === 'ОГЭ' || session.id.includes('oge')
+              ? 'oge'
+              : 'ege';
           const taskResults = questions.map((q, idx) => {
             const taskNumber = q.kimTaskNumber ?? idx + 1;
             return {
@@ -458,6 +469,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   };
 
   const handleRestart = () => {
+    // «Пройти ещё раз» — явный сброс, чистим черновик.
     if (mockDraftKey) clearDraft(activeUserId, session.id);
     if (onRestartFresh && !session.isReviewMode) {
       onRestartFresh();
@@ -601,8 +613,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             <div className="flex items-start gap-2.5 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200">
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <span>
-                Ошибки ({wrongCount}) сохранены в разделе «Работа над ошибками». Они останутся там,
-                пока вы не нажмёте «Выучил» (+10 XP за искупление).
+                Ошибки ({wrongCount}) сохранены в разделе «Работа над ошибками». Они останутся
+                там, пока вы не нажмёте «Выучил» (+10 XP за искупление).
               </span>
             </div>
           )}
@@ -792,12 +804,17 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
                 <span>{formatStopwatch(elapsedSeconds)}</span>
               </span>
               <span className="font-mono-num text-slate-400">
-                Решено верно: <strong className="text-emerald-300">{correctCount}</strong> из {total}
+                Решено верно:{' '}
+                <strong className="text-emerald-300">{correctCount}</strong> из {total}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1" role="navigation" aria-label="Навигация по заданиям КИМ">
+          <div
+            className="flex flex-wrap items-center gap-1"
+            role="navigation"
+            aria-label="Навигация по заданиям КИМ"
+          >
             {questions.map((q, idx) => {
               const res = questionResults[idx];
               const isCurrent = idx === currentIndex;
@@ -858,7 +875,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedOption: string | null }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ selectedOption: string | null }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -877,7 +898,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ values: string[]; digitsInput: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ values: string[]; digitsInput: string }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -896,7 +921,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedIndices: number[] }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ selectedIndices: number[] }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -915,7 +944,13 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedMapping: Record<string, number | ''> }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{
+                  selectedMapping: Record<string, number | ''>;
+                }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -936,7 +971,14 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ essayText: string; gradingReport: unknown }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{
+                  essayText: string;
+                  gradingReport: unknown;
+                }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -954,7 +996,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ values: string[]; digitsInput: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ values: string[]; digitsInput: string }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -992,7 +1038,14 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ letterValues: string[]; answerInput: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{
+                  letterValues: string[];
+                  answerInput: string;
+                }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -1011,7 +1064,17 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedForms: Record<string, 'solid' | 'separate' | 'hyphen'>; answerInput: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{
+                  selectedForms: Record<
+                    string,
+                    'solid' | 'separate' | 'hyphen'
+                  >;
+                  answerInput: string;
+                }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -1030,7 +1093,14 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ slotValues: Record<number, 'н' | 'нн'>; digitsInput: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{
+                  slotValues: Record<number, 'н' | 'нн'>;
+                  digitsInput: string;
+                }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -1049,7 +1119,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ answer: string }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ answer: string }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
@@ -1071,7 +1145,11 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           isReviewMode={session.isReviewMode}
           isLastQuestion={currentIndex + 1 >= total}
           canGoPrev={currentIndex > 0}
-          savedState={savedStates[currentIndex] as SavedQuestionState<{ selectedIndices: number[] }> | undefined}
+          savedState={
+            savedStates[currentIndex] as
+              | SavedQuestionState<{ selectedIndices: number[] }>
+              | undefined
+          }
           draftState={draftStates[currentIndex]}
           onDraftChange={handleDraftChange}
           comboStreak={comboStreak}
