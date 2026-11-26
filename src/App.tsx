@@ -100,7 +100,9 @@ function buildQuestionPreviewText(q: PlatformQuestion): string {
       return truncatePreview(q.sentenceTemplate);
     }
     let idx = 0;
-    return truncatePreview(q.sentenceTemplate.replace(/\[_\]/g, () => `(${++idx})`));
+    return truncatePreview(
+      q.sentenceTemplate.replace(/\[_\]/g, () => `(${++idx})`)
+    );
   }
   if (q.type === 'text_cloze') {
     return truncatePreview(getTextClozePlainPreview(q.markupText));
@@ -110,14 +112,18 @@ function buildQuestionPreviewText(q: PlatformQuestion): string {
       return truncatePreview(`Фонетический разбор: «${q.fullWord}»`);
     }
     if (q.mode === 'morphological') {
-      return truncatePreview(`Морфологический разбор «${q.targetWord}»: ${q.sentence}`);
+      return truncatePreview(
+        `Морфологический разбор «${q.targetWord}»: ${q.sentence}`
+      );
     }
     return truncatePreview(`Синтаксический разбор: ${q.sentence}`);
   }
   if (q.type === 'ege_row_spelling') {
     return truncatePreview(
       q.rows
-        .map((r) => `${r.rowNumber}) ${r.words.map((w) => w.template).join(', ')}`)
+        .map(
+          (r) => `${r.rowNumber}) ${r.words.map((w) => w.template).join(', ')}`
+        )
         .join(' · ')
     );
   }
@@ -133,7 +139,9 @@ function buildQuestionPreviewText(q: PlatformQuestion): string {
     return truncatePreview(preview);
   }
   if (q.type === 'word_input') {
-    return truncatePreview(q.sentence ? `${q.prompt} «${q.sentence}»` : q.prompt);
+    return truncatePreview(
+      q.sentence ? `${q.prompt} «${q.sentence}»` : q.prompt
+    );
   }
   if (q.type === 'phraseology_highlight') {
     return truncatePreview(`${q.prompt} ${q.paragraph}`);
@@ -159,10 +167,18 @@ function resolveAttemptGradeLevel(
 ): AttemptGradeLevel {
   if (overrideGrade) return overrideGrade;
   const tag = question.topicTag || '';
-  if (sourceId.startsWith('ege-') || sourceId === 'mock-ege' || tag.startsWith('ЕГЭ')) {
+  if (
+    sourceId.startsWith('ege-') ||
+    sourceId === 'mock-ege' ||
+    tag.startsWith('ЕГЭ')
+  ) {
     return 'ege';
   }
-  if (sourceId.startsWith('oge-') || sourceId === 'mock-oge' || tag.startsWith('ОГЭ')) {
+  if (
+    sourceId.startsWith('oge-') ||
+    sourceId === 'mock-oge' ||
+    tag.startsWith('ОГЭ')
+  ) {
     return 'oge';
   }
   if (userGrade === 'grades_2_4') return 'grade2_4';
@@ -190,7 +206,10 @@ function getRankTier(xp: number): number {
   return 3;
 }
 
-const AI_EXAM_TO_ESSAY_KIND: Record<SavedEssayRecord['examType'], OpenEssayKind> = {
+const AI_EXAM_TO_ESSAY_KIND: Record<
+  SavedEssayRecord['examType'],
+  OpenEssayKind
+> = {
   OGE_SUMMARY: 'oge_summary',
   OGE_ESSAY: 'oge_essay',
   EGE_ESSAY: 'ege_essay',
@@ -240,15 +259,18 @@ export default function App() {
     const active = getActiveUser();
     return active ? getMistakes(active.nickname) : [];
   });
-  const [dailyChallenge, setDailyChallenge] = useState<DailyChallengeState | null>(() => {
-    const active = getActiveUser();
-    return active ? getDailyChallenge(active.nickname) : null;
-  });
-  const [categoryStats, setCategoryStats] = useState<CategoryStatsMap | null>(() => {
-    const active = getActiveUser();
-    return active ? getCategoryStats(active.nickname) : null;
-  });
-  const [activeSection, setActiveSection] = useState<ActiveNavSection>('dashboard');
+  const [dailyChallenge, setDailyChallenge] =
+    useState<DailyChallengeState | null>(() => {
+      const active = getActiveUser();
+      return active ? getDailyChallenge(active.nickname) : null;
+    });
+  const [categoryStats, setCategoryStats] =
+    useState<CategoryStatsMap | null>(() => {
+      const active = getActiveUser();
+      return active ? getCategoryStats(active.nickname) : null;
+    });
+  const [activeSection, setActiveSection] =
+    useState<ActiveNavSection>('dashboard');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('base');
   const [activeEgeTab, setActiveEgeTab] = useState<EgeCategoryTab>(() => {
     try {
@@ -266,8 +288,12 @@ export default function App() {
     }
     return 'speech_culture';
   });
-  const [activeSession, setActiveSession] = useState<ActiveSessionConfig | null>(null);
-  const [activeBlitzMode, setActiveBlitzMode] = useState<BlitzModeId | null>(null);
+  const [activeSession, setActiveSession] = useState<ActiveSessionConfig | null>(
+    null
+  );
+  const [activeBlitzMode, setActiveBlitzMode] = useState<BlitzModeId | null>(
+    null
+  );
   const [sessionNonce, setSessionNonce] = useState(0);
   const [restartAction, setRestartAction] = useState<(() => void) | undefined>(
     undefined
@@ -276,7 +302,9 @@ export default function App() {
     ((subtopic: string | null) => void) | undefined
   >(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [dyslexiaMode, setDyslexiaMode] = useState<boolean>(() => getDyslexiaMode());
+  const [dyslexiaMode, setDyslexiaMode] = useState<boolean>(() =>
+    getDyslexiaMode()
+  );
   const [recentLevelUp, setRecentLevelUp] = useState(false);
   const prevUserSnapshotRef = useRef<{ nickname: string; xp: number } | null>(
     user ? { nickname: user.nickname, xp: user.xp } : null
@@ -516,9 +544,8 @@ export default function App() {
   };
 
   /**
-   * Продолжает сохранённый пробник, если есть черновик.
-   * Если черновика нет (или он не восстановился) — запускает новый вариант.
-   * При этом новый вариант генерируется ТОЛЬКО здесь по явному действию.
+   * Открыть пробник: сначала пытаемся восстановить черновик по questionIds.
+   * Новый случайный вариант — только если черновика нет.
    */
   const handleStartMockTest = () => {
     const currentUser = getActiveUser() ?? user;
@@ -532,10 +559,9 @@ export default function App() {
         ? 'ЕГЭ'
         : undefined;
 
-    // 1. Пытаемся восстановить черновик
     const draft = loadDraft(currentUser.nickname, sessionId);
+
     if (draft && draft.questionIds.length > 0) {
-      // Собираем полную базу вопросов, чтобы найти нужные по id
       const allMockQuestions = buildMockTestQuestions(currentUser.grade);
       const { questions, missing } = rebuildQuestionsByIds(
         draft.questionIds,
@@ -543,11 +569,6 @@ export default function App() {
       );
 
       if (questions.length > 0) {
-        // Если часть id не нашлась — оставляем предупреждение в сессии
-        if (missing.length > 0) {
-          // не удаляем черновик: пользователь может закрыть и вернуться
-          // но предупредим через свойство сессии
-        }
         setActiveBlitzMode(null);
         setActiveSection('mock_test');
         setSessionNonce((n) => n + 1);
@@ -557,7 +578,8 @@ export default function App() {
           id: sessionId,
           title: `Комплексный тест (${GRADE_LABELS[currentUser.grade]})`,
           questions,
-          isMockExam: currentUser.grade === 'oge' || currentUser.grade === 'ege',
+          isMockExam:
+            currentUser.grade === 'oge' || currentUser.grade === 'ege',
           examLabel,
           xpPerCorrect: 25,
           restoredFromDraft: true,
@@ -566,11 +588,10 @@ export default function App() {
         return;
       }
 
-      // Черновик есть, но ни один вопрос не найден — очищаем и стартуем новый
+      // Черновик был, но ни один вопрос не найден — стираем и начинаем новый.
       clearDraft(currentUser.nickname, sessionId);
     }
 
-    // 2. Черновика нет — генерируем новый вариант
     const questions = buildMockTestQuestions(currentUser.grade);
     setActiveBlitzMode(null);
     setActiveSection('mock_test');
@@ -588,14 +609,15 @@ export default function App() {
   };
 
   /**
-   * Явный запуск нового варианта: очищает черновик и генерирует новые вопросы.
-   * Вызывается только по кнопке «Новый вариант» (например, из журнала).
+   * Явный новый вариант: чистит черновик и генерирует новые вопросы.
    */
   const handleStartNewMockVariant = () => {
     const currentUser = getActiveUser() ?? user;
     if (!currentUser) return;
+
     const sessionId = `mock-${currentUser.grade}`;
     clearDraft(currentUser.nickname, sessionId);
+
     const questions = buildMockTestQuestions(currentUser.grade);
     const examLabel =
       currentUser.grade === 'oge'
@@ -603,6 +625,7 @@ export default function App() {
         : currentUser.grade === 'ege'
         ? 'ЕГЭ'
         : undefined;
+
     setActiveBlitzMode(null);
     setActiveSection('mock_test');
     setSessionNonce((n) => n + 1);
@@ -675,7 +698,10 @@ export default function App() {
       nextUser = markQuestionsSolved(statsUpdatedUser, solvedIds);
     }
 
-    const { userAnswer, correctAnswer } = formatAttemptAnswers(question, userState);
+    const { userAnswer, correctAnswer } = formatAttemptAnswers(
+      question,
+      userState
+    );
 
     nextUser = appendAttemptHistory(nextUser, {
       questionId: question.id,
@@ -697,7 +723,9 @@ export default function App() {
 
     const catKey = resolveAnalyticsCategoryKey(user.grade, sourceId, question);
     if (catKey) {
-      setCategoryStats(recordCategoryAttempt(user.nickname, catKey, isCorrect));
+      setCategoryStats(
+        recordCategoryAttempt(user.nickname, catKey, isCorrect)
+      );
     }
     setDailyChallenge(
       updateDailyChallengeOnAnswer(user.nickname, {
@@ -725,7 +753,10 @@ export default function App() {
     return xpDelta;
   };
 
-  const handleMarkLearned = (questionId: string, fromReviewSession = false) => {
+  const handleMarkLearned = (
+    questionId: string,
+    fromReviewSession = false
+  ) => {
     if (!user) return;
     const nextMistakes = removeMistakeAsLearned(user.nickname, questionId);
     setMistakes(nextMistakes);
@@ -746,7 +777,8 @@ export default function App() {
 
   const handleClaimDailyChallenge = () => {
     if (!user) return;
-    const { user: updatedUser, challenge, awarded } = claimDailyChallengeReward(user);
+    const { user: updatedUser, challenge, awarded } =
+      claimDailyChallengeReward(user);
     if (awarded) {
       setUser(updatedUser);
     }
@@ -767,7 +799,10 @@ export default function App() {
     }
   };
 
-  const handlePracticeKimTask = (examType: 'oge' | 'ege', taskNumber: number) => {
+  const handlePracticeKimTask = (
+    examType: 'oge' | 'ege',
+    taskNumber: number
+  ) => {
     const mod = getModuleTargetForKimTask(examType, taskNumber);
     if (!mod) {
       setActiveSection('curriculum');
@@ -781,7 +816,10 @@ export default function App() {
     setActiveBlitzMode(mode);
   };
 
-  const handleBlitzDuelFinished = (outcome: { won: boolean; xpReward: number }) => {
+  const handleBlitzDuelFinished = (outcome: {
+    won: boolean;
+    xpReward: number;
+  }) => {
     const latestUser = getActiveUser() ?? user;
     if (!latestUser) return;
     const updatedUser = recordBlitzDuelOutcome(latestUser, outcome);
@@ -798,7 +836,7 @@ export default function App() {
     let updatedUser = latestUser;
     if (mockExamResult) {
       updatedUser = appendMockExamRecord(updatedUser, mockExamResult);
-      // Чистим черновик пробника после завершения, чтобы следующий заход был новым
+      // Штатное завершение пробника — здесь чистим черновик.
       if (moduleId.startsWith('mock-')) {
         clearDraft(latestUser.nickname, moduleId);
       }
@@ -816,7 +854,10 @@ export default function App() {
   ): SavedEssayRecord | void => {
     const latestUser = getActiveUser() ?? user;
     if (!latestUser) return;
-    const { user: updatedUser, savedRecord } = saveEssayToArchive(latestUser, entry);
+    const { user: updatedUser, savedRecord } = saveEssayToArchive(
+      latestUser,
+      entry
+    );
     setUser(updatedUser);
     return savedRecord;
   };
@@ -890,7 +931,6 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Mobile Top Header */}
       <header className="lg:hidden sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-[#0B0F1D]/90 backdrop-blur-md border-b border-slate-800/80">
         <div className="flex items-center gap-2.5">
           <LogoMark size={28} />
@@ -908,7 +948,6 @@ export default function App() {
         </button>
       </header>
 
-      {/* Main Content Workspace with Ambient Radial Glow */}
       <main className="relative lg:pl-64">
         <div
           aria-hidden="true"
