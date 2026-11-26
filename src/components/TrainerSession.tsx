@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Award,
@@ -12,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { MentorCharacter } from '../data/petsData';
+import { getModulesForGrade } from '../data/curriculum';
 import {
   AttemptGradeLevel,
   MockExamRecord,
@@ -134,9 +135,75 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   useEffect(() => {
     setQuestions(session.questions);
-  }, [session.questions]);
+      const isEge21 = session.id === 'ege-21' && !session.isMockExam && !session.isReviewMode;
+  const [ege21SignFilter, setEge21SignFilter] = useState<'mix' | 'comma' | 'dash' | 'colon'>('mix');
+
+  const allEge21Questions = useMemo(() => {
+    if (!isEge21) return [];
+    const mod = getModulesForGrade('ege').find((m) => m.id === 'ege-21');
+    return mod ? mod.questions : session.questions;
+  }, [isEge21, session.questions]);
+
+  const ege21Counts = useMemo(() => {
+    if (!isEge21) return { mix: 0, comma: 0, dash: 0, colon: 0 };
+    const getText = (q: (typeof allEge21Questions)[number]) =>
+      `${q.subtopic ?? ''} ${q.prompt ?? ''}`.toLowerCase();
+    return {
+      mix: allEge21Questions.length,
+      comma: allEge21Questions.filter((q) => getText(q).includes('запят')).length,
+      dash: allEge21Questions.filter((q) => getText(q).includes('тире')).length,
+      colon: allEge21Questions.filter((q) => getText(q).includes('двоеточ')).length,
+    };
+  }, [isEge21, allEge21Questions]);
 
   useEffect(() => {
+    setQuestions(session.questions);
+  }, [session.questions]);
+
+  const isEge21 = session.id === 'ege-21' && !session.isMockExam && !session.isReviewMode;
+  const [ege21SignFilter, setEge21SignFilter] = useState<'mix' | 'comma' | 'dash' | 'colon'>('mix');
+
+  const allEge21Questions = useMemo(() => {
+    if (!isEge21) return [];
+    const mod = getModulesForGrade('ege').find((m) => m.id === 'ege-21');
+    return mod ? mod.questions : session.questions;
+  }, [isEge21, session.questions]);
+
+  const ege21Counts = useMemo(() => {
+    if (!isEge21) return { mix: 0, comma: 0, dash: 0, colon: 0 };
+    const getText = (q: (typeof allEge21Questions)[number]) =>
+      `${q.subtopic ?? ''} ${q.prompt ?? ''}`.toLowerCase();
+    return {
+      mix: allEge21Questions.length,
+      comma: allEge21Questions.filter((q) => getText(q).includes('запят')).length,
+      dash: allEge21Questions.filter((q) => getText(q).includes('тире')).length,
+      colon: allEge21Questions.filter((q) => getText(q).includes('двоеточ')).length,
+    };
+  }, [isEge21, allEge21Questions]);
+
+  const handleSelectEge21Sign = (sign: 'mix' | 'comma' | 'dash' | 'colon') => {
+    setEge21SignFilter(sign);
+    const getText = (q: (typeof allEge21Questions)[number]) =>
+      `${q.subtopic ?? ''} ${q.prompt ?? ''}`.toLowerCase();
+    const filtered =
+      sign === 'mix'
+        ? allEge21Questions
+        : allEge21Questions.filter((q) => {
+            const t = getText(q);
+            if (sign === 'comma') return t.includes('запят');
+            if (sign === 'dash') return t.includes('тире');
+            return t.includes('двоеточ');
+          });
+    const nextList = filtered.length > 0 ? filtered : allEge21Questions;
+    const shuffled = [...nextList].sort(() => Math.random() - 0.5);
+    setQuestions(shuffled);
+    setCurrentIndex(0);
+    setQuestionResults(Array(shuffled.length).fill(null));
+    setSavedStates({});
+    answeredIndicesRef.current = new Set();
+  };
+
+    useEffect(() => {
     if (!mockDraftKey) return;
     try {
       const raw = localStorage.getItem(mockDraftKey);
@@ -506,8 +573,42 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   const progressPct = Math.round(((currentIndex + 1) / total) * 100);
 
-  return (
+   return (
     <div className="max-w-6xl mx-auto space-y-3.5 lg:space-y-4 pb-24 lg:pb-0">
+      {isEge21 && (
+        <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/80">
+          <span className="text-xs font-medium text-slate-400 mr-1">
+            Знак препинания:
+          </span>
+          {(
+            [
+              { key: 'mix', label: 'Микс', count: ege21Counts.mix },
+              { key: 'comma', label: 'Запятая', count: ege21Counts.comma },
+              { key: 'dash', label: 'Тире', count: ege21Counts.dash },
+              { key: 'colon', label: 'Двоеточие', count: ege21Counts.colon },
+            ] as const
+          ).map((tab) => {
+            const active = ege21SignFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => handleSelectEge21Sign(tab.key)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-violet-600/25 border-violet-500 text-violet-200 shadow-sm shadow-violet-500/20'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className="font-mono-num text-[11px] opacity-75">
+                  ({tab.count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
            {/* Top Session Bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 shrink-0">
