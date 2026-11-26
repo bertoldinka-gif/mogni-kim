@@ -231,14 +231,14 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     clearEssayDraft(resolvedUserId, question.id);
   };
 
-  const handleCopyAiPrompt = async () => {
+   const handleCopyAiPrompt = async () => {
     try {
-      const prompt = buildExternalAiPrompt(
-        KIND_TO_AI_EXAM[question.essayKind],
-        question.sourceText ?? '',
-        essayText,
-        question.minWords ?? 0
-      );
+      const prompt = buildExternalAiPrompt({
+        examType: KIND_TO_AI_EXAM[question.essayKind],
+        promptText: effectivePrompt,
+        sourceText: question.sourceText,
+        studentText: essayText,
+      });
       await navigator.clipboard.writeText(prompt);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
@@ -265,19 +265,19 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     window.setTimeout(() => setSavedToast(false), 2000);
   };
 
-  const handleCompleteWork = async () => {
+   const handleCompleteWork = async () => {
     if (isGrading) return;
     setIsGrading(true);
     setGradingError(null);
     try {
       saveEssayDraft(resolvedUserId, question.id, essayText);
       setDraftSaved(true);
-      const report = await evaluateEssayWithAI(
-        KIND_TO_AI_EXAM[question.essayKind],
-        effectivePrompt,
-        essayText,
-        question.minWords ?? 0
-      );
+      const report = await evaluateEssayWithAI({
+        examType: KIND_TO_AI_EXAM[question.essayKind],
+        promptText: effectivePrompt,
+        sourceText: question.sourceText,
+        studentText: essayText,
+      });
       setGradingReport(report);
       setSubmitted(true);
       const quote = activeMentor ? pickRandomQuote(activeMentor) : null;
