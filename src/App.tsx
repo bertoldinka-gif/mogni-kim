@@ -65,6 +65,11 @@ import {
   updateDailyChallengeOnMistakeLearned,
   updateUserGrade,
 } from './utils/storage';
+import {
+  clearDraft,
+  loadDraft,
+  rebuildQuestionsByIds,
+} from './utils/mockExamDraft';
 import { AuthScreen, checkAndConsumeInviteFromUrl } from './components/AuthScreen';
 import { Sidebar } from './components/Sidebar';
 import { LogoMark } from './components/LogoMark';
@@ -510,9 +515,87 @@ export default function App() {
     });
   };
 
+  /**
+   * Продолжает сохранённый пробник, если есть черновик.
+   * Если черновика нет (или он не восстановился) — запускает новый вариант.
+   * При этом новый вариант генерируется ТОЛЬКО здесь по явному действию.
+   */
   const handleStartMockTest = () => {
     const currentUser = getActiveUser() ?? user;
     if (!currentUser) return;
+
+    const sessionId = `mock-${currentUser.grade}`;
+    const examLabel =
+      currentUser.grade === 'oge'
+        ? 'ОГЭ'
+        : currentUser.grade === 'ege'
+        ? 'ЕГЭ'
+        : undefined;
+
+    // 1. Пытаемся восстановить черновик
+    const draft = loadDraft(currentUser.nickname, sessionId);
+    if (draft && draft.questionIds.length > 0) {
+      // Собираем полную базу вопросов, чтобы найти нужные по id
+      const allMockQuestions = buildMockTestQuestions(currentUser.grade);
+      const { questions, missing } = rebuildQuestionsByIds(
+        draft.questionIds,
+        allMockQuestions
+      );
+
+      if (questions.length > 0) {
+        // Если часть id не нашлась — оставляем предупреждение в сессии
+        if (missing.length > 0) {
+          // не удаляем черновик: пользователь может закрыть и вернуться
+          // но предупредим через свойство сессии
+        }
+        setActiveBlitzMode(null);
+        setActiveSection('mock_test');
+        setSessionNonce((n) => n + 1);
+        setRestartAction(() => () => handleStartMockTest());
+        setSubtopicAction(undefined);
+        setActiveSession({
+          id: sessionId,
+          title: `Комплексный тест (${GRADE_LABELS[currentUser.grade]})`,
+          questions,
+          isMockExam: currentUser.grade === 'oge' || currentUser.grade === 'ege',
+          examLabel,
+          xpPerCorrect: 25,
+          restoredFromDraft: true,
+          missingDraftQuestionIds: missing,
+        });
+        return;
+      }
+
+      // Черновик есть, но ни один вопрос не найден — очищаем и стартуем новый
+      clearDraft(currentUser.nickname, sessionId);
+    }
+
+    // 2. Черновика нет — генерируем новый вариант
+    const questions = buildMockTestQuestions(currentUser.grade);
+    setActiveBlitzMode(null);
+    setActiveSection('mock_test');
+    setSessionNonce((n) => n + 1);
+    setRestartAction(() => () => handleStartMockTest());
+    setSubtopicAction(undefined);
+    setActiveSession({
+      id: sessionId,
+      title: `Комплексный тест (${GRADE_LABELS[currentUser.grade]})`,
+      questions,
+      isMockExam: currentUser.grade === 'oge' || currentUser.grade === 'ege',
+      examLabel,
+      xpPerCorrect: 25,
+    });
+  };
+
+  /**
+   * Явный запуск нового варианта: очищает черновик и генерирует новые вопросы.
+   * Вызывается только по кнопке «Новый вариант» (например, из журнала).
+   */
+  const handleStartNewMockVariant = () => {
+    const currentUser = getActiveUser() ?? user;
+    if (!currentUser) return;
+    const sessionId = `mock-${currentUser.grade}`;
+    clearDraft(currentUser.nickname, sessionId);
     const questions = buildMockTestQuestions(currentUser.grade);
     const examLabel =
       currentUser.grade === 'oge'
@@ -526,7 +609,7 @@ export default function App() {
     setRestartAction(() => () => handleStartMockTest());
     setSubtopicAction(undefined);
     setActiveSession({
-      id: `mock-${currentUser.grade}`,
+      id: sessionId,
       title: `Комплексный тест (${GRADE_LABELS[currentUser.grade]})`,
       questions,
       isMockExam: currentUser.grade === 'oge' || currentUser.grade === 'ege',
@@ -715,6 +798,10 @@ export default function App() {
     let updatedUser = latestUser;
     if (mockExamResult) {
       updatedUser = appendMockExamRecord(updatedUser, mockExamResult);
+      // Чистим черновик пробника после завершения, чтобы следующий заход был новым
+      if (moduleId.startsWith('mock-')) {
+        clearDraft(latestUser.nickname, moduleId);
+      }
     }
     if (!moduleId.startsWith('history-') && moduleId !== 'mistake-review') {
       updatedUser = markModuleCompleted(updatedUser, moduleId);
@@ -908,7 +995,7 @@ export default function App() {
               records={user.mockExamHistory ?? []}
               grade={user.grade}
               onPracticeKimTask={handlePracticeKimTask}
-              onStartMockTest={handleStartMockTest}
+              onStartMockTest={handleStartNewMockVariant}
             />
           ) : activeSection === 'saved_essays' ? (
             <SavedEssaysArchive
