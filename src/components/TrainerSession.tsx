@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Award,
@@ -33,6 +33,14 @@ import { EgeRowSpellingEngine } from './engines/EgeRowSpellingEngine';
 import { EgeTask14Engine } from './engines/EgeTask14Engine';
 import { EgeTask15Engine } from './engines/EgeTask15Engine';
 import { WordInputEngine } from './engines/WordInputEngine';
+import {
+  MockExamDraft,
+  MockExamDraftSavedState,
+  clearDraft,
+  draftStorageKey,
+  loadDraft,
+  saveDraft,
+} from '../utils/mockExamDraft';
 
 export interface ActiveSessionConfig {
   id: string;
@@ -48,6 +56,10 @@ export interface ActiveSessionConfig {
   selectedSubtopic?: string | null;
   gradeLevelOverride?: AttemptGradeLevel;
   essayArchiveId?: string | null;
+  /** Признак того, что сессия собрана строго по questionIds черновика. */
+  restoredFromDraft?: boolean;
+  /** id, которые были в черновике, но отсутствуют в базе. */
+  missingDraftQuestionIds?: string[];
 }
 
 interface TrainerSessionProps {
@@ -106,94 +118,223 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   const [shakeKey, setShakeKey] = useState(0);
   const [finished, setFinished] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [draftRestoreWarning, setDraftRestoreWarning] = useState<string | null>(null);
   const mockStartTimeRef = useRef<number>(Date.now());
+  const restoredOnceRef = useRef(false);
 
-  // Черновики непроверенных ответов по индексу вопроса
   const [draftStates, setDraftStates] = useState<Record<number, unknown>>({});
+  const [questionResults, setQuestionResults] = useState<Array<boolean | null>>(() =>
+    Array(session.questions.length).fill(null)
+  );
+  const [savedStates, setSavedStates] = useState<Record<number, SavedQuestionState>>({});
+  const answeredIndicesRef = useRef<Set<number>>(new Set());
+
+  const questions = session.questions;
+  const total = questions.length;
+  const currentQuestion = questions[currentIndex];
+  const xpReward = session.xpPerCorrect ?? 20;
+  const isMock = Boolean(session.isMockExam);
+  const mockDraftKey = isMock ? draftStorageKey(activeUserId, session.id) : null;
 
   useEffect(() => {
-    if (!session.isMockExam || finished) return;
+    if (!isMock || finished) return;
     const interval = window.setInterval(() => {
       setElapsedSeconds(
         Math.max(0, Math.floor((Date.now() - mockStartTimeRef.current) / 1000))
       );
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [session.isMockExam, finished]);
+  }, [isMock, finished]);
 
-  const questions = session.questions;
-  const total = questions.length;
-  const [questionResults, setQuestionResults] = useState<Array<boolean | null>>(() =>
-    Array(total).fill(null)
-  );
-  const [savedStates, setSavedStates] = useState<Record<number, SavedQuestionState>>({});
-  const answeredIndicesRef = useRef<Set<number>>(new Set());
-  const currentQuestion = questions[currentIndex];
-  const xpReward = session.xpPerCorrect ?? 20;
-  const mockDraftKey = session.isMockExam
-    ? `mogni_mock_draft_${activeUserId ?? 'guest'}_${session.id}`
-    : null;
-
+  // --- Восстановление черновика (только один раз на монтирование) ---
   useEffect(() => {
-    if (!mockDraftKey) return;
-    try {
-      const raw = localStorage.getItem(mockDraftKey);
-      if (!raw) return;
-      const draft = JSON.parse(raw);
-      if (draft && draft.total === total && !draft.finished) {
-        setCurrentIndex(draft.currentIndex ?? 0);
-        setCorrectCount(draft.correctCount ?? 0);
-        setWrongCount(draft.wrongCount ?? 0);
-        setComboStreak(draft.comboStreak ?? 0);
-        setNetXpDelta(draft.netXpDelta ?? 0);
-        if (Array.isArray(draft.questionResults)) setQuestionResults(draft.questionResults);
-        if (draft.savedStates) setSavedStates(draft.savedStates);
-        if (draft.draftStates) setDraftStates(draft.draftStates);
-        if (Array.isArray(draft.answeredIndices)) {
-          answeredIndicesRef.current = new Set(draft.answeredIndices);
+    if (!isMock || restoredOnceRef.current) return;
+    restoredOnceRef.current = true;
+
+    const draft = loadDraft(activeUserId, session.id);
+    if (!draft) return;
+
+    const currentIds = questions.map((q) => q.id);
+    const savedIds = draft.questionIds;
+
+    // Если сессия уже собрана строго по questionIds черновика — применяем всё.
+    if (currentIds.length === savedIds.length) {
+      let exactMatch = true;
+      for (let i = 0; i < savedIds.length; i++) {
+        if (currentIds[i] !== savedIds[i]) {
+          exactMatch = false;
+          break;
         }
-        const prevElapsed = Number(draft.elapsedSeconds ?? 0);
-        setElapsedSeconds(prevElapsed);
-        mockStartTimeRef.current = Date.now() - prevElapsed * 1000;
       }
-    } catch {
-      // ignore
+
+      if (exactMatch) {
+        applyDraftByQuestionId(draft, questions, savedIds);
+        return;
+      }
     }
-  }, [mockDraftKey, total]);
+
+    // Иначе: сессия собрана заново (другие id / другой порядок).
+    // Применяем черновик частично — только по совпадающим questionId.
+    // Так ответы не «переедут» на чужие вопросы.
+    const currentIdSet = new Set(currentIds);
+    const matchedCount = savedIds.filter((id) => currentIdSet.has(id)).length;
+
+    if (matchedCount === 0) {
+      // Совпадений нет — безопаснее не применять ничего.
+      clearDraft(activeUserId, session.id);
+      setDraftRestoreWarning(
+        'Сохранённый черновик относится к другому варианту. Запущен новый чистый вариант.'
+      );
+      return;
+    }
+
+    applyDraftByQuestionId(draft, questions, currentIds);
+    if (matchedCount < savedIds.length) {
+      setDraftRestoreWarning(
+        `В сохранённом черновике было ${savedIds.length} вопросов, из них найдено ${matchedCount}. Остальные пропущены.`
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMock, activeUserId, session.id]);
+
+  /**
+   * Применяет черновик к текущей сессии, сопоставляя данные по questionId.
+   * Ответы, результаты и черновики переносятся на индекс текущего вопроса,
+   * только если questionId есть в targetQuestions.
+   */
+  function applyDraftByQuestionId(
+    draft: MockExamDraft,
+    targetQuestions: PlatformQuestion[],
+    orderedIdsForWarning: string[]
+  ) {
+    const idToIndex: Record<string, number> = {};
+    targetQuestions.forEach((q, i) => {
+      idToIndex[q.id] = i;
+    });
+
+    const nextResults: Array<boolean | null> = Array(targetQuestions.length).fill(null);
+    const nextSavedStates: Record<number, SavedQuestionState> = {};
+    const nextDraftStates: Record<number, unknown> = {};
+    const nextAnswered = new Set<number>();
+
+    // Результаты
+    for (const [qid, val] of Object.entries(draft.resultsByQuestionId || {})) {
+      const idx = idToIndex[qid];
+      if (idx === undefined) continue;
+      nextResults[idx] = val === true ? true : val === false ? false : null;
+    }
+
+    // Проверенные состояния
+    for (const [qid, state] of Object.entries(draft.savedStatesByQuestionId || {})) {
+      const idx = idToIndex[qid];
+      if (idx === undefined) continue;
+      nextSavedStates[idx] = {
+        isCorrect: Boolean(state?.isCorrect),
+        userState: (state as MockExamDraftSavedState | undefined)?.userState ?? null,
+        mentorQuote: (state as MockExamDraftSavedState | undefined)?.mentorQuote ?? null,
+      };
+    }
+
+    // Черновики непроверенных ответов
+    for (const [qid, val] of Object.entries(draft.draftStatesByQuestionId || {})) {
+      const idx = idToIndex[qid];
+      if (idx === undefined) continue;
+      nextDraftStates[idx] = val;
+    }
+
+    // Отвеченные
+    for (const qid of draft.answeredQuestionIds || []) {
+      const idx = idToIndex[qid];
+      if (idx === undefined) continue;
+      nextAnswered.add(idx);
+    }
+
+    // Восстанавливаем счётчики
+    const restoredCorrect = nextResults.filter((v) => v === true).length;
+    const restoredWrong = nextResults.filter((v) => v === false).length;
+
+    // currentIndex: если в черновике был валидный id — берём его индекс в новой сессии
+    let restoredIndex = 0;
+    const savedCurrentId = draft.questionIds[draft.currentIndex];
+    if (savedCurrentId && idToIndex[savedCurrentId] !== undefined) {
+      restoredIndex = idToIndex[savedCurrentId];
+    } else if (draft.currentIndex < targetQuestions.length) {
+      restoredIndex = draft.currentIndex;
+    }
+
+    setCurrentIndex(restoredIndex);
+    setCorrectCount(restoredCorrect);
+    setWrongCount(restoredWrong);
+    setComboStreak(draft.comboStreak ?? 0);
+    setNetXpDelta(draft.netXpDelta ?? 0);
+    setQuestionResults(nextResults);
+    setSavedStates(nextSavedStates);
+    setDraftStates(nextDraftStates);
+    answeredIndicesRef.current = nextAnswered;
+
+    const prevElapsed = Number(draft.elapsedSeconds ?? 0);
+    setElapsedSeconds(prevElapsed);
+    mockStartTimeRef.current = Date.now() - prevElapsed * 1000;
+
+    // Приводим orderedIdsForWarning к виду, чтобы линтер не ругался (не используется)
+    void orderedIdsForWarning;
+  }
 
   const handleSaveMockAndExit = () => {
-    if (mockDraftKey) {
-      try {
-        localStorage.setItem(
-          mockDraftKey,
-          JSON.stringify({
-            total,
-            finished: false,
-            currentIndex,
-            correctCount,
-            wrongCount,
-            comboStreak,
-            netXpDelta,
-            elapsedSeconds,
-            questionResults,
-            savedStates,
-            draftStates,
-            answeredIndices: Array.from(answeredIndicesRef.current),
-          })
-        );
-      } catch {
-        // ignore
-      }
+    if (!mockDraftKey) {
+      onExit();
+      return;
     }
+    const resultsByQuestionId: Record<string, boolean | null> = {};
+    const savedStatesByQuestionId: Record<string, MockExamDraftSavedState> = {};
+    const draftStatesByQuestionId: Record<string, unknown> = {};
+    const answeredQuestionIds: string[] = [];
+
+    questions.forEach((q, idx) => {
+      if (questionResults[idx] !== null && questionResults[idx] !== undefined) {
+        resultsByQuestionId[q.id] = questionResults[idx];
+      }
+      if (savedStates[idx]) {
+        savedStatesByQuestionId[q.id] = {
+          isCorrect: savedStates[idx].isCorrect,
+          userState: savedStates[idx].userState ?? null,
+          mentorQuote: savedStates[idx].mentorQuote ?? null,
+        };
+      }
+      if (draftStates[idx] !== undefined) {
+        draftStatesByQuestionId[q.id] = draftStates[idx];
+      }
+      if (answeredIndicesRef.current.has(idx)) {
+        answeredQuestionIds.push(q.id);
+      }
+    });
+
+    const draft: MockExamDraft = {
+      version: 2,
+      questionIds: questions.map((q) => q.id),
+      total,
+      finished: false,
+      currentIndex,
+      correctCount,
+      wrongCount,
+      comboStreak,
+      netXpDelta,
+      elapsedSeconds,
+      resultsByQuestionId,
+      savedStatesByQuestionId,
+      draftStatesByQuestionId,
+      answeredQuestionIds,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    saveDraft(activeUserId, session.id, draft);
     onExit();
   };
 
   const triggerXpToast = (amount: number, isPenalty: boolean) => {
     const key = Date.now() + Math.random();
     setXpToast({ key, amount, isPenalty });
-    if (isPenalty) {
-      setShakeKey((k) => k + 1);
-    }
+    if (isPenalty) setShakeKey((k) => k + 1);
     setTimeout(() => {
       setXpToast((prev) => (prev?.key === key ? null : prev));
     }, 1000);
@@ -245,7 +386,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
       session.gradeLevelOverride,
       userState
     );
-
     setNetXpDelta((prev) => prev + actualDelta);
 
     if (isCorrect) {
@@ -277,9 +417,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     return true;
   };
 
-  const handlePrev = () => {
-    setCurrentIndex((i) => Math.max(0, i - 1));
-  };
+  const handlePrev = () => setCurrentIndex((i) => Math.max(0, i - 1));
 
   const handleNext = () => {
     if (currentIndex + 1 >= total) {
@@ -287,15 +425,12 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         0,
         Math.floor((Date.now() - mockStartTimeRef.current) / 1000)
       );
-      if (session.isMockExam) {
-        setElapsedSeconds(finalDuration);
-      }
+      if (isMock) setElapsedSeconds(finalDuration);
       setFinished(true);
-      if (mockDraftKey) {
-        localStorage.removeItem(mockDraftKey);
-      }
+      if (mockDraftKey) clearDraft(activeUserId, session.id);
+
       if (!session.isReviewMode) {
-        if (session.isMockExam) {
+        if (isMock) {
           const examType: 'oge' | 'ege' =
             session.examLabel === 'ОГЭ' || session.id.includes('oge') ? 'oge' : 'ege';
           const taskResults = questions.map((q, idx) => {
@@ -323,9 +458,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
   };
 
   const handleRestart = () => {
-    if (mockDraftKey) {
-      localStorage.removeItem(mockDraftKey);
-    }
+    if (mockDraftKey) clearDraft(activeUserId, session.id);
     if (onRestartFresh && !session.isReviewMode) {
       onRestartFresh();
       return;
@@ -366,7 +499,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
     const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
     return (
-      <div className={session.isMockExam ? 'max-w-3xl mx-auto' : 'max-w-2xl mx-auto'}>
+      <div className={isMock ? 'max-w-3xl mx-auto' : 'max-w-2xl mx-auto'}>
         <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80 space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -374,7 +507,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             </div>
             <div>
               <h2 className="font-display text-xl sm:text-2xl font-bold text-white">
-                {session.isMockExam
+                {isMock
                   ? `Экзаменационная ведомость (${session.examLabel ?? 'КИМ'})`
                   : session.isReviewMode
                   ? 'Повторение завершено'
@@ -386,16 +519,16 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
           <div
             className={`grid grid-cols-1 gap-3 ${
-              session.isMockExam ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'
+              isMock ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'
             }`}
           >
             <div className="p-4 rounded-xl bg-[#080B14]/80 border border-slate-800/80">
               <div className="text-xs text-slate-400">
-                {session.isMockExam ? 'Первичный балл' : 'Верных ответов'}
+                {isMock ? 'Первичный балл' : 'Верных ответов'}
               </div>
               <div className="font-mono-num text-2xl font-bold text-emerald-400 mt-1">
                 {correctCount} / {total}
-                {session.isMockExam && (
+                {isMock && (
                   <span className="block text-[11px] font-normal text-slate-400 mt-0.5">
                     первичных баллов
                   </span>
@@ -408,7 +541,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
                 {accuracy}%
               </div>
             </div>
-            {session.isMockExam && (
+            {isMock && (
               <div className="p-4 rounded-xl bg-[#080B14]/80 border border-slate-800/80">
                 <div className="text-xs text-slate-400 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
@@ -431,7 +564,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             </div>
           </div>
 
-          {session.isMockExam && (
+          {isMock && (
             <div className="p-4 rounded-xl bg-[#080B14]/80 border border-slate-800/80 space-y-2.5">
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span className="font-semibold text-slate-300">
@@ -509,7 +642,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto space-y-3.5 lg:space-y-4 pb-24 lg:pb-0">
-      {/* Top Session Bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 shrink-0">
           <button
@@ -521,7 +653,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             <span>Завершить</span>
           </button>
 
-          {session.isMockExam && (
+          {isMock && (
             <button
               type="button"
               onClick={handleSaveMockAndExit}
@@ -534,7 +666,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-400 min-w-0">
-          {/* Glowing Combo Streak Badge when >= 2 */}
           {comboStreak >= 2 && (
             <div
               key={comboStreak}
@@ -556,7 +687,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           </span>
           <span aria-hidden="true">·</span>
 
-          {/* Live XP Balance Pill with Pure CSS Shake on Penalty & Floating +XP / -XP Badge */}
           <div className="relative inline-flex items-center shrink-0">
             <div
               key={shakeKey}
@@ -577,7 +707,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
             {xpToast && (
               <FloatingXpBadge
                 toastKey={xpToast.key}
-                delta={xpToast.amount}
+                amount={xpToast.amount}
                 className="-top-1 right-0"
               />
             )}
@@ -585,7 +715,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         </div>
       </div>
 
-      {/* Progress Track */}
       <div className="h-1.5 w-full bg-slate-800/80 rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500 transition-all duration-200"
@@ -593,9 +722,8 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         />
       </div>
 
-      {/* Automatic Subtopic Filter Bar */}
       {!session.isReviewMode &&
-        !session.isMockExam &&
+        !isMock &&
         onSelectSubtopic &&
         session.availableSubtopics &&
         session.availableSubtopics.length >= 2 && (
@@ -635,7 +763,6 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
           </div>
         )}
 
-      {/* Subtle Cycle Auto-Reset Notice */}
       {session.cycleResetNotice && (
         <div className="max-w-5xl mx-auto flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200">
           <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -643,8 +770,7 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         </div>
       )}
 
-      {/* Official Mock Exam КИМ Header & Task Status Pills */}
-      {session.isMockExam && (
+      {isMock && (
         <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/75 border border-slate-800/85 space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
@@ -710,7 +836,21 @@ export const TrainerSession: React.FC<TrainerSessionProps> = ({
         </div>
       )}
 
-      {/* Split-Screen Question & Side Panel */}
+      {draftRestoreWarning && (
+        <div className="max-w-5xl mx-auto flex items-start gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
+          <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <span>{draftRestoreWarning}</span>
+          <button
+            type="button"
+            onClick={() => setDraftRestoreWarning(null)}
+            className="ml-auto text-amber-300 hover:text-white font-semibold cursor-pointer"
+            aria-label="Скрыть предупреждение"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {currentQuestion.type === 'fill_letter' ? (
         <FillLetterEngine
           key={`${currentQuestion.id}-${currentIndex}`}
