@@ -27,6 +27,8 @@ import {
 } from '../utils/storage';
 import { AnimatedXpValue, FloatingXpBadge, useXpDeltaToast } from './AnimatedXpCounter';
 import { MentorAvatar } from './MentorAvatar';
+import { GIFT_CATALOG, OwnedGiftRecord, loadUserGifts } from '../data/giftsData';
+import { buyShopGift } from '../utils/storage';
 
 interface ShopProps {
   user: UserProfile;
@@ -37,6 +39,18 @@ export const Shop: React.FC<ShopProps> = ({ user, onUserUpdated }) => {
   const [isOpening, setIsOpening] = useState(false);
   const [lastReward, setLastReward] = useState<LootboxReward | null>(null);
   const [shopError, setShopError] = useState<string | null>(null);
+const [boughtGift, setBoughtGift] = useState<OwnedGiftRecord | null>(null);
+
+const handleBuyGift = (giftId: string) => {
+  setShopError(null);
+  const res = buyShopGift(user, giftId);
+  if (res.error) {
+    setShopError(res.error);
+    return;
+  }
+  onUserUpdated(res.user);
+  if (res.gift) setBoughtGift(res.gift);
+};
 
   const unlockedMentors = user.unlockedMentors ?? [];
   const activeMentorId = user.activeMentorId ?? null;
@@ -510,7 +524,7 @@ export const Shop: React.FC<ShopProps> = ({ user, onUserUpdated }) => {
                           : 'shop-secondary-btn bg-slate-800/90 hover:bg-violet-600 text-white border border-slate-700 hover:border-violet-500 cursor-pointer'
                       }`}
                     >
-                      {isActive ? 'Активна' : 'Применить'}
+                                           {isActive ? 'Активна' : 'Применить'}
                     </button>
                   ) : (
                     <button
@@ -528,6 +542,93 @@ export const Shop: React.FC<ShopProps> = ({ user, onUserUpdated }) => {
           })}
         </div>
       </div>
+
+      {/* Collectible Gifts Showcase */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-white flex items-center gap-2">
+              <Gift className="w-5 h-5 text-amber-400" />
+              <span>Витрина коллекционных подарков</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Подарите себе трофей с личной подписью активного наставника — он появится на полке в
+              профиле, где его можно улучшить до редкого!
+            </p>
+          </div>
+          <span className="font-mono-num text-xs text-slate-400 whitespace-nowrap">
+            На полке: {loadUserGifts(user.id).length} шт.
+          </span>
+        </div>
+
+        {boughtGift && (
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/40 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-emerald-200">
+            <span>
+              🎉 Подарок{' '}
+              <strong>
+                {GIFT_CATALOG.find((g) => g.id === boughtGift.giftId)?.name} #
+                {boughtGift.serialNumber}
+              </strong>{' '}
+              отправлен на вашу полку в «Личном кабинете»!
+            </span>
+            <button
+              type="button"
+              onClick={() => setBoughtGift(null)}
+              className="text-xs underline text-emerald-300 hover:text-white cursor-pointer"
+            >
+              Скрыть
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {GIFT_CATALOG.map((gift) => {
+            const canAfford = user.xp >= gift.cost;
+            return (
+              <div
+                key={gift.id}
+                className="p-5 rounded-xl bg-slate-900/75 backdrop-blur-md border border-slate-800/80 hover:border-amber-500/40 transition-all flex flex-col justify-between gap-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="w-14 h-14 rounded-2xl bg-[#080B14]/90 border border-slate-800 flex items-center justify-center text-3xl">
+                      {gift.emoji}
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                        gift.limited
+                          ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                          : 'bg-amber-500/15 border-amber-500/35 text-amber-300'
+                      }`}
+                    >
+                      {gift.tag}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-white">
+                      {gift.name}
+                    </h3>
+                    <p className="text-xs text-slate-400 leading-relaxed mt-1">
+                      {gift.description}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!canAfford}
+                  onClick={() => handleBuyGift(gift.id)}
+                  className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-violet-600 hover:from-amber-400 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-medium text-white shadow-lg shadow-amber-950/30 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Подарить себе за {gift.cost} XP
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
+
