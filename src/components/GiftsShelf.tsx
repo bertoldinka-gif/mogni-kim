@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { Award, Calendar, Gift, Hash, Sparkles, X, Zap } from 'lucide-react';
 import {
@@ -125,140 +126,151 @@ export const GiftsShelf: React.FC<GiftsShelfProps> = ({ user, onUpgradeGift }) =
       )}
 
       {/* Telegram-style Gift Card Modal */}
-      <AnimatePresence>
-        {selectedRecord && selectedMeta && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 8 }}
-              className={`relative w-full max-w-md rounded-2xl border p-6 space-y-5 overflow-hidden ${
-                selectedRarity
-                  ? `${selectedRarity.cardBg} ${selectedRarity.borderGlow}`
-                  : 'bg-slate-900 border-slate-700/90 shadow-2xl'
-              }`}
+      {createPortal(
+        <AnimatePresence>
+          {selectedRecord && selectedMeta && (
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+              onClick={() => setSelectedUid(null)}
             >
-              <button
-                type="button"
-                onClick={() => setSelectedUid(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/30 hover:bg-black/50 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 8 }}
+                onClick={(e) => e.stopPropagation()}
+                className={
+                  'relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border p-6 space-y-5 ' +
+                  (selectedRarity
+                    ? selectedRarity.cardBg + ' ' + selectedRarity.borderGlow
+                    : 'bg-slate-900 border-slate-700/90 shadow-2xl')
+                }
               >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="flex flex-col items-center text-center space-y-2 pt-1">
-                <motion.div
-                  animate={
-                    isUpgrading
-                      ? { rotate: [0, -12, 12, -10, 10, 0], scale: [1, 1.18, 0.95, 1.15, 1] }
-                      : { rotate: 0, scale: 1 }
-                  }
-                  transition={{ duration: 0.6 }}
-                  className="w-20 h-20 rounded-2xl bg-black/35 border border-white/15 flex items-center justify-center text-5xl shadow-inner"
+                <button
+                  type="button"
+                  onClick={() => setSelectedUid(null)}
+                  className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/30 hover:bg-black/50 text-slate-300 hover:text-white transition-colors cursor-pointer"
                 >
-                  {selectedMeta.emoji}
-                </motion.div>
+                  <X className="w-4 h-4" />
+                </button>
 
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 font-mono-num text-xs px-2.5 py-0.5 rounded-full bg-black/40 border border-white/15 text-slate-200">
-                    <Hash className="w-3 h-3 text-amber-400" />
-                    Экземпляр #{selectedRecord.serialNumber}
-                  </span>
-                  {selectedRarity && (
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${selectedRarity.badgeColor}`}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      {selectedRarity.name}
+                <div className="flex flex-col items-center text-center space-y-2 pt-1">
+                  <motion.div
+                    animate={
+                      isUpgrading
+                        ? { rotate: [0, -12, 12, -10, 10, 0], scale: [1, 1.18, 0.95, 1.15, 1] }
+                        : { rotate: 0, scale: 1 }
+                    }
+                    transition={{ duration: 0.6 }}
+                    className="w-20 h-20 rounded-2xl bg-black/35 border border-white/15 flex items-center justify-center text-5xl shadow-inner"
+                  >
+                    {selectedMeta.emoji}
+                  </motion.div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 font-mono-num text-xs px-2.5 py-0.5 rounded-full bg-black/40 border border-white/15 text-slate-200">
+                      <Hash className="w-3 h-3 text-amber-400" />
+                      Экземпляр #{selectedRecord.serialNumber}
                     </span>
-                  )}
-                </div>
-
-                <h4 className="font-display text-xl font-bold text-white">
-                  {selectedMeta.name}
-                </h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  {selectedMeta.description}
-                </p>
-              </div>
-
-              {/* Metadata Table */}
-              <div className="rounded-xl bg-black/40 border border-white/10 p-3.5 space-y-2.5 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-violet-400" />
-                    Дата получения:
-                  </span>
-                  <span className="font-mono-num text-slate-200 font-medium">
-                    {selectedRecord.purchasedAt}
-                  </span>
-                </div>
-
-                <div className="pt-2 border-t border-white/10 space-y-1">
-                  <span className="text-slate-400 flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-amber-400" />
-                    Подпись наставника (
-                    {getMentorById(selectedRecord.mentorId)?.name ?? 'Хранитель'}):
-                  </span>
-                  <p className="text-slate-200 italic leading-relaxed">
-                    {selectedRecord.mentorSignature}
-                  </p>
-                </div>
-              </div>
-
-              {/* Upgraded Legend or Upgrade CTA */}
-              {selectedRecord.upgraded ? (
-                <div className="rounded-xl bg-black/50 border border-amber-400/35 p-4 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Коллекционная легенда артефакта</span>
-                  </div>
-                  <p className="text-xs text-slate-200 leading-relaxed">
-                    {selectedRecord.upgraded.legend}
-                  </p>
-                </div>
-              ) : (
-                onUpgradeGift && (
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      disabled={isUpgrading || user.xp < GIFT_UPGRADE_COST}
-                      onClick={handleUpgradeClick}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchsia-600 to-cyan-600 hover:from-amber-400 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-bold text-white shadow-lg shadow-fuchsia-950/40 transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <span>
-                        {isUpgrading
-                          ? 'Перековываем артефакт...'
-                          : user.xp < GIFT_UPGRADE_COST
-                          ? 'Нужно ' + GIFT_UPGRADE_COST + ' XP для улучшения'
-                          : 'Улучшить за ' + GIFT_UPGRADE_COST + ' XP ✨'}
+                    {selectedRarity && (
+                      <span
+                        className={
+                          'inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ' +
+                          selectedRarity.badgeColor
+                        }
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {selectedRarity.name}
                       </span>
-                    </button>
-
-                    {upgradeError && (
-                      <p className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
-                        {upgradeError}
-                      </p>
                     )}
+                  </div>
 
-                    <p className="text-[11px] text-slate-400 text-center">
-                      Ваш баланс: {user.xp} XP
+                  <h4 className="font-display text-xl font-bold text-white">
+                    {selectedMeta.name}
+                  </h4>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {selectedMeta.description}
+                  </p>
+                </div>
+
+                {/* Metadata Table */}
+                <div className="rounded-xl bg-black/40 border border-white/10 p-3.5 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-violet-400" />
+                      Дата получения:
+                    </span>
+                    <span className="font-mono-num text-slate-200 font-medium">
+                      {selectedRecord.purchasedAt}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-white/10 space-y-1">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-amber-400" />
+                      Подпись наставника (
+                      {getMentorById(selectedRecord.mentorId)?.name ?? 'Хранитель'}):
+                    </span>
+                    <p className="text-slate-200 italic leading-relaxed">
+                      {selectedRecord.mentorSignature}
                     </p>
                   </div>
-                )
-              )}
+                </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedUid(null)}
-                className="w-full text-center text-xs text-slate-300 hover:text-white underline cursor-pointer"
-              >
-                Закрыть
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                {/* Upgraded Legend or Upgrade CTA */}
+                {selectedRecord.upgraded ? (
+                  <div className="rounded-xl bg-black/50 border border-amber-400/35 p-4 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Коллекционная легенда артефакта</span>
+                    </div>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {selectedRecord.upgraded.legend}
+                    </p>
+                  </div>
+                ) : (
+                  onUpgradeGift && (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled={isUpgrading || user.xp < GIFT_UPGRADE_COST}
+                        onClick={handleUpgradeClick}
+                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchsia-600 to-cyan-600 hover:from-amber-400 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-bold text-white shadow-lg shadow-fuchsia-950/40 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>
+                          {isUpgrading
+                            ? 'Перековываем артефакт...'
+                            : user.xp < GIFT_UPGRADE_COST
+                            ? 'Нужно ' + GIFT_UPGRADE_COST + ' XP для улучшения'
+                            : 'Улучшить за ' + GIFT_UPGRADE_COST + ' XP ✨'}
+                        </span>
+                      </button>
+
+                      {upgradeError && (
+                        <p className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                          {upgradeError}
+                        </p>
+                      )}
+
+                      <p className="text-[11px] text-slate-400 text-center">
+                        Ваш баланс: {user.xp} XP
+                      </p>
+                    </div>
+                  )
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedUid(null)}
+                  className="w-full text-center text-xs text-slate-300 hover:text-white underline cursor-pointer"
+                >
+                  Закрыть
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
