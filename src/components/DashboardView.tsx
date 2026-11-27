@@ -40,6 +40,8 @@ import {
 import { AnimatedXpValue, FloatingXpBadge, useXpDeltaToast } from './AnimatedXpCounter';
 import { LogoMark } from './LogoMark';
 import { MentorAvatar } from './MentorAvatar';
+import { GiftsShelf } from './GiftsShelf';
+import { upgradeOwnedGift } from '../utils/storage';
 
 interface DashboardViewProps {
   user: UserProfile;
@@ -430,7 +432,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Серия: {user.streak} дн.
               </span>
             </div>
-
+            
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {weekDays.map((day) => (
                 <div
@@ -467,7 +469,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
-
+ {/* Collectible Gifts Shelf (Telegram-style) */}
+      <GiftsShelf
+        user={user}
+        onUpgradeGift={(uid) => {
+          const res = upgradeOwnedGift(user, uid);
+          if (res.error) return { ok: false, error: res.error };
+          window.dispatchEvent(new Event('storage'));
+          return { ok: true };
+        }}
+      />
       {/* 4-column KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-slate-900/70 backdrop-blur-md border border-slate-800/80">
