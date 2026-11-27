@@ -227,12 +227,13 @@ export const GiftsShelf: React.FC<GiftsShelfProps> = ({ user, onUpgradeGift }) =
 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchsia-600 to-cyan-600 hover:from-amber-400 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-bold text-white shadow-lg shadow-fuchsia-950/40 transition-all cursor-pointer flex items-center justify-center gap-2"
 >
 
-
-{isUpgrading
-? 'Перековываем артефакт...'
-: user.xp < GIFT_UPGRADE_COST
-? Нужно ${GIFT_UPGRADE_COST} XP для улучшения
-: Улучшить за ${GIFT_UPGRADE_COST} XP ✨}
+                      <span>
+                        {isUpgrading
+                          ? 'Перековываем артефакт...'
+                          : user.xp < GIFT_UPGRADE_COST
+                          ? 'Нужно ' + GIFT_UPGRADE_COST + ' XP для улучшения'
+                          : 'Улучшить за ' + GIFT_UPGRADE_COST + ' XP ✨'}
+                      </span>
 
 
 {upgradeError && (
