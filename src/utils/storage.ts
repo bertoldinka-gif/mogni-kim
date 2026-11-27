@@ -7,6 +7,16 @@ import {
   RARE_TITLES,
 } from '../data/petsData';
 import {
+  GIFT_CATALOG,
+  GIFT_UPGRADE_COST,
+  GIFT_UPGRADE_RARITIES,
+  OwnedGiftRecord,
+  generateGiftLegend,
+  getMentorSignatureForGift,
+  loadUserGifts,
+  saveUserGifts,
+} from '../data/giftsData';
+import {
   DEFAULT_THEME_ID,
   ThemeDefinition,
   UI_THEMES,
@@ -1229,4 +1239,99 @@ export function applyCloudProfilePayload(payload: {
   }
 
   return normalized;
+}
+export function buyShopGift(
+  user: UserProfile,
+  giftId: string
+): { user: UserProfile; gift?: OwnedGiftRecord; error?: string } {
+  const normalized = normalizeUser(user);
+  const item = GIFT_CATALOG.find((g) => g.id === giftId);
+  if (!item) {
+    return { user: normalized, error: 'Подарок не найден.' };
+  }
+  if (normalized.xp < item.cost) {
+    return {
+      user: normalized,
+      error: `Недостаточно XP для подарка «${item.name}». Нужно ${item.cost} XP.`,
+    };
+  }
+
+  const activeMentor = MENTORS.find((m) => m.id === normalized.activeMentorId);
+  const currentGifts = loadUserGifts(normalized.id);
+  const serialNumber = Math.floor(10 + Math.random() * 890);
+  const newRecord: OwnedGiftRecord = {
+    uid: `gift-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    giftId: item.id,
+    serialNumber,
+    purchasedAt: new Date().toLocaleDateString('ru-RU'),
+    mentorId: normalized.activeMentorId ?? null,
+    mentorSignature: getMentorSignatureForGift(
+      normalized.activeMentorId,
+      activeMentor?.name
+    ),
+  };
+
+  saveUserGifts(normalized.id, [newRecord, ...currentGifts]);
+  const updated = updateUserProfile({
+    ...normalized,
+    xp: normalized.xp - item.cost,
+  });
+  return { user: updated, gift: newRecord };
+}
+
+export function upgradeOwnedGift(
+  user: UserProfile,
+  giftUid: string
+): { user: UserProfile; error?: string } {
+  const normalized = normalizeUser(user);
+  if (normalized.xp < GIFT_UPGRADE_COST) {
+    return {
+      user: normalized,
+      error: `Недостаточно XP для улучшения. Нужно ${GIFT_UPGRADE_COST} XP.`,
+    };
+  }
+
+  const currentGifts = loadUserGifts(normalized.id);
+  const idx = currentGifts.findIndex((g) => g.uid === giftUid);
+  if (idx === -1) {
+    return { user: normalized, error: 'Подарок не найден на вашей полке.' };
+  }
+  const target = currentGifts[idx];
+  if (target.upgraded) {
+    return { user: normalized, error: 'Этот подарок уже улучшен!' };
+  }
+
+  const meta = GIFT_CATALOG.find((c) => c.id === target.giftId);
+  if (!meta) {
+    return { user: normalized, error: 'Описание подарка не найдено.' };
+  }
+
+  const rarity =
+    GIFT_UPGRADE_RARITIES[Math.floor(Math.random() * GIFT_UPGRADE_RARITIES.length)];
+  const activeMentor = MENTORS.find((m) => m.id === normalized.activeMentorId);
+  const { perk, legend } = generateGiftLegend(
+    meta,
+    rarity,
+    target.serialNumber,
+    activeMentor?.name
+  );
+
+  const nextGifts = [...currentGifts];
+  nextGifts[idx] = {
+    ...target,
+    upgraded: {
+      rarityId: rarity.id,
+      rarityName: rarity.name,
+      perk,
+      legend,
+      upgradedAt: new Date().toLocaleDateString('ru-RU'),
+    },
+  };
+
+  saveUserGifts(normalized.id, nextGifts);
+  const updated = updateUserProfile({
+    ...normalized,
+    xp: normalized.xp - GIFT_UPGRADE_COST,
+  });
+  return { user: updated };
 }
