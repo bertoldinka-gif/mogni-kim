@@ -224,9 +224,8 @@ export const GiftsShelf: React.FC<GiftsShelfProps> = ({ user, onUpgradeGift }) =
                       type="button"
                       disabled={isUpgrading || user.xp < GIFT_UPGRADE_COST}
                       onClick={handleUpgradeClick}
-className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchsia-600 to-cyan-600 hover:from-amber-400 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-bold text-white shadow-lg shadow-fuchsia-950/40 transition-all cursor-pointer flex items-center justify-center gap-2"
->
-
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchsia-600 to-cyan-600 hover:from-amber-400 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm font-bold text-white shadow-lg shadow-fuchsia-950/40 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
                       <span>
                         {isUpgrading
                           ? 'Перековываем артефакт...'
@@ -234,28 +233,32 @@ className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-fuchs
                           ? 'Нужно ' + GIFT_UPGRADE_COST + ' XP для улучшения'
                           : 'Улучшить за ' + GIFT_UPGRADE_COST + ' XP ✨'}
                       </span>
+                    </button>
 
+                    {upgradeError && (
+                      <p className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                        {upgradeError}
+                      </p>
+                    )}
 
-{upgradeError && (
-{upgradeError}
-)}
+                    <p className="text-[11px] text-slate-400 text-center">
+                      Ваш баланс: {user.xp} XP
+                    </p>
+                  </div>
+                )
+              )}
 
-)
-)}
-Ваш баланс: {user.xp} XP
-
-<button
-type="button"
-onClick={() => setSelectedUid(null)}
-className="text-slate-300 hover:text-white underline cursor-pointer"
->
-Закрыть
-
-
-</motion.div>
-
-)}
-
-
-);
+              <button
+                type="button"
+                onClick={() => setSelectedUid(null)}
+                className="w-full text-center text-xs text-slate-300 hover:text-white underline cursor-pointer"
+              >
+                Закрыть
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
