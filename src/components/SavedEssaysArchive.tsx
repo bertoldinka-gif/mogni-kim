@@ -52,6 +52,17 @@ const EXAM_BADGE_META: Record<
     badgeClass: 'bg-amber-500/15 border-amber-500/40 text-amber-200',
   },
 };
+const DEFAULT_EXAM_BADGE_META = {
+  label: 'Письменная работа',
+  shortLabel: 'Сочинение',
+  badgeClass: 'bg-slate-500/15 border-slate-500/40 text-slate-200',
+};
+
+function getExamBadgeMeta(examType?: string | null) {
+  if (!examType) return DEFAULT_EXAM_BADGE_META;
+  const normalized = examType.toUpperCase() as AiExamType;
+  return EXAM_BADGE_META[normalized] ?? DEFAULT_EXAM_BADGE_META;
+}
 
 function formatEssayDate(iso: string): string {
   try {
@@ -113,7 +124,8 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
   const filteredEssays = useMemo(() => {
     const q = query.trim().toLowerCase();
     return essays.filter((item) => {
-      if (filter !== 'all' && item.examType !== filter) return false;
+      const normalizedType = (item.examType || '').toUpperCase();
+      if (filter !== 'all' && normalizedType !== filter) return false;
       if (!q) return true;
       return (
         item.promptTitle.toLowerCase().includes(q) ||
@@ -267,7 +279,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredEssays.map((record) => {
-            const meta = EXAM_BADGE_META[record.examType];
+            const meta = getExamBadgeMeta(record.examType);
             const report = record.gradingReport;
             const isConfirmingDelete = confirmDeleteId === record.id;
 
@@ -387,10 +399,10 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`px-2.5 py-0.5 rounded-md border text-xs font-semibold ${
-                        EXAM_BADGE_META[activeRecord.examType].badgeClass
+                        getExamBadgeMeta(activeRecord.examType).badgeClass
                       }`}
                     >
-                      {EXAM_BADGE_META[activeRecord.examType].label}
+                      {getExamBadgeMeta(activeRecord.examType).label}
                     </span>
                     <span className="text-xs text-slate-400 font-mono-num">
                       {formatEssayDate(activeRecord.timestamp)}
