@@ -247,22 +247,20 @@ export const OpenEssayEngine: React.FC<OpenEssayEngineProps> = ({
     }
   };
 
-  const handleSaveSnapshot = () => {
+    const handleSaveSnapshot = () => {
     if (!onSaveEssay || !essayText.trim()) return;
-    const record = onSaveEssay({
-      id: archiveRecordId ?? undefined,
-      questionId: question.id,
-      essayKind: question.essayKind,
-      prompt: effectivePrompt,
-      essayText,
+    onSaveEssay({
+      id: `essay_${question.id}_${Date.now()}`,
+      examType: KIND_TO_AI_EXAM[question.essayKind],
+      promptTitle: effectivePrompt,
+      sourceText: question.sourceText,
+      studentText: essayText.trim(),
       wordCount,
+      timestamp: new Date().toISOString(),
       gradingReport: gradingReport ?? undefined,
     });
-    if (record && 'id' in record) {
-      setArchiveRecordId(record.id);
-    }
     setSavedToast(true);
-    window.setTimeout(() => setSavedToast(false), 2000);
+    window.setTimeout(() => setSavedToast(false), 2200);
   };
 
    const handleCompleteWork = async () => {
