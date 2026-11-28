@@ -1,4 +1,6 @@
 import { TaskModule } from '../../types/platform';
+import { OGE_READING_QUESTIONS } from './ogeReadingTasks';
+import { OGE_ESSAY_MODULE } from './ogeEssayTasks';
 
 export const ogeModules: TaskModule[] = [
   {
