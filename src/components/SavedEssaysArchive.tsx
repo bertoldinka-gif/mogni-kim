@@ -80,19 +80,22 @@ function formatEssayDate(iso: string): string {
   }
 }
 
-function buildExcerpt(text: string, maxLen = 190): string {
-  const cleaned = text.replace(/\s+/g, ' ').trim();
+function buildExcerpt(text: string | null | undefined, maxLen = 190): string {
+  const cleaned = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return '';
   if (cleaned.length <= maxLen) return cleaned;
   return `${cleaned.slice(0, maxLen - 1).trimEnd()}…`;
 }
 
 export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
-  essays,
+  essays: essaysProp,
   onSaveUpdatedEssay,
   onDeleteEssay,
   onOpenInEditor,
   onNavigateToCurriculum,
 }) => {
+  const essays = essaysProp ?? [];
+
   const [filter, setFilter] = useState<ExamFilter>('all');
   const [query, setQuery] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -104,7 +107,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
 
   useEffect(() => {
     if (!activeRecord) return;
-    setDraftEditText(activeRecord.studentText);
+    setDraftEditText(activeRecord.studentText ?? '');
     setShowSourceInModal(false);
     setCopiedModalText(false);
     setSavedModalNotice(false);
@@ -128,14 +131,14 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
       if (filter !== 'all' && normalizedType !== filter) return false;
       if (!q) return true;
       return (
-        item.promptTitle.toLowerCase().includes(q) ||
-        item.studentText.toLowerCase().includes(q)
+        (item.promptTitle ?? '').toLowerCase().includes(q) ||
+        (item.studentText ?? '').toLowerCase().includes(q)
       );
     });
   }, [essays, filter, query]);
 
   const modalWordCount = useMemo(
-    () => countEssayWords(draftEditText),
+    () => countEssayWords(draftEditText ?? ''),
     [draftEditText]
   );
 
@@ -177,7 +180,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
 
   const handleOpenInTrainer = () => {
     if (!activeRecord) return;
-    const trimmed = draftEditText.trim() || activeRecord.studentText;
+    const trimmed = draftEditText.trim() || activeRecord.studentText || '';
     const recordToOpen: SavedEssayRecord = {
       ...activeRecord,
       studentText: trimmed,
@@ -300,7 +303,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
                       <span>{formatEssayDate(record.timestamp)}</span>
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/80 text-xs font-mono-num text-slate-300">
-                      {record.wordCount} сл.
+                      {record.wordCount ?? 0} сл.
                     </span>
                   </div>
 
@@ -328,7 +331,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
 
                 <div className="space-y-1.5">
                   <h2 className="font-display text-base font-semibold text-white leading-snug">
-                    {record.promptTitle}
+                    {record.promptTitle || 'Без названия'}
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                     {buildExcerpt(record.studentText)}
@@ -412,7 +415,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
                     id="saved-essay-modal-title"
                     className="font-display text-base sm:text-lg font-bold text-white leading-snug"
                   >
-                    {activeRecord.promptTitle}
+                    {activeRecord.promptTitle || 'Без названия'}
                   </h3>
                 </div>
 
@@ -601,7 +604,7 @@ export const SavedEssaysArchive: React.FC<SavedEssaysArchiveProps> = ({
                     )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {activeRecord.gradingReport.criteria.map((crit) => {
+                    {(activeRecord.gradingReport.criteria ?? []).map((crit) => {
                       const isPassFail = Boolean(
                         activeRecord.gradingReport?.isPassFail
                       );
